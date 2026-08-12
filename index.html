@@ -11,13 +11,14 @@
 body{margin:0;background:#f4f6f8;color:#111827}.app{max-width:760px;margin:auto;padding:16px 16px 40px}h1{font-size:25px;margin:3px 0}.sub{font-size:13px;color:#667085;margin-bottom:14px}
 .card,.hero{background:#fff;border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 3px 16px #0000000b}.hero{text-align:center}.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#fee2e2;color:#b42318}.gold{font-size:13px;color:#667085;margin-top:10px}.price{font-size:43px;font-weight:850;letter-spacing:-1.5px;margin:3px 0}.change{font-size:12px;color:#667085}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{grid-column:1/-1}label{display:block;font-size:12px;color:#667085;margin:5px 0}input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px;font-size:16px;background:#fff}button{border:0;border-radius:12px;padding:12px 15px;font-weight:800;font-size:14px;cursor:pointer}.primary{background:#111827;color:#fff}.secondary{background:#eef1f4}.drop{border:2px dashed #cdd3da;border-radius:16px;padding:20px;text-align:center}.file{display:none}#preview{display:none;max-width:100%;max-height:430px;border-radius:12px;margin:12px auto 0}.small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;border-bottom:1px solid #edf0f2;text-align:right}th:first-child,td:first-child{text-align:left}.alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.progress{height:8px;background:#eef1f4;border-radius:99px;overflow:hidden;margin-top:8px}.progress>div{height:100%;width:0;background:#111827;transition:width .2s}.order{border:1px solid #edf0f2;border-radius:14px;padding:10px;margin-top:8px}.order .grid{gap:8px}
+.warn{color:#b45309}.ok{color:#087443}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 <div class="app">
 <h1>XM ロスカット Pro</h1>
-<div class="sub">画像選択 → OCR自動読み取り → XMロスカットライン推定</div>
+<div class="sub">画像選択 → OCR自動読み取り → 約定順を考慮したXMロスカットライン推定</div>
 
 <div class="card"><div class="drop">
 <input id="file" class="file" type="file" accept="image/*">
@@ -47,7 +48,7 @@ body{margin:0;background:#f4f6f8;color:#111827}.app{max-width:760px;margin:auto;
 
 <div class="card"><div class="row"><b>OCRで認識した注文</b><span id="count">0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></div>
 
-<div class="alert"><b>重要：</b>XMの公式情報ではマージンコール50%、Stop Out20%です。本計算は「全Buy注文が約定した状態」を仮定し、GOLD#の契約サイズ100 oz/lot、レバレッジ、USD/JPYを使って推定します。実際のXMではBid/Ask、スプレッド、スワップ、契約仕様、既存ポジション、強制決済の順序などにより結果が変わる場合があります。</div>
+<div class="alert"><b>約定順を考慮：</b>Buy Limitは価格が下がって注文価格に到達した時点でのみ約定し、未約定注文はロスカット計算から除外します。<b>重要：</b>XMの公式情報ではマージンコール50%、Stop Out20%です。本計算は「全Buy注文が約定した状態」を仮定し、GOLD#の契約サイズ100 oz/lot、レバレッジ、USD/JPYを使って推定します。実際のXMではBid/Ask、スプレッド、スワップ、契約仕様、既存ポジション、強制決済の順序などにより結果が変わる場合があります。</div>
 <div class="card footer"><b>計算モデル</b><br>必要証拠金 = 価格 × Lot × 100 oz ÷ レバレッジ × USD/JPY。Buyの含み損益 = (価格 − 平均約定価格) × 合計oz × USD/JPY。Stop Out時の有効証拠金 = 必要証拠金 × Stop Out%。この条件を満たす価格を解いています。<br><br>※投資判断ではなく参考値です。最終的なロスカット価格はXMの取引画面を優先してください。</div>
 </div>
 <script>
@@ -59,19 +60,126 @@ function renderOrders(){
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;')}
 function addOrder(){orders.push({side:'Buy Limit',lot:.01,price:4000});renderOrders()} function resetOrders(){orders=[];renderOrders()}
 function calc(){
- const bal=+$('balance').value||0, lev=+$('leverage').value||1000, stop=(+$('stopout').value||20)/100, u=+$('usdjpy').value||0;
- const buys=orders.filter(o=>/buy/i.test(o.side)&&o.lot>0&&o.price>0); const lots=buys.reduce((s,o)=>s+o.lot,0), oz=lots*100;
- const entryUsd=buys.reduce((s,o)=>s+o.price*o.lot*100,0); const avg=oz?entryUsd/oz:0;
- $('lots').textContent=lots.toFixed(2); $('oz').textContent=oz.toFixed(2); $('usedRate').textContent=u.toFixed(3); $('avg').textContent=avg?avg.toFixed(3):'—';
- if(!buys.length||!u||!lev){$('result').textContent='—';return}
- // Solve: balance + (P-avg)*oz*USDJPY = stopout * (P*oz/lev)*USDJPY
- const denom=oz*u*(1-stop/lev); const lc=(entryUsd*u-bal)/denom;
- $('result').textContent=isFinite(lc)?lc.toFixed(2):'—';
- if(goldPrice!=null){$('gold').textContent=goldPrice.toFixed(2)+' USD'; const d=goldPrice-lc; $('gap').textContent=d>=0?d.toFixed(2)+'ドル余裕':'ロスカット価格を下回っています'; $('distance').textContent=`現在 ${goldPrice.toFixed(2)} → LC ${lc.toFixed(2)} / 平均 ${avg.toFixed(2)}`;} else {$('gold').textContent='—';$('gap').textContent='—';$('distance').textContent='—'}
+ const bal=+$('balance').value||0, lev=+$('leverage').value||1000;
+ const stop=(+$('stopout').value||20)/100, u=+$('usdjpy').value||0;
+ const all=orders.filter(o=>/buy/i.test(o.side)&&o.lot>0&&o.price>0)
+   .map(o=>({lot:+o.lot,price:+o.price}))
+   .sort((a,b)=>b.price-a.price);
+
+ $('usedRate').textContent=u?u.toFixed(3):'—';
+
+ if(!all.length||!u||!lev){
+   $('result').textContent='—'; $('lots').textContent='—'; $('oz').textContent='—';
+   $('avg').textContent='—'; $('gap').textContent='—'; $('distance').textContent='—';
+   return;
+ }
+
+ /*
+  XMのBuy Limitは価格が下がって注文価格に到達した時点で約定。
+  Stop Out判定は「その価格までに約定した注文」だけで行う。
+  未約定のBuy Limitは必要証拠金にも含めない。
+  価格PでのEquity:
+    balance + Σ((P-entry) * lot * 100 * USDJPY)
+  必要証拠金:
+    P * Σ(lot) * 100 * USDJPY / leverage
+  StopOut:
+    Equity = StopOut% * Margin
+  これをPについて解き、各約定ステージの価格帯に入っている候補だけ採用する。
+ */
+
+ const current=goldPrice!=null?goldPrice:null;
+ // 現在価格が分かる場合、現在価格以下のBuy Limitは既に約定済みとみなす。
+ // 現在価格が取得できない場合は、全注文がまだ未約定の状態から将来の下落をシミュレーション。
+ let active = current==null ? [] : all.filter(o=>o.price>=current-1e-9);
+ let pending = current==null ? all.slice() : all.filter(o=>o.price<current-1e-9);
+
+ function stageLC(pos){
+   const L=pos.reduce((s,o)=>s+o.lot,0);
+   const E=pos.reduce((s,o)=>s+o.price*o.lot*100,0);
+   if(!L) return Infinity;
+   return (E*u-bal)/(L*100*u*(1-stop/lev));
+ }
+
+ // 現在価格より上の注文が複数ある場合はすべて約定済み。
+ // 現在価格より下の注文を順番に追加しながら、Stop Outが起きる区間を探す。
+ let lc=null, lcActive=[], triggerText='';
+ let stages=[];
+
+ // activeを価格降順にして、現在価格時点のポジションから開始
+ active.sort((a,b)=>b.price-a.price);
+
+ // Stop Outが既に現在価格より上にあるかチェック
+ if(active.length){
+   const cand=stageLC(active);
+   const next=all.filter(o=>o.price<current-1e-9).sort((a,b)=>b.price-a.price)[0];
+   const lowerBoundary=next?next.price:-Infinity;
+   if(cand<=current+1e-9 && cand>lowerBoundary-1e-9){
+     lc=cand; lcActive=active.slice(); triggerText='現在の価格帯でStop Out';
+   }
+ }
+
+ // まだStop Outしていない場合、下方向に未約定注文を1本ずつ約定させて確認
+ if(lc===null){
+   let pos=active.slice();
+   const remaining=pending.slice().sort((a,b)=>b.price-a.price);
+   let upperBoundary=current==null?Infinity:current;
+   for(let i=0;i<remaining.length;i++){
+     const o=remaining[i];
+     // o.priceに到達した瞬間に約定
+     pos=pos.concat([o]).sort((a,b)=>b.price-a.price);
+     const cand=stageLC(pos);
+     const nextLower=(i+1<remaining.length)?remaining[i+1].price:-Infinity;
+     // このステージは「次の注文価格より上、今回の約定価格以下」の範囲
+     if(cand<=o.price+1e-9 && cand>nextLower-1e-9){
+       lc=cand; lcActive=pos.slice();
+       triggerText=`${pos.length}本約定後にStop Out`;
+       break;
+     }
+   }
+ }
+
+ // 全注文が約定した後の候補
+ if(lc===null && all.length){
+   const cand=stageLC(all);
+   lc=cand; lcActive=all.slice(); triggerText='全注文約定後のStop Out';
+ }
+
+ const lots=lcActive.reduce((s,o)=>s+o.lot,0);
+ const oz=lots*100;
+ const entryUsd=lcActive.reduce((s,o)=>s+o.price*o.lot*100,0);
+ const avg=oz?entryUsd/oz:0;
+
+ $('lots').textContent=lots.toFixed(2);
+ $('oz').textContent=oz.toFixed(2);
+ $('avg').textContent=avg?avg.toFixed(3):'—';
+ $('result').textContent=(lc!=null&&isFinite(lc))?lc.toFixed(2):'—';
+
+ // 状態表示を追加
+ let state=$('stageInfo');
+ if(!state){
+   const el=document.createElement('div'); el.id='stageInfo'; el.className='small';
+   el.style.marginTop='8px'; $('result').parentElement.appendChild(el); state=el;
+ }
+ const activeCount=lcActive.length;
+ const nextPending=all.filter(o=>!lcActive.some(a=>a.price===o.price&&a.lot===o.lot))
+   .sort((a,b)=>b.price-a.price)[0];
+ state.innerHTML=`<b>想定約定：</b>${activeCount}/${all.length}本　`+
+   (nextPending?`<b>次の未約定：</b>${nextPending.price.toFixed(2)}（${nextPending.lot.toFixed(2)} lot）　`:'')+
+   `<br><span class="${activeCount<all.length?'warn':'ok'}">${triggerText}</span>`;
+
+ if(goldPrice!=null){
+   $('gold').textContent=goldPrice.toFixed(2)+' USD';
+   const d=goldPrice-lc;
+   $('gap').textContent=d>=0?d.toFixed(2)+'ドル余裕':'LCラインを下回っています';
+   $('distance').textContent=`現在 ${goldPrice.toFixed(2)} → LC ${lc.toFixed(2)} / 想定${activeCount}本`;
+ }else{
+   $('gold').textContent='—'; $('gap').textContent='—'; $('distance').textContent='—';
+ }
 }
+
 async function fetchGold(){
  $('rateStatus').textContent='GOLD / USDJPY 更新中…';
- try{const [g,f]=await Promise.all([fetch('https://api.gold-api.com/price/XAU',{cache:'no-store'}).then(r=>r.json()),fetch('https://open.er-api.com/v6/latest/USD',{cache:'no-store'}).then(r=>r.json())]); if(!g.price)throw Error('gold'); goldPrice=+g.price; if(f.rates?.JPY)$('usdjpy').value=(+f.rates.JPY).toFixed(3); $('rateStatus').innerHTML=`<span class="ok">✓ GOLD ${goldPrice.toFixed(2)} / USDJPY ${Number($('usdjpy').value).toFixed(3)}</span>`; calc();}catch(e){$('rateStatus').innerHTML='<span class="warn">自動取得に失敗。入力値で計算中</span>';calc()}
+ try{const [g,f]=await Promise.all([fetch('https://api.gold-api.com/price/XAU',{cache:'no-store'}).then(r=>r.json()),fetch('https://open.er-api.com/v6/latest/USD',{cache:'no-store'}).then(r=>r.json())]); if(!g.price)throw Error('gold'); goldPrice=+g.price; if(f.rates?.JPY)$('usdjpy').value=(+f.rates.JPY).toFixed(3); $('rateStatus').innerHTML=`<span class="ok">✓ GOLD ${goldPrice.toFixed(2)} / USDJPY ${+$('usdjpy').value.toFixed?+$('usdjpy').value.toFixed(3):$('usdjpy').value}</span>`; calc();}catch(e){$('rateStatus').innerHTML='<span class="warn">自動取得に失敗。入力値で計算中</span>';calc()}
 }
 function startTimer(){clearInterval(timer);timer=setInterval(fetchGold,+$('interval')?.value||60000)}
 $('refresh').onclick=fetchGold; ['balance','leverage','stopout','usdjpy'].forEach(id=>$(id).addEventListener('input',calc)); $('choose').onclick=()=>$('file').click();

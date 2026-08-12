@@ -76,7 +76,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
 
 <div class="card">
   <div class="row"><b>認識した注文</b><span id="count">0件</span></div>
-  <div id="orders"></div><div id="orderStatus" class="small" style="margin-top:10px"></div>
+  <div id="orders"></div>
   <div class="toolbar" style="margin-top:10px">
     <button class="secondary" onclick="addOrder()">＋ 注文追加</button>
     <button class="secondary" onclick="resetOrders()">リセット</button>
@@ -117,13 +117,13 @@ let orders=[
 {side:"Buy Limit",lot:.01,price:4139.37},
 {side:"Buy Limit",lot:.01,price:4083.97}
 ];
+const $=id=>document.getElementById(id);
 let goldBid=null, goldAsk=null, timer=null;
 let metaToken=sessionStorage.getItem('xm_meta_token')||'';
 let metaAccount=sessionStorage.getItem('xm_meta_account')||'';
 let goldSymbol=sessionStorage.getItem('xm_gold_symbol')||'GOLD#';
 $('metaToken').value=metaToken; $('metaAccount').value=metaAccount; $('goldSymbol').value=goldSymbol;
 
-const $=id=>document.getElementById(id);
 function saveMeta(){
  metaToken=$('metaToken').value.trim(); metaAccount=$('metaAccount').value.trim(); goldSymbol=$('goldSymbol').value.trim()||'GOLD#';
  sessionStorage.setItem('xm_meta_token',metaToken); sessionStorage.setItem('xm_meta_account',metaAccount); sessionStorage.setItem('xm_gold_symbol',goldSymbol);
@@ -142,8 +142,9 @@ function addOrder(){orders.push({side:'Buy Limit',lot:.01,price:4000});renderOrd
 function resetOrders(){orders=[];renderOrders()}
 
 function calc(){
- const bal=+$('balance').value||0, lev=+$('leverage').value||1000, stop=+$('stopout').value||20, u=+$('usdjpy').value||0;
+ const bal=+$('balance').value||0, lev=+$('leverage').value||1000, stopPct=+$('stopout').value||20, u=+$('usdjpy').value||0;
  const price = goldBid;
+ const stop=stopPct/100;
  const buys=orders.filter(o=>/buy/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
  if(!buys.length||!u||!Number.isFinite(price)){
    $('result').textContent='—'; $('goldBid').textContent=Number.isFinite(price)?price.toFixed(2):'—'; $('goldAsk').textContent=Number.isFinite(goldAsk)?goldAsk.toFixed(2):'—';
@@ -151,17 +152,17 @@ function calc(){
  }
  // Simulate a falling market. Buy Limit executes when Ask reaches the order price.
  // Find the first Stop Out level among successive fills; pending orders below that level stay unfilled.
- let filled=[]; let lc=null; const stopRatio=stop/100; const contractSize=100;
+ let filled=[]; let lc=null; const contractSize=100;
  for(const pending of buys){
    // Before this order can fill, evaluate Stop Out using only already-filled positions.
    if(filled.length){
-     const candidate=solveLC(bal,lev,stopRatio,u,filled,contractSize);
+     const candidate=solveLC(bal,lev,stop,u,filled,contractSize);
      if(candidate!==null && candidate>=pending.price){ lc=candidate; break; }
    }
    // This pending Buy Limit can fill when Ask reaches its price, provided Stop Out has not occurred above it.
    filled.push(pending);
  }
- if(lc===null && filled.length){ lc=solveLC(bal,lev,stopRatio,u,filled,contractSize); }
+ if(lc===null && filled.length){ lc=solveLC(bal,lev,stop,u,filled,contractSize); }
  const allLots=filled.reduce((s,o)=>s+o.lot,0), oz=allLots*contractSize;
  const entryOzValue=filled.reduce((s,o)=>s+o.price*o.lot*contractSize,0);
  $('lots').textContent=allLots.toFixed(2); $('oz').textContent=oz.toFixed(2); $('usedRate').textContent=u.toFixed(3);
@@ -172,7 +173,7 @@ function calc(){
  $('count').textContent=`${orders.length}件 / 約定 ${filled.length}件`;
  renderOrderStatus(filled,buys,lc);
 }
-function solveLC(bal,lev,stopRatio,u,filled,contractSize){
+function solveLC(bal,lev,stop,u,filled,contractSize){
  const lots=filled.reduce((s,o)=>s+o.lot,0), oz=lots*contractSize;
  if(!oz||!u) return null;
  const entryOzValue=filled.reduce((s,o)=>s+o.price*o.lot*contractSize,0);
@@ -182,7 +183,7 @@ function solveLC(bal,lev,stopRatio,u,filled,contractSize){
 }
 function renderOrderStatus(filled,all,lc){
  const f=new Set(filled.map(o=>o.price+'|'+o.lot));
- $('orderStatus').innerHTML=all.map(o=>{const key=o.price+'|'+o.lot;const isF=f.has(key);return `<div class="row"><span>${o.side} ${o.lot.toFixed(2)} / ${o.price.toFixed(2)}</span><b class="${isF?'ok':'warn'}">${isF?'✓ 約定済み':'○ 未約定'}</b></div>`}).join('');
+ $('orders').innerHTML=all.map((o,i)=>{const key=o.price+'|'+o.lot;const isF=f.has(key);const pending=!isF; const label=isF?'✓ 約定済み':'○ 未約定'; return `<div class="row"><span>${o.side} ${o.lot.toFixed(2)} / ${o.price.toFixed(2)}</span><b class="${isF?'ok':'warn'}">${label}</b></div>`}).join('');
 }
 
 async function metaGet(path){

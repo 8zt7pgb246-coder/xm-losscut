@@ -3,215 +3,101 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
 <title>XM ロスカット Pro</title>
+<link rel="manifest" href="manifest.json">
 <style>
-:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
-*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
-h1{font-size:25px;margin:3px 0}.sub{font-size:13px;color:#667085;margin-bottom:14px}
-.card,.hero{background:#fff;border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 3px 16px #0000000b}
-.hero{text-align:center}.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#fee2e2;color:#b42318}
-.gold{font-size:13px;color:#667085;margin-top:10px}.price{font-size:43px;font-weight:850;letter-spacing:-1.5px;margin:3px 0}.change{font-size:12px;color:#667085}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{grid-column:1/-1}
-label{display:block;font-size:12px;color:#667085;margin:5px 0}input{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px;font-size:16px;background:#fff}
-button{border:0;border-radius:12px;padding:12px 15px;font-weight:800;font-size:14px;cursor:pointer}.primary{background:#111;color:#fff}.secondary{background:#eef1f4}
-.drop{border:2px dashed #cdd3da;border-radius:16px;padding:20px;text-align:center}.file{display:none}
-#preview{display:none;max-width:100%;max-height:430px;border-radius:12px;margin:12px auto 0}
-.small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;border-bottom:1px solid #edf0f2;text-align:right}th:first-child,td:first-child{text-align:left}
-.alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}
-.link{color:#344054;text-decoration:underline}.footer{font-size:11px;color:#667085;line-height:1.6}
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}*{box-sizing:border-box}
+body{margin:0;background:#f4f6f8;color:#111827}.app{max-width:760px;margin:auto;padding:16px 16px 40px}h1{font-size:25px;margin:3px 0}.sub{font-size:13px;color:#667085;margin-bottom:14px}
+.card,.hero{background:#fff;border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 3px 16px #0000000b}.hero{text-align:center}.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#fee2e2;color:#b42318}.gold{font-size:13px;color:#667085;margin-top:10px}.price{font-size:43px;font-weight:850;letter-spacing:-1.5px;margin:3px 0}.change{font-size:12px;color:#667085}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{grid-column:1/-1}label{display:block;font-size:12px;color:#667085;margin:5px 0}input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px;font-size:16px;background:#fff}button{border:0;border-radius:12px;padding:12px 15px;font-weight:800;font-size:14px;cursor:pointer}.primary{background:#111827;color:#fff}.secondary{background:#eef1f4}.drop{border:2px dashed #cdd3da;border-radius:16px;padding:20px;text-align:center}.file{display:none}#preview{display:none;max-width:100%;max-height:430px;border-radius:12px;margin:12px auto 0}.small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;border-bottom:1px solid #edf0f2;text-align:right}th:first-child,td:first-child{text-align:left}.alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.progress{height:8px;background:#eef1f4;border-radius:99px;overflow:hidden;margin-top:8px}.progress>div{height:100%;width:0;background:#111827;transition:width .2s}.order{border:1px solid #edf0f2;border-radius:14px;padding:10px;margin-top:8px}.order .grid{gap:8px}
 </style>
-<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#111111"></head>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
 <body>
 <div class="app">
 <h1>XM ロスカット Pro</h1>
-<div class="sub">iPhone対応版｜写真を選択 → 自動読み取り → GOLD価格を自動取得</div>
-<div id="startup" class="small" style="background:#eef7ff;padding:10px;border-radius:12px;margin-bottom:10px">
-Safariで開いた場合は「共有 → ホーム画面に追加」でアプリのように起動できます。
-</div>
+<div class="sub">画像選択 → OCR自動読み取り → XMロスカットライン推定</div>
+
+<div class="card"><div class="drop">
+<input id="file" class="file" type="file" accept="image/*">
+<button class="primary" id="choose">📷 XM画面を読み込む</button>
+<div id="ocrStatus" class="small" style="margin-top:10px">XMのMT4/MT5スクリーンショットを選択してください</div>
+<div class="progress"><div id="progressBar"></div></div>
+<img id="preview">
+</div></div>
+
+<div class="card"><div class="grid">
+<div><label>口座残高（JPY）</label><input id="balance" type="number" value="50000"></div>
+<div><label>レバレッジ</label><input id="leverage" type="number" value="1000"></div>
+<div><label>XM Stop Out（%）</label><input id="stopout" type="number" value="20"></div>
+<div><label>USD/JPY</label><input id="usdjpy" type="number" step="0.001" value="158.930"></div>
+</div><div class="toolbar" style="margin-top:12px"><button class="secondary" id="refresh">🔄 レートを更新</button><span id="rateStatus" class="small">取得中…</span></div></div>
+
+<div class="hero"><div class="badge">推定ロスカットライン</div><div class="gold">GOLD# / XAUUSD</div><div class="price" id="result">—</div><div class="change" id="distance">—</div></div>
 
 <div class="card">
-  <div class="drop">
-    <input id="file" class="file" type="file" accept="image/*">
-    <button class="primary" id="choose">📷 XM画面を読み込む</button>
-    <div id="ocrStatus" class="small" style="margin-top:10px">XMのMT4/MT5スクリーンショットを選択してください</div>
-    <img id="preview">
-  </div>
+<div class="row"><span>現在のGOLD価格</span><b id="gold">—</b></div>
+<div class="row"><span>現在価格 → ロスカット</span><b id="gap">—</b></div>
+<div class="row"><span>平均約定価格</span><b id="avg">—</b></div>
+<div class="row"><span>合計Lot</span><b id="lots">—</b></div>
+<div class="row"><span>合計数量</span><b id="oz">—</b></div>
+<div class="row"><span>現在のUSD/JPY</span><b id="usedRate">—</b></div>
 </div>
 
-<div class="card">
-  <div class="grid">
-    <div><label>口座残高（JPY）</label><input id="balance" type="number" value="50000"></div>
-    <div><label>レバレッジ</label><input id="leverage" type="number" value="1000"></div>
-    <div><label>XM Stop Out（%）</label><input id="stopout" type="number" value="20"></div>
-    <div><label>USD/JPY</label><input id="usdjpy" type="number" step="0.001" value="158.930"></div>
-  </div>
-  <div class="toolbar" style="margin-top:12px">
-    <button class="secondary" id="refresh">🔄 レートを更新</button>
-    <span id="rateStatus" class="small">取得中…</span>
-  </div>
-</div>
+<div class="card"><div class="row"><b>OCRで認識した注文</b><span id="count">0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></div>
 
-<div class="hero">
-  <div class="badge">推定ロスカットライン</div>
-  <div class="gold">GOLD# / XAUUSD</div>
-  <div class="price" id="result">—</div>
-  <div class="change" id="distance">—</div>
+<div class="alert"><b>重要：</b>XMの公式情報ではマージンコール50%、Stop Out20%です。本計算は「全Buy注文が約定した状態」を仮定し、GOLD#の契約サイズ100 oz/lot、レバレッジ、USD/JPYを使って推定します。実際のXMではBid/Ask、スプレッド、スワップ、契約仕様、既存ポジション、強制決済の順序などにより結果が変わる場合があります。</div>
+<div class="card footer"><b>計算モデル</b><br>必要証拠金 = 価格 × Lot × 100 oz ÷ レバレッジ × USD/JPY。Buyの含み損益 = (価格 − 平均約定価格) × 合計oz × USD/JPY。Stop Out時の有効証拠金 = 必要証拠金 × Stop Out%。この条件を満たす価格を解いています。<br><br>※投資判断ではなく参考値です。最終的なロスカット価格はXMの取引画面を優先してください。</div>
 </div>
-
-<div class="card">
-  <div class="row"><span>現在のGOLD価格</span><b id="gold">—</b></div>
-  <div class="row"><span>現在価格 → ロスカット</span><b id="gap">—</b></div>
-  <div class="row"><span>平均約定価格</span><b id="avg">—</b></div>
-  <div class="row"><span>合計Lot</span><b id="lots">—</b></div>
-  <div class="row"><span>合計数量</span><b id="oz">—</b></div>
-  <div class="row"><span>現在のUSD/JPY</span><b id="usedRate">—</b></div>
-</div>
-
-<div class="card">
-  <div class="row"><b>認識した注文</b><span id="count">0件</span></div>
-  <div id="orders"></div>
-  <div class="toolbar" style="margin-top:10px">
-    <button class="secondary" onclick="addOrder()">＋ 注文追加</button>
-    <button class="secondary" onclick="resetOrders()">リセット</button>
-  </div>
-</div>
-
-<div class="card">
-  <div class="grid">
-    <div class="wide"><label>GOLD価格の取得元</label>
-      <div class="small">Gold API（XAU/USD）。無料のリアルタイム価格APIで、ブラウザから直接利用できるCORS対応です。</div>
-    </div>
-    <div class="wide"><label>自動更新間隔</label>
-      <select id="interval" style="width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px;font-size:16px">
-        <option value="10000">10秒</option><option value="30000">30秒</option><option value="60000" selected>60秒</option>
-      </select>
-    </div>
-  </div>
-</div>
-
-<div class="alert">
-<b>重要：</b>この価格は市場のXAU/USDスポット価格で、XMのGOLD#のBid/Askそのものではありません。
-実際のロスカット判定ではXM側の価格、スプレッド、スワップ、契約仕様、口座タイプ等が影響します。
-したがって本アプリの値は「推定値」です。
-</div>
-
-<div class="card footer">
-<b>計算モデル</b><br>
-GOLD# 1 lot = 100 oz を仮定。Buyのみを対象に、全注文が約定した時点の口座残高を基準として、
-証拠金維持率がStop Out値（初期20%）になる価格を解いています。既存ポジションやスワップ等は別途反映が必要です。
-</div>
-</div>
-
-
 <script>
-let orders=[
-{side:"Buy Limit",lot:.01,price:4290.49},
-{side:"Buy Limit",lot:.01,price:4228.19},
-{side:"Buy Limit",lot:.01,price:4182.70},
-{side:"Buy Limit",lot:.01,price:4139.37},
-{side:"Buy Limit",lot:.01,price:4083.97}
-];
-let goldPrice=null, timer=null;
-
-const $=id=>document.getElementById(id);
+let orders=[]; let goldPrice=null; let timer=null; const $=id=>document.getElementById(id);
 function renderOrders(){
- $("count").textContent=orders.length+"件";
- $("orders").innerHTML=orders.map((o,i)=>`
- <div class="grid" style="margin-top:8px">
-  <div><label>方向</label><input value="${o.side}" onchange="orders[${i}].side=this.value;calc()"></div>
-  <div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="orders[${i}].lot=parseFloat(this.value)||0;calc()"></div>
-  <div class="wide"><label>価格</label><input type="number" step=".01" value="${o.price}" onchange="orders[${i}].price=parseFloat(this.value)||0;calc()"></div>
- </div>`).join("");
- calc();
+ $('count').textContent=orders.length+'件';
+ $('orders').innerHTML=orders.map((o,i)=>`<div class="order"><div class="grid"><div><label>方向</label><input value="${esc(o.side)}" onchange="orders[${i}].side=this.value;calc()"></div><div><label>Lot</label><input type="number" step="0.01" value="${o.lot}" onchange="orders[${i}].lot=parseFloat(this.value)||0;calc()"></div><div class="wide"><label>価格</label><input type="number" step="0.01" value="${o.price}" onchange="orders[${i}].price=parseFloat(this.value)||0;calc()"></div></div></div>`).join(''); calc();
 }
-function addOrder(){orders.push({side:"Buy Limit",lot:.01,price:4000});renderOrders()}
-function resetOrders(){orders=[];renderOrders()}
-
+function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;')}
+function addOrder(){orders.push({side:'Buy Limit',lot:.01,price:4000});renderOrders()} function resetOrders(){orders=[];renderOrders()}
 function calc(){
- const bal=+$("balance").value||0, lev=+$("leverage").value||1000, stop=+$("stopout").value||20, u=+$("usdjpy").value||0;
- const buys=orders.filter(o=>/buy/i.test(o.side)&&o.lot>0&&o.price>0);
- const lots=buys.reduce((s,o)=>s+o.lot,0), oz=lots*100;
- const entryOzValue=buys.reduce((s,o)=>s+o.price*o.lot*100,0);
- $("lots").textContent=lots.toFixed(2); $("oz").textContent=oz.toFixed(2); $("usedRate").textContent=u.toFixed(3);
- if(!buys.length||!u){$("result").textContent="—";return}
- const k=stop/100;
- const lc=(entryOzValue-bal/u)/(oz*(1-k/lev));
- const avg=entryOzValue/oz;
- $("avg").textContent=avg.toFixed(3); $("result").textContent=lc.toFixed(2);
- if(goldPrice){
-   $("gold").textContent=goldPrice.toFixed(2)+" USD";
-   const d=goldPrice-lc;
-   $("gap").textContent=(d>=0?d.toFixed(2)+"ドル余裕":"ロスカット価格を下回っています");
-   $("distance").textContent=`現在 ${goldPrice.toFixed(2)} → LC ${lc.toFixed(2)} / 平均 ${avg.toFixed(2)}`;
- } else $("gold").textContent="—";
+ const bal=+$('balance').value||0, lev=+$('leverage').value||1000, stop=(+$('stopout').value||20)/100, u=+$('usdjpy').value||0;
+ const buys=orders.filter(o=>/buy/i.test(o.side)&&o.lot>0&&o.price>0); const lots=buys.reduce((s,o)=>s+o.lot,0), oz=lots*100;
+ const entryUsd=buys.reduce((s,o)=>s+o.price*o.lot*100,0); const avg=oz?entryUsd/oz:0;
+ $('lots').textContent=lots.toFixed(2); $('oz').textContent=oz.toFixed(2); $('usedRate').textContent=u.toFixed(3); $('avg').textContent=avg?avg.toFixed(3):'—';
+ if(!buys.length||!u||!lev){$('result').textContent='—';return}
+ // Solve: balance + (P-avg)*oz*USDJPY = stopout * (P*oz/lev)*USDJPY
+ const denom=oz*u*(1-stop/lev); const lc=(entryUsd*u-bal)/denom;
+ $('result').textContent=isFinite(lc)?lc.toFixed(2):'—';
+ if(goldPrice!=null){$('gold').textContent=goldPrice.toFixed(2)+' USD'; const d=goldPrice-lc; $('gap').textContent=d>=0?d.toFixed(2)+'ドル余裕':'ロスカット価格を下回っています'; $('distance').textContent=`現在 ${goldPrice.toFixed(2)} → LC ${lc.toFixed(2)} / 平均 ${avg.toFixed(2)}`;} else {$('gold').textContent='—';$('gap').textContent='—';$('distance').textContent='—'}
 }
-
 async function fetchGold(){
- $("rateStatus").textContent="GOLD / USD/JPY 更新中…";
- try{
-   const [g,f]=await Promise.all([
-     fetch("https://api.gold-api.com/price/XAU",{cache:"no-store",mode:"cors"}).then(r=>r.json()),
-     fetch("https://open.er-api.com/v6/latest/USD",{cache:"no-store",mode:"cors"}).then(r=>r.json())
-   ]);
-   if(!g.price) throw new Error("gold price missing");
-   goldPrice=Number(g.price);
-   if(f.rates && f.rates.JPY) $("usdjpy").value=Number(f.rates.JPY).toFixed(3);
-   const t=new Date().toLocaleTimeString("ja-JP");
-   $("rateStatus").innerHTML=`<span class="ok">✓ GOLD ${goldPrice.toFixed(2)} / USDJPY ${(+ $("usdjpy").value).toFixed(3)}（${t}）</span>`;
-   calc();
- }catch(e){
-   console.error(e);
-   $("rateStatus").innerHTML='<span class="warn">自動取得に失敗。手入力値で計算しています。</span>';
-   calc();
- }
+ $('rateStatus').textContent='GOLD / USDJPY 更新中…';
+ try{const [g,f]=await Promise.all([fetch('https://api.gold-api.com/price/XAU',{cache:'no-store'}).then(r=>r.json()),fetch('https://open.er-api.com/v6/latest/USD',{cache:'no-store'}).then(r=>r.json())]); if(!g.price)throw Error('gold'); goldPrice=+g.price; if(f.rates?.JPY)$('usdjpy').value=(+f.rates.JPY).toFixed(3); $('rateStatus').innerHTML=`<span class="ok">✓ GOLD ${goldPrice.toFixed(2)} / USDJPY ${Number($('usdjpy').value).toFixed(3)}</span>`; calc();}catch(e){$('rateStatus').innerHTML='<span class="warn">自動取得に失敗。入力値で計算中</span>';calc()}
 }
-function startTimer(){
- clearInterval(timer);
- timer=setInterval(fetchGold,+$("interval").value||60000);
-}
-$("refresh").onclick=fetchGold;
-$("interval").onchange=startTimer;
-["balance","leverage","stopout","usdjpy"].forEach(id=>$(id).addEventListener("input",calc));
-$("choose").onclick=()=>$("file").click();
-
-
+function startTimer(){clearInterval(timer);timer=setInterval(fetchGold,+$('interval')?.value||60000)}
+$('refresh').onclick=fetchGold; ['balance','leverage','stopout','usdjpy'].forEach(id=>$(id).addEventListener('input',calc)); $('choose').onclick=()=>$('file').click();
 function parseOCR(text){
- let found=[];
- let re=/([0-9]+(?:\.[0-9]+)?)\s*\/\s*0\s*(?:at|@)\s*([0-9]+(?:\.[0-9]+)?)/gi,m;
- while((m=re.exec(text))!==null) found.push({side:"Buy Limit",lot:+m[1],price:+m[2]});
- return found;
+ const cleaned=text.replace(/[ＯＯ]/g,'0').replace(/,/g,'').replace(/＠/g,'@').replace(/\s+/g,' ');
+ const found=[];
+ // Primary pattern: 0.01 / 0 at 4290.49 (allow OCR noise between tokens)
+ const re=/(\d+(?:\.\d+)?)\s*\/\s*0(?:\.0+)?\s*(?:at|a t|@)\s*(\d{3,5}(?:\.\d+)?)/gi; let m;
+ while((m=re.exec(cleaned))) found.push({side:'Buy Limit',lot:+m[1],price:+m[2]});
+ if(found.length) return dedupe(found);
+ // Fallback: lines containing buy limit and a decimal lot/price
+ for(const line of text.split(/\n+/)){if(/buy\s*limit/i.test(line)){const nums=(line.match(/\d+(?:\.\d+)/g)||[]).map(Number);if(nums.length>=2){const lot=nums.find(n=>n>0&&n<=1);const price=nums.filter(n=>n>1000).pop();if(lot&&price)found.push({side:'Buy Limit',lot,price})}}}
+ return dedupe(found);
 }
-
-$("file").addEventListener("change",async e=>{
- const f=e.target.files[0]; if(!f)return;
- $("preview").src=URL.createObjectURL(f); $("preview").style.display="block";
- $("ocrStatus").innerHTML='<span class="ok">✓ 画像を読み込みました。下の注文欄を確認してください。</span>';
-
- // iPhone/Safariでは外部OCRライブラリの読み込み失敗を避けるため、
- // まず画像を確実に読み込み、注文欄は編集可能にする。
- // この版は添付されたXMスクショの5注文を初期認識値として表示。
- if(orders.length===0){
-   orders=[
-    {side:"Buy Limit",lot:.01,price:4290.49},
-    {side:"Buy Limit",lot:.01,price:4228.19},
-    {side:"Buy Limit",lot:.01,price:4182.70},
-    {side:"Buy Limit",lot:.01,price:4139.37},
-    {side:"Buy Limit",lot:.01,price:4083.97}
-   ];
- }
- renderOrders();
+function dedupe(a){const seen=new Set();return a.filter(x=>{const k=x.lot+'|'+x.price;if(seen.has(k))return false;seen.add(k);return true})}
+$('file').addEventListener('change',async e=>{
+ const f=e.target.files[0];if(!f)return;$('preview').src=URL.createObjectURL(f);$('preview').style.display='block';$('progressBar').style.width='5%';$('ocrStatus').textContent='OCR準備中…';
+ try{
+   if(!window.Tesseract)throw Error('OCR library unavailable');
+   const worker=await Tesseract.createWorker('eng',1,{logger:m=>{if(m.progress)$('progressBar').style.width=Math.max(5,Math.round(m.progress*100))+'%'; if(m.status)$('ocrStatus').textContent='OCR: '+m.status}});
+   const r=await worker.recognize(f); await worker.terminate(); const text=r.data.text||''; const parsed=parseOCR(text);
+   if(parsed.length){orders=parsed; $('ocrStatus').innerHTML=`<span class="ok">✓ ${parsed.length}件を自動認識しました。注文内容を確認してください。</span>`;} else {$('ocrStatus').innerHTML='<span class="warn">注文を自動認識できませんでした。下の注文欄から入力してください。</span>';}
+   $('progressBar').style.width='100%'; renderOrders();
+ }catch(err){console.error(err);$('ocrStatus').innerHTML='<span class="warn">OCRに失敗しました。下の注文欄から入力してください。</span>'; $('progressBar').style.width='0%'; renderOrders();}
 });
-
 renderOrders(); fetchGold(); startTimer();
-
+if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
-<script>
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('./sw.js').catch(()=>{});
-}
-</script>
-</body>
-</html>
+</body></html>

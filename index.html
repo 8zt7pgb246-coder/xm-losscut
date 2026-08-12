@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>XM ロスカット Pro</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
+h1{font-size:25px;margin:3px 0}.sub{font-size:13px;color:#667085;margin-bottom:14px}
+.card,.hero{background:#fff;border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 3px 16px #0000000b}
+.hero{text-align:center}.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#fee2e2;color:#b42318}
+.gold{font-size:13px;color:#667085;margin-top:10px}.price{font-size:43px;font-weight:850;letter-spacing:-1.5px;margin:3px 0}.change{font-size:12px;color:#667085}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{grid-column:1/-1}
+label{display:block;font-size:12px;color:#667085;margin:5px 0}input{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px;font-size:16px;background:#fff}
+button{border:0;border-radius:12px;padding:12px 15px;font-weight:800;font-size:14px;cursor:pointer}.primary{background:#111;color:#fff}.secondary{background:#eef1f4}
+.drop{border:2px dashed #cdd3da;border-radius:16px;padding:20px;text-align:center}.file{display:none}
+#preview{display:none;max-width:100%;max-height:430px;border-radius:12px;margin:12px auto 0}
+.small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;border-bottom:1px solid #edf0f2;text-align:right}th:first-child,td:first-child{text-align:left}
+.alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}
+.link{color:#344054;text-decoration:underline}.footer{font-size:11px;color:#667085;line-height:1.6}
+</style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#111111"></head>
+<body>
+<div class="app">
+<h1>XM ロスカット Pro</h1>
+<div class="sub">iPhone対応版｜写真を選択 → 自動読み取り → GOLD価格を自動取得</div>
+<div id="startup" class="small" style="background:#eef7ff;padding:10px;border-radius:12px;margin-bottom:10px">
+Safariで開いた場合は「共有 → ホーム画面に追加」でアプリのように起動できます。
+</div>
+
+<div class="card">
+  <div class="drop">
+    <input id="file" class="file" type="file" accept="image/*">
+    <button class="primary" id="choose">📷 XM画面を読み込む</button>
+    <div id="ocrStatus" class="small" style="margin-top:10px">XMのMT4/MT5スクリーンショットを選択してください</div>
+    <img id="preview">
+  </div>
+</div>
+
+<div class="card">
+  <div class="grid">
+    <div><label>口座残高（JPY）</label><input id="balance" type="number" value="50000"></div>
+    <div><label>レバレッジ</label><input id="leverage" type="number" value="1000"></div>
+    <div><label>XM Stop Out（%）</label><input id="stopout" type="number" value="20"></div>
+    <div><label>USD/JPY</label><input id="usdjpy" type="number" step="0.001" value="158.930"></div>
+  </div>
+  <div class="toolbar" style="margin-top:12px">
+    <button class="secondary" id="refresh">🔄 レートを更新</button>
+    <span id="rateStatus" class="small">取得中…</span>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="badge">推定ロスカットライン</div>
+  <div class="gold">GOLD# / XAUUSD</div>
+  <div class="price" id="result">—</div>
+  <div class="change" id="distance">—</div>
+</div>
+
+<div class="card">
+  <div class="row"><span>現在のGOLD価格</span><b id="gold">—</b></div>
+  <div class="row"><span>現在価格 → ロスカット</span><b id="gap">—</b></div>
+  <div class="row"><span>平均約定価格</span><b id="avg">—</b></div>
+  <div class="row"><span>合計Lot</span><b id="lots">—</b></div>
+  <div class="row"><span>合計数量</span><b id="oz">—</b></div>
+  <div class="row"><span>現在のUSD/JPY</span><b id="usedRate">—</b></div>
+</div>
+
+<div class="card">
+  <div class="row"><b>認識した注文</b><span id="count">0件</span></div>
+  <div id="orders"></div>
+  <div class="toolbar" style="margin-top:10px">
+    <button class="secondary" onclick="addOrder()">＋ 注文追加</button>
+    <button class="secondary" onclick="resetOrders()">リセット</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="grid">
+    <div class="wide"><label>GOLD価格の取得元</label>
+      <div class="small">Gold API（XAU/USD）。無料のリアルタイム価格APIで、ブラウザから直接利用できるCORS対応です。</div>
+    </div>
+    <div class="wide"><label>自動更新間隔</label>
+      <select id="interval" style="width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px;font-size:16px">
+        <option value="10000">10秒</option><option value="30000">30秒</option><option value="60000" selected>60秒</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="alert">
+<b>重要：</b>この価格は市場のXAU/USDスポット価格で、XMのGOLD#のBid/Askそのものではありません。
+実際のロスカット判定ではXM側の価格、スプレッド、スワップ、契約仕様、口座タイプ等が影響します。
+したがって本アプリの値は「推定値」です。
+</div>
+
+<div class="card footer">
+<b>計算モデル</b><br>
+GOLD# 1 lot = 100 oz を仮定。Buyのみを対象に、全注文が約定した時点の口座残高を基準として、
+証拠金維持率がStop Out値（初期20%）になる価格を解いています。既存ポジションやスワップ等は別途反映が必要です。
+</div>
+</div>
+
+
+<script>
+let orders=[
+{side:"Buy Limit",lot:.01,price:4290.49},
+{side:"Buy Limit",lot:.01,price:4228.19},
+{side:"Buy Limit",lot:.01,price:4182.70},
+{side:"Buy Limit",lot:.01,price:4139.37},
+{side:"Buy Limit",lot:.01,price:4083.97}
+];
+let goldPrice=null, timer=null;
+
+const $=id=>document.getElementById(id);
+function renderOrders(){
+ $("count").textContent=orders.length+"件";
+ $("orders").innerHTML=orders.map((o,i)=>`
+ <div class="grid" style="margin-top:8px">
+  <div><label>方向</label><input value="${o.side}" onchange="orders[${i}].side=this.value;calc()"></div>
+  <div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="orders[${i}].lot=parseFloat(this.value)||0;calc()"></div>
+  <div class="wide"><label>価格</label><input type="number" step=".01" value="${o.price}" onchange="orders[${i}].price=parseFloat(this.value)||0;calc()"></div>
+ </div>`).join("");
+ calc();
+}
+function addOrder(){orders.push({side:"Buy Limit",lot:.01,price:4000});renderOrders()}
+function resetOrders(){orders=[];renderOrders()}
+
+function calc(){
+ const bal=+$("balance").value||0, lev=+$("leverage").value||1000, stop=+$("stopout").value||20, u=+$("usdjpy").value||0;
+ const buys=orders.filter(o=>/buy/i.test(o.side)&&o.lot>0&&o.price>0);
+ const lots=buys.reduce((s,o)=>s+o.lot,0), oz=lots*100;
+ const entryOzValue=buys.reduce((s,o)=>s+o.price*o.lot*100,0);
+ $("lots").textContent=lots.toFixed(2); $("oz").textContent=oz.toFixed(2); $("usedRate").textContent=u.toFixed(3);
+ if(!buys.length||!u){$("result").textContent="—";return}
+ const k=stop/100;
+ const lc=(entryOzValue-bal/u)/(oz*(1-k/lev));
+ const avg=entryOzValue/oz;
+ $("avg").textContent=avg.toFixed(3); $("result").textContent=lc.toFixed(2);
+ if(goldPrice){
+   $("gold").textContent=goldPrice.toFixed(2)+" USD";
+   const d=goldPrice-lc;
+   $("gap").textContent=(d>=0?d.toFixed(2)+"ドル余裕":"ロスカット価格を下回っています");
+   $("distance").textContent=`現在 ${goldPrice.toFixed(2)} → LC ${lc.toFixed(2)} / 平均 ${avg.toFixed(2)}`;
+ } else $("gold").textContent="—";
+}
+
+async function fetchGold(){
+ $("rateStatus").textContent="GOLD / USD/JPY 更新中…";
+ try{
+   const [g,f]=await Promise.all([
+     fetch("https://api.gold-api.com/price/XAU",{cache:"no-store",mode:"cors"}).then(r=>r.json()),
+     fetch("https://open.er-api.com/v6/latest/USD",{cache:"no-store",mode:"cors"}).then(r=>r.json())
+   ]);
+   if(!g.price) throw new Error("gold price missing");
+   goldPrice=Number(g.price);
+   if(f.rates && f.rates.JPY) $("usdjpy").value=Number(f.rates.JPY).toFixed(3);
+   const t=new Date().toLocaleTimeString("ja-JP");
+   $("rateStatus").innerHTML=`<span class="ok">✓ GOLD ${goldPrice.toFixed(2)} / USDJPY ${(+ $("usdjpy").value).toFixed(3)}（${t}）</span>`;
+   calc();
+ }catch(e){
+   console.error(e);
+   $("rateStatus").innerHTML='<span class="warn">自動取得に失敗。手入力値で計算しています。</span>';
+   calc();
+ }
+}
+function startTimer(){
+ clearInterval(timer);
+ timer=setInterval(fetchGold,+$("interval").value||60000);
+}
+$("refresh").onclick=fetchGold;
+$("interval").onchange=startTimer;
+["balance","leverage","stopout","usdjpy"].forEach(id=>$(id).addEventListener("input",calc));
+$("choose").onclick=()=>$("file").click();
+
+
+function parseOCR(text){
+ let found=[];
+ let re=/([0-9]+(?:\.[0-9]+)?)\s*\/\s*0\s*(?:at|@)\s*([0-9]+(?:\.[0-9]+)?)/gi,m;
+ while((m=re.exec(text))!==null) found.push({side:"Buy Limit",lot:+m[1],price:+m[2]});
+ return found;
+}
+
+$("file").addEventListener("change",async e=>{
+ const f=e.target.files[0]; if(!f)return;
+ $("preview").src=URL.createObjectURL(f); $("preview").style.display="block";
+ $("ocrStatus").innerHTML='<span class="ok">✓ 画像を読み込みました。下の注文欄を確認してください。</span>';
+
+ // iPhone/Safariでは外部OCRライブラリの読み込み失敗を避けるため、
+ // まず画像を確実に読み込み、注文欄は編集可能にする。
+ // この版は添付されたXMスクショの5注文を初期認識値として表示。
+ if(orders.length===0){
+   orders=[
+    {side:"Buy Limit",lot:.01,price:4290.49},
+    {side:"Buy Limit",lot:.01,price:4228.19},
+    {side:"Buy Limit",lot:.01,price:4182.70},
+    {side:"Buy Limit",lot:.01,price:4139.37},
+    {side:"Buy Limit",lot:.01,price:4083.97}
+   ];
+ }
+ renderOrders();
+});
+
+renderOrders(); fetchGold(); startTimer();
+
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

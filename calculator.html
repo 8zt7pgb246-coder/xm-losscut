@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DeadLine positioning｜変動額計算</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Noto Sans JP",sans-serif;color:#111;background:#f3f5f7}
+*{box-sizing:border-box}body{margin:0;background:#f3f5f7}
+header{background:#fff;padding:22px 18px 16px;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:5}
+h1{margin:0;font-size:24px}.sub{color:#6b7280;margin-top:5px;font-size:13px}
+main{max-width:760px;margin:auto;padding:16px}
+.card{background:#fff;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+label{display:block;font-weight:700;margin:0 0 7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input,select{width:100%;padding:14px;border:1px solid #d6dbe1;border-radius:12px;font-size:18px;background:#fff}
+.result{background:#111;color:#fff;border-radius:18px;padding:20px}.result .big{font-size:38px;font-weight:800;margin:5px 0 8px}.muted{color:#687386;font-size:13px;line-height:1.6}
+.result .muted{color:#cbd2dc}
+.row{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #edf0f3}.row:last-child{border-bottom:0}
+.value{font-weight:800;text-align:right}.warn{background:#fff6e8;border:1px solid #f1d3a5;color:#8a4b08;border-radius:14px;padding:12px;font-size:13px;line-height:1.6}
+.ok{color:#16794b;font-weight:700}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.result .big{font-size:34px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>DeadLine positioning</h1>
+  <div class="sub">デラポジ｜変動額計算</div>
+</header>
+<main>
+  <div class="card">
+    <h2 style="margin-top:0">ロット × 変動幅 → 概算損益</h2>
+    <div class="grid">
+      <div><label>銘柄</label><select id="symbol"></select></div>
+      <div><label>ロット数</label><input id="lots" type="number" inputmode="decimal" min="0" step="0.01" value="0.01"></div>
+      <div><label>変動幅（pips / points）</label><input id="move" type="number" inputmode="decimal" min="0" step="0.1" value="10"></div>
+      <div><label>USD/JPY</label><input id="usdjpy" type="number" inputmode="decimal" min="0" step="0.001" value="159.173"></div><div><label>AUD/JPY</label><input id="audjpy" type="number" inputmode="decimal" min="0" step="0.001" value="113.000"></div>
+    </div>
+  </div>
+
+  <div class="result">
+    <div>概算損益（JPY）</div>
+    <div class="big" id="jpy">—</div>
+    <div class="muted" id="detail">—</div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span>1 pip / 1 point の価値（0.01 lot）</span><span class="value" id="per001">—</span></div>
+    <div class="row"><span>1 pip / 1 point の価値（1.00 lot）</span><span class="value" id="per1">—</span></div>
+    <div class="row"><span>今回の変動幅</span><span class="value" id="moveText">—</span></div>
+  </div>
+
+  <div class="warn" id="notice"></div>
+
+  <div class="card">
+    <h3 style="margin-top:0">使い方</h3>
+    <div class="muted">「ロット数」と「変動幅」を入れるだけで、現在の換算レートを使って円換算します。これは概算値です。実際の損益はBid/Ask、スプレッド、約定価格、スワップ、手数料、銘柄固有の契約仕様などで変わります。</div>
+  </div>
+</main>
+<script>
+const specs={
+ "GOLD#":{name:"GOLD#",unit:"point",point:0.01,contract:100,quote:"USD",note:"XMのGOLDは1 lot=100 ozとして計算。XM公式資料でも100 oz/lotの例が確認できます。"},
+ "USDJPY#":{name:"USDJPY#",unit:"pip",point:0.01,contract:100000,quote:"JPY",note:"JPYペアは1 pip=0.01。"},
+ "BTCUSD#":{name:"BTCUSD#",unit:"point",point:1,contract:1,quote:"USD",note:"BTCUSDは1 point=$1/lotの概算設定。必ずMT5の「仕様」で契約サイズ・最小価格変動を確認してください。"},
+ "JP225Cash#":{name:"JP225Cash#",unit:"point",point:1,contract:1,quote:"USD",note:"JP225Cashは1 point×契約サイズで計算。契約サイズはMT5の銘柄仕様を優先してください。"},
+ "OILCash#":{name:"OILCash#",unit:"point",point:0.01,contract:100,quote:"USD",note:"OILCashは100 barrels/lotの例がXM関連データで確認できます。MT5の銘柄仕様を優先してください。"},
+ "EURUSD#":{name:"EURUSD#",unit:"pip",point:0.0001,contract:100000,quote:"USD",note:"FXは1 lot=100,000通貨を標準として概算。"},
+ "GBPUSD#":{name:"GBPUSD#",unit:"pip",point:0.0001,contract:100000,quote:"USD",note:"FXは1 lot=100,000通貨を標準として概算。"},
+ "AUDJPY#":{name:"AUDJPY#",unit:"pip",point:0.01,contract:100000,quote:"JPY",note:"JPYペアは1 pip=0.01。"},
+ "AUDUSD#":{name:"AUDUSD#",unit:"pip",point:0.0001,contract:100000,quote:"USD",note:"FXは1 lot=100,000通貨を標準として概算。"},
+ "GBPAUD#":{name:"GBPAUD#",unit:"pip",point:0.0001,contract:100000,quote:"AUD",note:"AUD建て損益をAUDJPYで円換算するため、下記のAUDJPYレートを使用。"}
+};
+const symbol=document.getElementById('symbol');
+Object.keys(specs).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;symbol.appendChild(o)});
+const els={lots:document.getElementById('lots'),move:document.getElementById('move'),usdjpy:document.getElementById('usdjpy'),audjpy:document.getElementById('audjpy'),jpy:document.getElementById('jpy'),detail:document.getElementById('detail'),per001:document.getElementById('per001'),per1:document.getElementById('per1'),moveText:document.getElementById('moveText'),notice:document.getElementById('notice')};
+function fmt(n){return new Intl.NumberFormat('ja-JP',{maximumFractionDigits:0}).format(n)}
+function calc(){
+ const s=specs[symbol.value], lots=Number(els.lots.value)||0, move=Math.abs(Number(els.move.value)||0), uj=Number(els.usdjpy.value)||0, aj=Number(els.audjpy.value)||0;
+ let perLotQuote=s.contract*s.point; let perLotJPY, conversion="JPY";
+ if(s.quote==="JPY"){perLotJPY=perLotQuote}
+ else if(s.quote==="USD"){perLotJPY=perLotQuote*uj; conversion="USD→JPY"}
+ else if(s.quote==="AUD"){perLotJPY=perLotQuote*aj; conversion="AUD→JPY"}
+ const total=perLotJPY*lots*move;
+ els.jpy.textContent=(total? "約 ¥"+fmt(total):"—");
+ els.per1.textContent=perLotJPY? "約 ¥"+fmt(perLotJPY):"—";
+ els.per001.textContent=perLotJPY? "約 ¥"+fmt(perLotJPY*.01):"—";
+ els.moveText.textContent=move+" "+s.unit;
+ els.detail.textContent=move+" "+s.unit+" × "+lots+" lot ／ "+conversion;
+ els.notice.innerHTML="<b>注意：</b> "+s.note;
+}
+symbol.addEventListener('change',calc);els.lots.addEventListener('input',calc);els.move.addEventListener('input',calc);els.usdjpy.addEventListener('input',calc);els.audjpy.addEventListener('input',calc);
+calc();
+</script>
+</body></html>

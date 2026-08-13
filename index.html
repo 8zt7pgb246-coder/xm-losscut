@@ -96,6 +96,12 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
 </div>
 
 <div class="card">
+  <div class="row"><b>1 pip / 1 point の変動額</b><span>0.01 lot基準</span></div>
+  <div class="row"><span id="pipLabel">現在の銘柄</span><b id="pipValue">—</b></div>
+  <div class="small" id="pipNote">FXは1 pip、CFDは気配値の最小表示単位（1 point）で計算します。</div>
+</div>
+
+<div class="card">
   <div class="row"><b>認識した注文</b><span id="count">0件</span></div>
   <div id="orders"></div>
   <div class="toolbar" style="margin-top:10px">
@@ -123,7 +129,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
 
 <div class="card footer">
 <b>計算モデル</b><br>
-気配値スクショで認識した銘柄を選択して計算できます。FXは1 lot=100,000通貨を初期値とし、GOLD#は100 oz、BTCUSD#は1 BTC、OILCash#は100 barrels、JP225Cash#は1 indexを初期値とします。Buy Limitを現在価格から高い順に約定する下落シナリオとして扱い、各注文が約定するたびにStop Out価格を再計算します。FXのJPY換算には気配値に含まれるUSDJPY/AUDJPY等の換算レートを使用します。既存ポジション・スワップ・段階式レバレッジ等は別途反映が必要です。XMは銘柄ごとに契約サイズやレバレッジ条件が異なり、変更される場合があるため、MT5の「仕様」で確認してください。
+気配値スクショで認識した銘柄を選択して計算できます。FXは1 lot=100,000通貨を初期値とし、GOLD#は100 oz、BTCUSD#は1 BTC、OILCash#は100 barrels、JP225Cash#は1 indexを初期値とします。Buy Limitを現在価格から高い順に約定する下落シナリオとして扱い、各注文が約定するたびにStop Out価格を再計算します。証拠金は各注文の約定価格を基準に固定する近似モデルです。FXのJPY換算には気配値に含まれるUSDJPY/AUDJPY等の換算レートを使用します。既存ポジション・スワップ・段階式レバレッジ等は別途反映が必要です。XMは銘柄ごとに契約サイズやレバレッジ条件が異なり、変更される場合があるため、MT5の「仕様」で確認してください。
 </div>
 </div>
 
@@ -183,7 +189,7 @@ function switchSymbol(){
   goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;
   if(saved&&Number.isFinite(+saved.usdjpy)) $('usdjpy').value=(+saved.usdjpy).toFixed(3);
   priceUpdatedAt=saved?.updatedAt||'';
-  updatePriceUI(); calc();
+  updatePriceUI(); updatePipValue(); calc();
 }
 function loadSavedPrice(){switchSymbol(); return Number.isFinite(goldBid)&&Number.isFinite(goldAsk);}
 function savePrice(){
@@ -255,32 +261,45 @@ function solveLCGeneric(bal,stop,filled,c){
   if(!filled.length) return null;
   const buys=filled.filter(o=>/buy/i.test(o.side));
   if(!buys.length) return null;
-  const totalLots=buys.reduce((s,o)=>s+o.lot,0);
   const quoteRate=getRateToJPY(c.quote);
-  const baseRate=getRateToJPY(c.base);
+  let baseRate=getRateToJPY(c.base);
+  // BTC is quoted in USD, so its JPY base conversion can be derived from the saved BTC/USD and USD/JPY.
+  if(!baseRate && c.base==='BTC' && Number.isFinite(goldBid) && getRateToJPY('USD')) baseRate=goldBid*getRateToJPY('USD');
   if(!quoteRate||!baseRate) return null;
-  // Solve Equity = StopOut% * Margin for a long-only basket.
-  // Equity = balance + sum((P-entry)*qty*quote->JPY).
-  // Margin is approximated from current Ask for FX/CFD base value.
-  const marginAt=(p)=>{
-    if(c.type==='fx') return buys.reduce((s,o)=>s+o.lot*c.contract/c.leverage*baseRate,0);
-    return buys.reduce((s,o)=>s+p*o.lot*c.contract/c.leverage*baseRate,0);
-  };
+  // XM-style stable-margin approximation: margin is locked from each entry price
+  // at the selected leverage, rather than being recomputed from the falling price.
+  const fixedMargin=buys.reduce((s,o)=>s+(o.price*o.lot*c.contract/c.leverage*baseRate),0);
+  const stopEquity=(stop/100)*fixedMargin;
   const f=(p)=>{
     const equity=bal+buys.reduce((s,o)=>s+(p-o.price)*o.lot*c.contract*quoteRate,0);
-    const margin=marginAt(p);
-    return equity-(stop/100)*margin;
+    return equity-stopEquity;
   };
   let lo=0,hi=Math.max(...buys.map(o=>o.price));
-  for(let i=0;i<80;i++){
+  for(let i=0;i<100;i++){
     const mid=(lo+hi)/2;
     if(f(mid)>0) hi=mid; else lo=mid;
   }
   return (lo+hi)/2;
 }
+function updatePipValue(){
+  const c=cfg();
+  const lots=0.01;
+  let step=0.01, label='1 point';
+  if(c.type==='fx'){
+    step=/JPY$/.test(currentSymbol)?0.01:0.0001;
+    label='1 pip';
+  }
+  const quoteRate=getRateToJPY(c.quote);
+  const value=Number.isFinite(quoteRate)?step*lots*c.contract*quoteRate:null;
+  $('pipLabel').textContent=`${currentSymbol} ${label} / 0.01 lot`;
+  $('pipValue').textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';
+  $('pipNote').textContent=c.type==='fx'
+    ? `${step} ${label}の価格変動 × 0.01 lot（${(lots*c.contract).toLocaleString()}通貨）をJPY換算`
+    : `${step} USD/価格単位の変動 × 0.01 lotをJPY換算（契約サイズ ${c.contract} ${c.unit} / lot）`;
+}
 function calc(){
  const bal=+$('balance').value||0, stop=+$('stopout').value||20, u=+$('usdjpy').value||0;
- const c=cfg(), lev=+$('symbolLeverage').value||c.leverage, contractSize=+$('contractSize').value||c.contract;
+ const c=cfg(), lev=+$('symbolLeverage').value||c.leverage, contractSize=+$('contractSize').value||c.contract; updatePipValue();
  const currentBid=goldBid,currentAsk=goldAsk;
  const buys=orders.filter(o=>/buy\s*limit|buy/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
  const quoteRate=getRateToJPY(c.quote), baseRate=getRateToJPY(c.base);
@@ -301,8 +320,8 @@ function calc(){
      lc=solveLCGeneric(bal,stop,filled,{...c,leverage:lev,contract:contractSize});
      continue;
    }
-   // 現在のLCが次のBuy Limit以上なら、その注文もLC到達前に約定する。
-   if(lc!==null && lc>=next.price){
+   // 現在のLCが次のBuy Limit以下なら、価格はそこまで下落するため、その注文もLC到達前に約定する。
+   if(lc!==null && lc<=next.price){
      filled.push(next); remaining.shift();
      lc=solveLCGeneric(bal,stop,filled,{...c,leverage:lev,contract:contractSize});
    } else break;

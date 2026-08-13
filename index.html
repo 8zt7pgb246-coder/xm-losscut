@@ -27,7 +27,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
 <body>
 <div class="app">
 <h1>XM ロスカット Pro</h1>
-<div class="sub">スクショを選択 → 自動OCR → GOLD価格を自動取得 → ロスカットライン更新</div>
+<div class="sub">注文スクショ＋XM気配値スクショ → 自動OCR → 価格を端末保存 → ロスカットライン更新</div>
 
 <div class="card">
   <div class="drop">
@@ -43,16 +43,14 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
     <div><label>口座残高（JPY）</label><input id="balance" type="number" value="50000"></div>
     <div><label>レバレッジ</label><input id="leverage" type="number" value="1000"></div>
     <div><label>XM Stop Out（%）</label><input id="stopout" type="number" value="20"></div>
-    <div><label>USD/JPY</label><input id="usdjpy" type="number" step="0.001" value="158.930"></div>
-    <div class="wide"><label>XM価格接続（MetaApi）</label>
-      <input id="metaToken" type="password" placeholder="MetaApi auth-token（端末内のみ保存）" autocomplete="off">
+    <div><label>USD/JPY（保存価格）</label><input id="usdjpy" type="number" step="0.001" value="158.930"></div>
+    <div class="wide"><label>XM KIWAMI GOLD# 気配値</label>
+      <input id="priceFile" class="file" type="file" accept="image/*">
+      <button class="primary" id="priceChoose">📷 気配値スクショを読み込む</button>
     </div>
-    <div><label>MetaTrader Account ID</label><input id="metaAccount" type="text" placeholder="MetaApiのAccount ID" autocomplete="off"></div>
-    <div><label>GOLDシンボル</label><input id="goldSymbol" type="text" value="GOLD#" autocomplete="off"></div>
   </div>
   <div class="toolbar" style="margin-top:12px">
-    <button class="secondary" id="refresh">🔄 XM価格を更新</button>
-    <span id="rateStatus" class="small">XM価格接続待ち</span>
+    <span id="rateStatus" class="small">保存されたXM価格を確認しています…</span>
   </div>
 </div>
 
@@ -72,6 +70,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
   <div class="row"><span>合計Lot</span><b id="lots">—</b></div>
   <div class="row"><span>合計数量</span><b id="oz">—</b></div>
   <div class="row"><span>現在のUSD/JPY</span><b id="usedRate">—</b></div>
+  <div class="row"><span>価格最終更新</span><b id="priceUpdated">—</b></div>
 </div>
 
 <div class="card">
@@ -119,15 +118,37 @@ let orders=[
 ];
 const $=id=>document.getElementById(id);
 let goldBid=null, goldAsk=null, timer=null;
-let metaToken=sessionStorage.getItem('xm_meta_token')||'';
-let metaAccount=sessionStorage.getItem('xm_meta_account')||'';
-let goldSymbol=sessionStorage.getItem('xm_gold_symbol')||'GOLD#';
-$('metaToken').value=metaToken; $('metaAccount').value=metaAccount; $('goldSymbol').value=goldSymbol;
+let priceUpdatedAt=localStorage.getItem('xm_price_updated_at')||'';
+const PRICE_KEY='xm_saved_prices_v2';
 
-function saveMeta(){
- metaToken=$('metaToken').value.trim(); metaAccount=$('metaAccount').value.trim(); goldSymbol=$('goldSymbol').value.trim()||'GOLD#';
- sessionStorage.setItem('xm_meta_token',metaToken); sessionStorage.setItem('xm_meta_account',metaAccount); sessionStorage.setItem('xm_gold_symbol',goldSymbol);
+function loadSavedPrice(){
+  try{
+    const x=JSON.parse(localStorage.getItem(PRICE_KEY)||'null');
+    if(x && Number.isFinite(x.goldBid) && Number.isFinite(x.goldAsk)){
+      goldBid=Number(x.goldBid); goldAsk=Number(x.goldAsk);
+      if(Number.isFinite(x.usdjpy)) $('usdjpy').value=Number(x.usdjpy).toFixed(3);
+      priceUpdatedAt=x.updatedAt||'';
+      updatePriceUI(); calc(); return true;
+    }
+  }catch(e){console.warn(e)}
+  updatePriceUI(); calc(); return false;
 }
+function savePrice(){
+  const data={goldBid,goldAsk,usdjpy:+$('usdjpy').value||0,updatedAt:new Date().toISOString()};
+  localStorage.setItem(PRICE_KEY,JSON.stringify(data));
+  priceUpdatedAt=data.updatedAt; localStorage.setItem('xm_price_updated_at',priceUpdatedAt);
+  updatePriceUI();
+}
+function updatePriceUI(){
+  $('goldBid').textContent=Number.isFinite(goldBid)?goldBid.toFixed(2)+' USD':'—';
+  $('goldAsk').textContent=Number.isFinite(goldAsk)?goldAsk.toFixed(2)+' USD':'—';
+  $('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?(goldAsk-goldBid).toFixed(2)+' USD':'—';
+  $('priceUpdated').textContent=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未保存';
+  $('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)
+    ? `<span class="ok">✓ 保存済み XM GOLD# Bid ${goldBid.toFixed(2)} / Ask ${goldAsk.toFixed(2)}</span>`
+    : '<span class="warn">気配値スクショを読み込んでください</span>';
+}
+function saveMeta(){}
 function renderOrders(){
  $('count').textContent=orders.length+'件';
  $('orders').innerHTML=orders.map((o,i)=>`
@@ -142,33 +163,27 @@ function addOrder(){orders.push({side:'Buy Limit',lot:.01,price:4000});renderOrd
 function resetOrders(){orders=[];renderOrders()}
 
 function calc(){
- const bal=+$('balance').value||0, lev=+$('leverage').value||1000, stopPct=+$('stopout').value||20, u=+$('usdjpy').value||0;
+ const bal=+$('balance').value||0, lev=+$('leverage').value||1000, stop=+$('stopout').value||20, u=+$('usdjpy').value||0;
  const price = goldBid;
- const stop=stopPct/100;
  const buys=orders.filter(o=>/buy/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
  if(!buys.length||!u||!Number.isFinite(price)){
-   $('result').textContent='—'; $('goldBid').textContent=Number.isFinite(price)?price.toFixed(2):'—'; $('goldAsk').textContent=Number.isFinite(goldAsk)?goldAsk.toFixed(2):'—';
-   $('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?(goldAsk-goldBid).toFixed(2):'—'; return;
+   $('result').textContent='—'; $('gap').textContent='—'; $('avg').textContent='—'; $('lots').textContent='—'; $('oz').textContent='—'; $('usedRate').textContent=u?u.toFixed(3):'—';
+   updatePriceUI(); return;
  }
- // Simulate a falling market. Buy Limit executes when Ask reaches the order price.
- // Find the first Stop Out level among successive fills; pending orders below that level stay unfilled.
- let filled=[]; let lc=null; const contractSize=100;
+ let filled=[]; let lc=null; const stopRatio=stop/100; const contractSize=100;
  for(const pending of buys){
-   // Before this order can fill, evaluate Stop Out using only already-filled positions.
    if(filled.length){
-     const candidate=solveLC(bal,lev,stop,u,filled,contractSize);
+     const candidate=solveLC(bal,lev,stopRatio,u,filled,contractSize);
      if(candidate!==null && candidate>=pending.price){ lc=candidate; break; }
    }
-   // This pending Buy Limit can fill when Ask reaches its price, provided Stop Out has not occurred above it.
    filled.push(pending);
  }
- if(lc===null && filled.length){ lc=solveLC(bal,lev,stop,u,filled,contractSize); }
+ if(lc===null && filled.length){ lc=solveLC(bal,lev,stopRatio,u,filled,contractSize); }
  const allLots=filled.reduce((s,o)=>s+o.lot,0), oz=allLots*contractSize;
  const entryOzValue=filled.reduce((s,o)=>s+o.price*o.lot*contractSize,0);
  $('lots').textContent=allLots.toFixed(2); $('oz').textContent=oz.toFixed(2); $('usedRate').textContent=u.toFixed(3);
- $('avg').textContent=oz? (entryOzValue/oz).toFixed(3):'—';
- $('goldBid').textContent=goldBid.toFixed(2)+' USD'; $('goldAsk').textContent=goldAsk.toFixed(2)+' USD'; $('goldSpread').textContent=(goldAsk-goldBid).toFixed(2);
- if(lc!==null){ $('result').textContent=lc.toFixed(2); const d=goldBid-lc; $('gap').textContent=(d>=0?d.toFixed(2)+'ドル余裕':'ロスカット価格を下回っています'); $('distance').textContent=`XM Bid ${goldBid.toFixed(2)} → LC ${lc.toFixed(2)} / 約定 ${filled.length}/${buys.length}本`; }
+ $('avg').textContent=oz? (entryOzValue/oz).toFixed(3):'—'; updatePriceUI();
+ if(lc!==null){ $('result').textContent=lc.toFixed(2); const d=goldBid-lc; $('gap').textContent=(d>=0?d.toFixed(2)+'ドル余裕':'ロスカット価格を下回っています'); $('distance').textContent=`保存XM Bid ${goldBid.toFixed(2)} → LC ${lc.toFixed(2)} / 約定 ${filled.length}/${buys.length}本`; }
  else { $('result').textContent='—'; $('gap').textContent='—'; $('distance').textContent='—'; }
  $('count').textContent=`${orders.length}件 / 約定 ${filled.length}件`;
  renderOrderStatus(filled,buys,lc);
@@ -177,54 +192,47 @@ function solveLC(bal,lev,stop,u,filled,contractSize){
  const lots=filled.reduce((s,o)=>s+o.lot,0), oz=lots*contractSize;
  if(!oz||!u) return null;
  const entryOzValue=filled.reduce((s,o)=>s+o.price*o.lot*contractSize,0);
- // Equity = balance + (Bid-entry)*oz*USDJPY; Margin = Bid*oz*USDJPY/leverage.
- // Stop Out: Equity = stop * Margin.
  return (entryOzValue + bal/u)/(oz*(1-stop/lev));
 }
 function renderOrderStatus(filled,all,lc){
  const f=new Set(filled.map(o=>o.price+'|'+o.lot));
- $('orders').innerHTML=all.map((o,i)=>{const key=o.price+'|'+o.lot;const isF=f.has(key);const pending=!isF; const label=isF?'✓ 約定済み':'○ 未約定'; return `<div class="row"><span>${o.side} ${o.lot.toFixed(2)} / ${o.price.toFixed(2)}</span><b class="${isF?'ok':'warn'}">${label}</b></div>`}).join('');
+ $('orders').innerHTML=all.map((o,i)=>{const key=o.price+'|'+o.lot;const isF=f.has(key);const label=isF?'✓ 約定済み':'○ 未約定'; return `<div class="row"><span>${o.side} ${o.lot.toFixed(2)} / ${o.price.toFixed(2)}</span><b class="${isF?'ok':'warn'}">${label}</b></div>`}).join('');
 }
 
-async function metaGet(path){
- saveMeta();
- if(!metaToken||!metaAccount) throw new Error('MetaApi token / Account ID が未入力です');
- const base='https://mt-client-api-v1.new-york.agiliumtrade.ai';
- const r=await fetch(base+'/users/current/accounts/'+encodeURIComponent(metaAccount)+path,{headers:{'Accept':'application/json','auth-token':metaToken},cache:'no-store'});
- if(!r.ok) throw new Error('MetaApi '+r.status);
- return r.json();
-}
-async function findGoldSymbol(){
- const symbols=await metaGet('/symbols');
- if(symbols.includes(goldSymbol)) return goldSymbol;
- const x=symbols.find(s=>/^GOLD#?$/i.test(s)) || symbols.find(s=>/gold/i.test(s));
- if(!x) throw new Error('GOLD系シンボルが口座にありません');
- goldSymbol=x; $('goldSymbol').value=x; sessionStorage.setItem('xm_gold_symbol',x); return x;
-}
-async function fetchGold(){
- $('rateStatus').textContent='XM KIWAMI GOLD# / USDJPY 更新中…';
- try{
-   const gs=await findGoldSymbol();
-   const [g,u]=await Promise.all([
-     metaGet('/symbols/'+encodeURIComponent(gs)+'/current-price?keepSubscription=true'),
-     metaGet('/symbols/USDJPY/current-price?keepSubscription=true')
-   ]);
-   if(!Number.isFinite(g.bid)||!Number.isFinite(g.ask)) throw new Error('GOLD Bid/Ask missing');
-   goldBid=Number(g.bid); goldAsk=Number(g.ask);
-   if(Number.isFinite(u.bid)) $('usdjpy').value=Number(u.bid).toFixed(3);
-   const t=new Date().toLocaleTimeString('ja-JP');
-   $('rateStatus').innerHTML=`<span class="ok">✓ XM ${gs} Bid ${goldBid.toFixed(2)} / Ask ${goldAsk.toFixed(2)} / USDJPY ${$('usdjpy').value}（${t}）</span>`;
-   calc();
- }catch(e){
-   console.error(e); goldBid=null; goldAsk=null;
-   $('rateStatus').innerHTML='<span class="err">XM価格を取得できません。トークン・Account ID・GOLD#シンボルを確認してください。LC計算は停止しています。</span>';
-   $('result').textContent='—'; $('goldBid').textContent='—'; $('goldAsk').textContent='—'; $('goldSpread').textContent='—';
+function extractPrices(text){
+ const clean=text.replace(/,/g,'').replace(/\s+/g,' ');
+ let gold=null, usdjpy=null;
+ const goldContext=/(?:gold\s*#?|xauusd|gld|ゴールド)[^\n]{0,160}/i.exec(text);
+ const gc=goldContext?goldContext[0]:clean;
+ const nums=(gc.match(/\d{3,5}\.\d{1,3}/g)||[]).map(Number).filter(n=>n>1000&&n<10000);
+ if(nums.length>=2){ gold=Math.min(nums[0],nums[1]); }
+ // Common MT5/Market Watch layouts show two adjacent GOLD prices; if a line contains GOLD# use its first two prices.
+ if(!goldContext){
+   const pairs=clean.match(/(4\d{3}\.\d{1,3})\s+(4\d{3}\.\d{1,3})/);
+   if(pairs){ const a=+pairs[1],b=+pairs[2]; gold=Math.min(a,b); }
  }
+ const us=(text.match(/USD\s*JPY[^\d]{0,80}(\d{2,3}\.\d{2,4})/i)||[])[1];
+ if(us) usdjpy=+us;
+ return {goldBid:gold, goldAsk: nums.length>=2?Math.max(nums[0],nums[1]):null, usdjpy};
 }
-function startTimer(){clearInterval(timer);timer=setInterval(fetchGold,+$('interval').value||10000)}
-$('refresh').onclick=fetchGold;
-$('interval').onchange=startTimer;
-['balance','leverage','stopout','usdjpy','metaToken','metaAccount','goldSymbol'].forEach(id=>$(id).addEventListener('input',()=>{if(id.startsWith('meta'))saveMeta();calc()}));
+function setDetectedPrice(x){
+ if(!Number.isFinite(x.goldBid)||!Number.isFinite(x.goldAsk)||x.goldAsk<x.goldBid) throw new Error('GOLD#のBid/Askを2つ認識できませんでした');
+ goldBid=x.goldBid; goldAsk=x.goldAsk;
+ if(Number.isFinite(x.usdjpy)) $('usdjpy').value=x.usdjpy.toFixed(3);
+ savePrice(); calc();
+}
+$('priceChoose').onclick=()=>$('priceFile').click();
+$('priceFile').addEventListener('change',async e=>{
+ const f=e.target.files[0]; if(!f)return;
+ $('rateStatus').textContent='気配値スクショを解析しています…';
+ try{
+   const result=await Tesseract.recognize(f,'eng',{logger:m=>{if(m.status==='recognizing text')$('rateStatus').textContent=`気配値OCR中… ${Math.round(m.progress*100)}%`}});
+   const x=extractPrices(result.data.text);
+   setDetectedPrice(x);
+   $('rateStatus').innerHTML=`<span class="ok">✓ 読み取り → 即保存・上書きしました。次回起動時もこの価格を使用します。</span>`;
+ }catch(err){console.error(err); $('rateStatus').innerHTML='<span class="err">気配値のBid/Askを認識できませんでした。前回保存価格は変更していません。</span>';}
+});
+['balance','leverage','stopout','usdjpy'].forEach(id=>$(id).addEventListener('input',()=>{if(id==='usdjpy'&&Number.isFinite(goldBid)&&Number.isFinite(goldAsk))savePrice();calc()}));
 $('choose').onclick=()=>$('file').click();
 
 function parseOCR(text){
@@ -262,7 +270,7 @@ $("file").addEventListener("change",async e=>{
  }
 });
 
-renderOrders();fetchGold();startTimer();
+renderOrders();loadSavedPrice();
 </script>
 </body>
 </html>

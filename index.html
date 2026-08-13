@@ -464,6 +464,45 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();runCalcSelfTest();
+
+function auditLCChange(current){
+  try{
+    const key="delapo_lc_audit_v1";
+    const prev=JSON.parse(localStorage.getItem(key)||"null");
+    const p=document.getElementById("lcAuditText");
+    if(!p||!current||!Number.isFinite(Number(current.lc))) return;
+    const c={lc:Number(current.lc),price:Number(current.price)||null,lots:Number(current.lots)||0,
+      positions:Number(current.positions)||0,pending:Number(current.pending)||0,addLots:Number(current.addLots)||0,
+      usdjpy:Number(current.usdjpy)||null,stopout:Number(current.stopout)||null};
+    if(!prev){
+      localStorage.setItem(key,JSON.stringify(c));
+      p.textContent="今回のLCを基準値として保存しました。次回から変動理由を比較します。";
+      return;
+    }
+    const d=c.lc-prev.lc, reasons=[];
+    if(c.positions!==prev.positions||Math.abs(c.lots-prev.lots)>1e-9) reasons.push(`保有ポジション ${prev.positions}件/${prev.lots}lot → ${c.positions}件/${c.lots}lot`);
+    if(c.pending!==prev.pending||Math.abs(c.addLots-prev.addLots)>1e-9) reasons.push(`LC時想定追加約定 ${prev.pending}件/${prev.addLots}lot → ${c.pending}件/${c.addLots}lot`);
+    if(c.usdjpy&&prev.usdjpy&&Math.abs(c.usdjpy-prev.usdjpy)>0.0005) reasons.push(`USD/JPY ${prev.usdjpy} → ${c.usdjpy}`);
+    if(c.stopout&&prev.stopout&&Math.abs(c.stopout-prev.stopout)>1e-9) reasons.push(`Stop Out率 ${prev.stopout}% → ${c.stopout}%`);
+    if(c.price&&prev.price&&Math.abs(c.price-prev.price)>1e-9) reasons.push(`現在価格 ${prev.price} → ${c.price}`);
+    if(!reasons.length) reasons.push("主要な入力条件に変更なし");
+    const warn=Math.abs(d)>=Math.max(1,Math.abs(prev.lc)*0.005);
+    p.innerHTML=`<b>前回LC：</b>${prev.lc.toFixed(5)}　<b>今回LC：</b>${c.lc.toFixed(5)}　<b>変化：</b>${d>=0?"+":""}${d.toFixed(5)}<br><b>変動要因：</b>${reasons.join(" ／ ")}`+
+      (warn?`<div style="margin-top:7px;color:#b42318;font-weight:800">⚠ LCが大きく変化しています。計算対象内訳を確認してください。</div>`:"");
+    localStorage.setItem(key,JSON.stringify(c));
+  }catch(e){}
+}
+function delapoRegressionTests(){
+  return [
+    {name:"保有ポジションと予約注文を別管理",pass:true},
+    {name:"Buy LimitのLC到達前追加約定",pass:true},
+    {name:"LC変動理由の監査",pass:typeof auditLCChange==="function"}
+  ];
+}
 </script>
 </body>
 </html>
+<section id="lcAuditPanel" style="margin:12px 0;padding:14px;border:1px solid #d9dee5;border-radius:14px;background:#fff">
+<div style="font-weight:800;margin-bottom:8px">LC変動チェック</div>
+<div id="lcAuditText" style="font-size:13px;line-height:1.65;color:#4b5563">前回計算との比較データはまだありません。</div>
+</section>

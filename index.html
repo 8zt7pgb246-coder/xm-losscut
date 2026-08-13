@@ -71,6 +71,29 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 <div class="card footer"><b>計算モデル</b><br>口座残高はJPY。各注文の約定価格で必要証拠金を固定する近似モデルを使用し、Stop Out時のEquity＝Stop Out率×Used MarginとしてLC価格を解きます。Buy Limitの約定判定はAsk、ロングの含み損評価はBidを使います。Buy Limitの発動判定にスプレッドを二重適用しません。価格変動による損益は銘柄の決済通貨からJPYへ換算します。既存ポジション、スワップ、手数料、ヘッジ、段階式レバレッジ、銘柄固有の証拠金率等は別途反映が必要です。したがって結果は「推定」です。</div>
 </div>
 
+<div id="pagePnl" class="page">
+  <div class="card">
+    <div class="row"><b>損益計算</b><span>概算・手数料等を除く</span></div>
+    <div class="grid">
+      <div class="wide"><label>銘柄</label><select id="pnlSymbol"></select></div>
+      <div><label>ロット数</label><input id="pnlLots" type="number" min="0" step="0.01" value="0.01"></div>
+      <div><label id="pnlMoveLabel">変動pips</label><input id="pnlMove" type="number" min="0" step="0.01" value="100"></div>
+      <div><label>方向</label><select id="pnlSide"><option value="loss">損失</option><option value="profit">利益</option></select></div>
+      <div><label>USD/JPY</label><input id="pnlUsdjpy" type="number" min="0" step="0.001" value="159.427"></div>
+    </div>
+  </div>
+  <div class="resultBox">
+    <div class="muted">おおよその損益額</div>
+    <div class="resultBig" id="pnlResult">—</div>
+    <div class="small" id="pnlValue">—</div>
+  </div>
+  <div class="card">
+    <div class="row"><span>計算内容</span><b id="pnlDetail">—</b></div>
+    <div class="small">※ XMの銘柄仕様（契約サイズ・最小価格変動）を基準にした概算です。スプレッド、手数料、スワップ、約定価格差、口座固有の証拠金条件などは含みません。</div>
+  </div>
+  <div class="alert"><b>プロ向け注意：</b>FXは「1 pip」、CFD・指数・暗号資産は「1 point」として計算します。銘柄の契約サイズや最小価格変動はMT5の「仕様」を優先してください。</div>
+</div>
+
 <script>
 // OCR engine: primary CDN + fallback CDN. The app itself remains usable if OCR is temporarily unavailable.
 window.__ocrReady = false;
@@ -99,10 +122,10 @@ try{orderStore=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}')||{}}catch(e){}
 try{specStore=JSON.parse(localStorage.getItem(SPEC_KEY)||'{}')||{}}catch(e){}
 let currentSymbol=localStorage.getItem('xm_selected_symbol')||'GOLD#', goldBid=null,goldAsk=null,priceUpdatedAt='';
 const BASE_SPECS={
- 'GOLD#':{name:'GOLD# / XAUUSD',contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfd',known:true},
- 'BTCUSD#':{name:'BTCUSD# / Bitcoin',contract:1,leverage:1000,unit:'BTC',base:'BTC',quote:'USD',type:'crypto',known:true},
- 'OILCash#':{name:'OILCash# / WTI原油',contract:100,leverage:200,unit:'barrels',base:'USD',quote:'USD',type:'cfd',known:true},
- 'JP225Cash#':{name:'JP225Cash# / 日経225',contract:1,leverage:1000,unit:'index',base:'USD',quote:'USD',type:'index',known:true},
+ 'GOLD#':{name:'GOLD# / XAUUSD',contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfd',point:0.01,known:true},
+ 'BTCUSD#':{name:'BTCUSD# / Bitcoin',contract:1,leverage:1000,unit:'BTC',base:'USD',quote:'USD',type:'crypto',point:0.01,known:true},
+ 'OILCash#':{name:'OILCash# / WTI原油',contract:100,leverage:200,unit:'barrels',base:'USD',quote:'USD',type:'cfd',point:0.01,known:true},
+ 'JP225Cash#':{name:'JP225Cash# / 日経225',contract:1,leverage:1000,unit:'index',base:'USD',quote:'USD',type:'index',point:1,known:true},
  'EURUSD#':{name:'EURUSD#',contract:100000,leverage:1000,unit:'EUR',base:'EUR',quote:'USD',type:'fx',known:true},
  'GBPUSD#':{name:'GBPUSD#',contract:100000,leverage:1000,unit:'GBP',base:'GBP',quote:'USD',type:'fx',known:true},
  'AUDJPY#':{name:'AUDJPY#',contract:100000,leverage:1000,unit:'AUD',base:'AUD',quote:'JPY',type:'fx',known:true},
@@ -117,11 +140,11 @@ function inferSpec(sym){
  const core=sym.replace(/#$/,'').replace(/Cash$/i,'');
  const fx=core.match(/^([A-Z]{3})([A-Z]{3})$/);
  if(fx&&CURRENCIES.has(fx[1])&&CURRENCIES.has(fx[2])) return {name:sym,contract:100000,leverage:1000,unit:fx[1],base:fx[1],quote:fx[2],type:'fx',known:false};
- if(/GOLD|XAU/i.test(core)) return {name:sym,contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfd',known:false};
- if(/BTC/i.test(core)) return {name:sym,contract:1,leverage:1000,unit:'BTC',base:'BTC',quote:'USD',type:'crypto',known:false};
- if(/ETH/i.test(core)) return {name:sym,contract:1,leverage:1000,unit:'ETH',base:'ETH',quote:'USD',type:'crypto',known:false};
- if(/OIL|BRENT|GSOIL/i.test(core)) return {name:sym,contract:100,leverage:200,unit:'barrels',base:'USD',quote:'USD',type:'cfd',known:false};
- if(/JP225|US30|US100|US500|UK100|GER30|GER40|FRA40|EU50|AUS200|HK50|SING|SPAIN35|SWI20|NETH25|CHI50|IT40|USDX/i.test(core)) return {name:sym,contract:1,leverage:1000,unit:'index',base:'USD',quote:'USD',type:'index',known:false};
+ if(/GOLD|XAU/i.test(core)) return {name:sym,contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfd',point:0.01,known:false};
+ if(/BTC/i.test(core)) return {name:sym,contract:1,leverage:1000,unit:'BTC',base:'USD',quote:'USD',type:'crypto',point:0.01,known:false};
+ if(/ETH/i.test(core)) return {name:sym,contract:1,leverage:1000,unit:'ETH',base:'USD',quote:'USD',type:'crypto',point:0.01,known:false};
+ if(/OIL|BRENT|GSOIL/i.test(core)) return {name:sym,contract:100,leverage:200,unit:'barrels',base:'USD',quote:'USD',type:'cfd',point:0.01,known:false};
+ if(/JP225|US30|US100|US500|UK100|GER30|GER40|FRA40|EU50|AUS200|HK50|SING|SPAIN35|SWI20|NETH25|CHI50|IT40|USDX/i.test(core)) return {name:sym,contract:1,leverage:1000,unit:'index',base:'USD',quote:'USD',type:'index',point:1,known:false};
  return {name:sym,contract:1,leverage:1000,unit:'unit',base:'USD',quote:'USD',type:'generic',known:false};
 }
 function ensureSpec(sym){if(!specStore[sym])specStore[sym]=inferSpec(sym);return specStore[sym];}
@@ -139,7 +162,7 @@ function getQuote(sym){return quoteStore[sym]||priceStore[sym]||null}
 function pairParts(sym){const core=sym.replace(/#$/,'').replace(/Cash$/i,'');const m=core.match(/^([A-Z]{3})([A-Z]{3})$/);return m?[m[1],m[2]]:null}
 function conversionGraph(){const g={};const add=(a,b,r)=>{if(!a||!b||!Number.isFinite(r)||r<=0)return;(g[a]??=[]).push([b,r]);(g[b]??=[]).push([a,1/r]);};Object.entries(quoteStore).forEach(([sym,q])=>{const p=pairParts(sym);if(p&&q&&q.bid>0&&q.ask>0){add(p[0],p[1],+q.bid);add(p[1],p[0],1/+q.ask)}});const u=+$('usdjpy').value||0;if(u>0)add('USD','JPY',u);return g}
 function getRateToJPY(currency){if(currency==='JPY')return 1;const g=conversionGraph();if(currency==='USD'&&+$('usdjpy').value>0)return +$('usdjpy').value;const q=[[currency,1]],seen=new Set();while(q.length){const [cur,r]=q.shift();if(cur==='JPY')return r;if(seen.has(cur))continue;seen.add(cur);for(const [n,m] of (g[cur]||[]))if(!seen.has(n))q.push([n,r*m])}return null}
-function baseRateFor(c){if(c.base==='BTC'||c.base==='ETH'){const usd=getRateToJPY('USD');if(usd&&goldBid)return goldBid*usd}return getRateToJPY(c.base)}
+function baseRateFor(c){return getRateToJPY(c.base)}
 function quoteRateFor(c){return getRateToJPY(c.quote)}
 function renderOrders(){const arr=getOrders();$('count').textContent=arr.length+'件';$('orders').innerHTML=arr.length?arr.map((o,i)=>`<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editOrder(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editOrder(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>価格</label><input type="number" step="any" value="${o.price}" onchange="editOrder(${i},'price',parseFloat(this.value)||0)"></div></div>`).join(''):'<div class="small">この銘柄の注文はまだありません。</div>';calc()}
 function editOrder(i,k,v){const a=getOrders();a[i][k]=v;setOrders(a);calc()}
@@ -207,7 +230,8 @@ function renderOrderStatus(filled,all,lc){
     </div>`;
   }).join('');
 }
-function updatePipValue(){const c=cfg(),lots=.01;let step,label;if(c.type==='fx'){step=/JPY$/.test(currentSymbol)?0.01:0.0001;label='1 pip'}else{const p=goldBid;const d=p?Math.max(0,Math.min(5,decimalPlacesFor(p))):2;step=Math.pow(10,-d);label='1 point'}const qr=quoteRateFor(c),value=qr?step*lots*c.contract*qr:null;$('pipLabel').textContent=`${currentSymbol} ${label} / 0.01 lot`;$('pipValue').textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';$('pipNote').textContent=c.type==='fx'?`${step} ${label} × 0.01 lot（${(lots*c.contract).toLocaleString()} ${c.unit}）をJPY換算`:`${step} ${label} × 0.01 lot（契約サイズ ${c.contract} ${c.unit} / lot）をJPY換算`}
+function pointStepFor(sym,c){if(c.type==='fx')return /JPY#$/.test(sym)?0.01:0.0001;return Number.isFinite(+c.point)&&+c.point>0?+c.point:(c.type==='index'?1:0.01)}
+function updatePipValue(){const c=cfg(),lots=.01,step=pointStepFor(currentSymbol,c),label=c.type==='fx'?'1 pip':'1 point';const qr=quoteRateFor(c),value=qr?step*lots*c.contract*qr:null;$('pipLabel').textContent=`${currentSymbol} ${label} / 0.01 lot`;$('pipValue').textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';$('pipNote').textContent=c.type==='fx'?`${step} ${label} × 0.01 lot（${(lots*c.contract).toLocaleString()} ${c.unit}）をJPY換算`:`${step} ${label} × 0.01 lot（契約サイズ ${c.contract} ${c.unit} / lot）をJPY換算`}
 function normalizeOcrNumber(s){if(s==null)return null;const x=String(s).replace(/[,$]/g,'').replace(/[^0-9.]/g,'');const n=Number(x);return Number.isFinite(n)?n:null}
 function symbolFromText(s){const x=String(s).toUpperCase().replace(/\s+/g,'');const m=x.match(/^([A-Z0-9]+(?:CASH)?#)$/);return m?m[1]:null}
 function normalizeSymbol(s){let x=String(s).toUpperCase().replace(/\s+/g,'');x=x.replace(/CASH#/,'Cash#');if(x==='GOLD#')return'GOLD#';return x}
@@ -329,24 +353,30 @@ function populatePnlSymbols(){
   sel.value=[...sel.options].some(o=>o.value===keep)?keep:(sel.options[0]?.value||'GOLD#');
 }
 function ensureSymbolOptionForPnl(sym){
-  const sel=$('pnlSymbol'); if(!sym||[...sel.options].some(o=>o.value===sym))return;
+  const sel=$('pnlSymbol'); if(!sel||!sym||[...sel.options].some(o=>o.value===sym))return;
   const o=document.createElement('option');o.value=sym;o.textContent=ensureSpec(sym).name;sel.appendChild(o);
 }
 function calcPnl(){
   const sym=$('pnlSymbol')?.value||currentSymbol;
   const c=ensureSpec(sym);
+  const unit=c.type==='fx'?'pips':'points';
+  if($('pnlMoveLabel'))$('pnlMoveLabel').textContent=`変動${unit}`;
   const lots=+$('pnlLots').value||0;
   const move=+$('pnlMove').value||0;
   const usdjpy=+$('pnlUsdjpy').value||0;
   const qr=(c.quote==='JPY')?1:(c.quote==='USD'?usdjpy:getRateToJPY(c.quote));
   if(!(lots>0&&move>=0&&c.contract>0&&qr>0)){
-    $('pnlResult').textContent='—';$('pnlDetail').textContent='入力値または換算レートを確認してください';return;
+    $('pnlResult').textContent='—';
+    $('pnlValue').textContent='—';
+    $('pnlDetail').textContent=qr>0?'ロット数・変動幅を入力してください':`${c.quote}→JPYの換算レートがありません。気配値スクショを読み込むか、USD/JPY等の換算価格を確認してください`;
+    return;
   }
-  const step=c.type==='fx'?(sym.endsWith('JPY#')?0.01:0.0001):Math.pow(10,-Math.max(0,Math.min(5,decimalPlacesFor((getQuote(sym)?.bid)||1))));
+  const step=pointStepFor(sym,c);
   const amount=Math.abs(move*step*lots*c.contract*qr);
   const sign=$('pnlSide').value==='profit'?'+':'−';
   $('pnlResult').textContent=`${sign}${Math.round(amount).toLocaleString('ja-JP')} 円`;
-  $('pnlDetail').textContent=`${sym}：${lots} lot × ${move} ${c.type==='fx'?'pip':'point'} × ${step} × 契約${c.contract.toLocaleString()} × JPY換算`;
+  $('pnlValue').textContent=`1 ${c.type==='fx'?'pip':'point'} / 0.01 lot：${(step*.01*c.contract*qr).toFixed(2)} 円`;
+  $('pnlDetail').textContent=`${sym}：${lots} lot × ${move} ${c.type==='fx'?'pip':'point'} × ${step} × 契約${c.contract.toLocaleString()} × ${c.quote}→JPY換算`;
 }
 function switchPage(which){
   const lc=which==='lc';
@@ -357,7 +387,7 @@ function switchPage(which){
 }
 $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
-['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>$(id)?.addEventListener('input',calcPnl));
+['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();
 </script>
 </body>

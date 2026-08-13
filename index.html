@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>XM ロスカット Pro</title>
+<title>DeadLine positioning｜デラポジ</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -19,8 +19,8 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 </head>
 <body>
 <div class="app">
-<h1>XM ロスカット Pro</h1>
-<div class="sub">XM気配値スクショ＋注文スクショ → OCR → 銘柄別に価格・注文を保存 → 段階約定をシミュレーションして推定LCを計算</div>
+<h1>DeadLine positioning <span style="font-size:14px;color:#667085">｜デラポジ</span></h1>
+<div class="sub">XM気配値スクショ＋注文スクショ → OCR → 銘柄別に価格・注文を保存 → 段階約定をシミュレーションして推定LCとリスクを計算</div>
 
 <div class="card">
   <div class="grid">
@@ -51,7 +51,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 <div class="row"><span>現在価格 → LC</span><b id="gap">—</b></div>
 <div class="row"><span>平均約定価格</span><b id="avg">—</b></div>
 <div class="row"><span>合計Lot</span><b id="lots">—</b></div>
-<div class="row"><span>LC時想定含み損 合計</span><b id="lcLoss">—</b></div>
+<div class="row"><span>LC時想定含み損 合計</span><b id="lcLoss">—</b></div><div class="row"><span>LC時想定損失率（残高比）</span><b id="lcLossPct">—</b></div>
 <div class="row"><span>合計数量</span><b id="qty">—</b></div>
 <div class="row"><span>現在のUSD/JPY</span><b id="usedRate">—</b></div>
 <div class="row"><span>価格最終更新</span><b id="priceUpdated">—</b></div>
@@ -59,14 +59,14 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 
 <div class="card"><div class="row"><b>1 pip / 1 point の変動額</b><span>0.01 lot基準</span></div><div class="row"><span id="pipLabel">現在の銘柄</span><b id="pipValue">—</b></div><div class="small" id="pipNote">—</div><div class="small" style="margin-top:6px">※「LC時想定含み損」は、推定LC価格まで到達した時点の各注文の評価損を概算したものです。実際の損益は約定・スプレッド・スワップ等で変わります。</div></div>
 
-<div class="card"><div class="row"><b>認識した注文</b><span id="count">0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></div>
+<div class="card"><div class="row"><b>LC時想定約定・想定含み損</b><span id="count">0件</span></div><div class="small" style="margin-bottom:6px">※ LC価格まで価格が到達した場合に、各Buy Limitが約定すると仮定した概算。実際のXM約定履歴ではありません。</div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></div>
 
 <div class="card"><label>価格ソース</label><div class="small"><b>XM KIWAMI 気配値スクショ → このアプリ</b>。1枚のスクショから認識できた全銘柄のBid/Askを銘柄別に保存します。新しい気配値を読み込むまで上書きしません。銘柄を切り替えても他銘柄の保存価格は消えません。</div></div>
 
 <div class="alert"><b>重要：</b>LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。表示される「LC時想定約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で約定させます。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
 
-<div class="card footer"><b>計算モデル</b><br>口座残高はJPY。各注文の約定価格で必要証拠金を固定する近似モデルを使用し、Stop Out時のEquity＝Stop Out率×Used MarginとしてLC価格を解きます。Buy Limitの約定判定はAsk、ロングの含み損評価はBidを使い、現在のBid/Askスプレッドをシナリオにも反映します。価格変動による損益は銘柄の決済通貨からJPYへ換算します。既存ポジション、スワップ、手数料、ヘッジ、段階式レバレッジ、銘柄固有の証拠金率等は別途反映が必要です。したがって結果は「推定」です。</div>
+<div class="card footer"><b>DeadLine positioning（デラポジ）｜計算モデル</b><br>口座残高はJPY。各注文の約定価格で必要証拠金を固定する近似モデルを使用し、Stop Out時のEquity＝Stop Out率×Used MarginとしてLC価格を解きます。Buy Limitの約定判定はAsk、ロングの含み損評価はBidを使い、現在のBid/Askスプレッドをシナリオにも反映します。価格変動による損益は銘柄の決済通貨からJPYへ換算します。既存ポジション、スワップ、手数料、ヘッジ、段階式レバレッジ、銘柄固有の証拠金率等は別途反映が必要です。したがって結果は「推定」です。</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -120,25 +120,72 @@ function getQuote(sym){return quoteStore[sym]||priceStore[sym]||null}
 function pairParts(sym){const core=sym.replace(/#$/,'').replace(/Cash$/i,'');const m=core.match(/^([A-Z]{3})([A-Z]{3})$/);return m?[m[1],m[2]]:null}
 function conversionGraph(){const g={};const add=(a,b,r)=>{if(!a||!b||!Number.isFinite(r)||r<=0)return;(g[a]??=[]).push([b,r]);(g[b]??=[]).push([a,1/r]);};Object.entries(quoteStore).forEach(([sym,q])=>{const p=pairParts(sym);if(p&&q&&q.bid>0&&q.ask>0){add(p[0],p[1],+q.bid);add(p[1],p[0],1/+q.ask)}});const u=+$('usdjpy').value||0;if(u>0)add('USD','JPY',u);return g}
 function getRateToJPY(currency){if(currency==='JPY')return 1;const g=conversionGraph();if(currency==='USD'&&+$('usdjpy').value>0)return +$('usdjpy').value;const q=[[currency,1]],seen=new Set();while(q.length){const [cur,r]=q.shift();if(cur==='JPY')return r;if(seen.has(cur))continue;seen.add(cur);for(const [n,m] of (g[cur]||[]))if(!seen.has(n))q.push([n,r*m])}return null}
-function baseRateFor(c){if(c.base==='BTC'||c.base==='ETH'){const usd=getRateToJPY('USD');if(usd&&goldBid)return goldBid*usd}return getRateToJPY(c.base)}
+function baseRateFor(c){if(c.base==='BTC'||c.base==='ETH'){const usd=getRateToJPY('USD');const q=getQuote(currentSymbol);const px=q?.bid||goldBid;return usd&&px?px*usd:null}return getRateToJPY(c.base)}
 function quoteRateFor(c){return getRateToJPY(c.quote)}
 function renderOrders(){const arr=getOrders();$('count').textContent=arr.length+'件';$('orders').innerHTML=arr.length?arr.map((o,i)=>`<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editOrder(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editOrder(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>価格</label><input type="number" step="any" value="${o.price}" onchange="editOrder(${i},'price',parseFloat(this.value)||0)"></div></div>`).join(''):'<div class="small">この銘柄の注文はまだありません。</div>';calc()}
 function editOrder(i,k,v){const a=getOrders();a[i][k]=v;setOrders(a);calc()}
 function addOrder(){const a=getOrders();a.push({side:'Buy Limit',lot:.01,price:Number.isFinite(goldBid)?Math.max(0,goldBid-1):0});setOrders(a);renderOrders()}
 function resetOrders(){setOrders([]);renderOrders()}
 function fixedMarginJPY(o,c,lev,contract){const br=baseRateFor(c);return br?o.price*o.lot*contract/lev*br:null}
-function solveLC(bal,stop,filled,c,lev,contract){if(!filled.length)return null;const qr=quoteRateFor(c);if(!qr)return null;let margin=0;for(const o of filled){const m=fixedMarginJPY(o,c,lev,contract);if(m===null)return null;margin+=m}const stopEquity=margin*(stop/100);const pnl=p=>filled.reduce((s,o)=>s+(p-o.price)*o.lot*contract*qr,0);const f=p=>bal+pnl(p)-stopEquity;let hi=Math.max(...filled.map(o=>o.price)),lo=hi-1;while(f(lo)>0&&lo>0)lo=Math.max(0,lo*0.5);if(f(lo)>0)return null;for(let i=0;i<120;i++){const mid=(lo+hi)/2;if(f(mid)>0)hi=mid;else lo=mid}return (lo+hi)/2}
-function simulateLC(bal,stop,buys,c,lev,contract,currentAsk){let filled=buys.filter(o=>currentAsk<=o.price).slice();let remaining=buys.filter(o=>currentAsk>o.price);let lc=null;const spread=(Number.isFinite(goldAsk)&&Number.isFinite(goldBid))?Math.max(0,goldAsk-goldBid):0;while(remaining.length){if(!filled.length){filled.push(remaining.shift());lc=solveLC(bal,stop,filled,c,lev,contract);continue}lc=solveLC(bal,stop,filled,c,lev,contract);const next=remaining[0];const nextTriggerBid=next.price-spread;if(lc!==null&&lc<=nextTriggerBid){filled.push(remaining.shift());continue}break}if(filled.length)lc=solveLC(bal,stop,filled,c,lev,contract);return {filled,lc}}
-function calc(){const bal=+$('balance').value||0,stop=+$('stopout').value||20,c=cfg(),lev=+$('symbolLeverage').value||0,contract=+$('contractSize').value||0,buys=getOrders().filter(o=>/buy\s*limit/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);const qr=quoteRateFor(c);if(!buys.length||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!baseRateFor(c)||!lev||!contract){$('result').textContent='—';$('gap').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=buys.length?'換算レートまたは気配値が不足しています':'この銘柄のBuy Limit注文を読み込んでください';renderOrderStatus([],buys,null);return}
-const sim=simulateLC(bal,stop,buys,c,lev,contract,goldAsk);const filled=sim.filled,lc=sim.lc;const lots=filled.reduce((s,o)=>s+o.lot,0),qty=lots*contract,entry=filled.reduce((s,o)=>s+o.price*o.lot*contract,0);const totalLcLoss=lc!==null?filled.reduce((s,o)=>s+(lossAtLCJPY(o,lc,c)||0),0):null;$('lots').textContent=lots.toFixed(2);$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=qty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('avg').textContent=qty?(entry/qty).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid)))):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();if(lc!==null){$('result').textContent=lc.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid))));const d=goldBid-lc;$('gap').textContent=d>=0?`${d.toFixed(2)} ${c.quote}下`:`LC価格を下回っています`;$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → LC ${formatPrice(lc)} / LC時想定約定 ${filled.length}/${buys.length}本`}else{$('result').textContent='—';$('gap').textContent='LCを解けませんでした';$('distance').textContent='銘柄仕様・換算レート・注文を確認してください'}$('count').textContent=`${getOrders().length}件 / LC時想定約定 ${filled.length}件`;renderOrderStatus(filled,buys,lc)}
+function solveLC(bal,stop,filled,c,lev,contract){
+  if(!filled.length||!Number.isFinite(bal)||!Number.isFinite(stop)||stop<=0||!Number.isFinite(lev)||lev<=0||!Number.isFinite(contract)||contract<=0)return null;
+  const qr=quoteRateFor(c);
+  if(!qr)return null;
+  let margin=0;
+  for(const o of filled){
+    const m=fixedMarginJPY(o,c,lev,contract);
+    if(!Number.isFinite(m))return null;
+    margin+=m;
+  }
+  const stopEquity=margin*(stop/100);
+  const pnl=p=>filled.reduce((sum,o)=>sum+(p-o.price)*o.lot*contract*qr,0);
+  const f=p=>bal+pnl(p)-stopEquity;
+  let hi=Math.max(...filled.map(o=>o.price));
+  let lo=0;
+  if(f(hi)<0)return hi;
+  if(f(lo)>0)return null;
+  for(let i=0;i<140;i++){
+    const mid=(lo+hi)/2;
+    if(f(mid)>0)hi=mid;else lo=mid;
+  }
+  return (lo+hi)/2;
+}
+function simulateLC(bal,stop,buys,c,lev,contract,currentAsk){
+  const spread=(Number.isFinite(goldAsk)&&Number.isFinite(goldBid))?Math.max(0,goldAsk-goldBid):0;
+  const sorted=[...buys].sort((a,b)=>b.price-a.price);
+  const filled=[];
+  const remaining=[];
+  for(const o of sorted){
+    if(currentAsk<=o.price) filled.push(o); else remaining.push(o);
+  }
+  let lc=filled.length?solveLC(bal,stop,filled,c,lev,contract):null;
+  while(remaining.length){
+    const next=remaining[0];
+    const triggerBid=next.price-spread;
+    // Price falls from current level toward LC. If LC is at/below the next order's trigger,
+    // the order is crossed before Stop Out and must be included.
+    if(lc===null || lc<=triggerBid){
+      filled.push(next);
+      remaining.shift();
+      lc=solveLC(bal,stop,filled,c,lev,contract);
+      continue;
+    }
+    break;
+  }
+  lc=filled.length?solveLC(bal,stop,filled,c,lev,contract):null;
+  return {filled,lc};
+}
+function calc(){const bal=+$('balance').value||0,stop=+$('stopout').value||20,c=cfg(),lev=+$('symbolLeverage').value||0,contract=+$('contractSize').value||0,buys=getOrders().filter(o=>/buy\s*limit/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);const qr=quoteRateFor(c);if(!c.known){$('result').textContent='—';$('gap').textContent='銘柄仕様の確認が必要';$('avg').textContent='—';$('lots').textContent='—';$('lcLoss').textContent='—';$('lcLossPct').textContent='—';$('qty').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent='契約サイズ・レバレッジをMT5「仕様」で確認して入力してください';renderOrderStatus([],buys,null);return}if(!buys.length||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!baseRateFor(c)||!lev||!contract){$('result').textContent='—';$('gap').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcLoss').textContent='—';$('lcLossPct').textContent='—';$('qty').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=buys.length?'換算レートまたは気配値が不足しています':'この銘柄のBuy Limit注文を読み込んでください';renderOrderStatus([],buys,null);return}
+const sim=simulateLC(bal,stop,buys,c,lev,contract,goldAsk);const filled=sim.filled,lc=sim.lc;const lots=filled.reduce((s,o)=>s+o.lot,0),qty=lots*contract,entry=filled.reduce((s,o)=>s+o.price*o.lot*contract,0);const totalLcLoss=lc!==null?filled.reduce((s,o)=>s+(lossAtLCJPY(o,lc,c)||0),0):null;const lossPct=totalLcLoss!==null&&bal>0?(Math.abs(totalLcLoss)/bal*100):null;$('lots').textContent=lots.toFixed(2);$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('lcLossPct').textContent=lossPct!==null?`${lossPct.toFixed(1)} %`:'—';$('qty').textContent=qty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('avg').textContent=qty?(entry/qty).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid)))):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();if(lc!==null){$('result').textContent=lc.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid))));const d=goldBid-lc;$('gap').textContent=d>=0?`${d.toFixed(2)} ${c.quote}下`:`LC価格を下回っています`;$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → LC ${formatPrice(lc)} / LC時想定約定 ${filled.length}/${buys.length}本`}else{$('result').textContent='—';$('gap').textContent='LCを解けませんでした';$('distance').textContent='銘柄仕様・換算レート・注文を確認してください'}$('count').textContent=`${getOrders().length}件 / LC時想定約定 ${filled.length}件`;renderOrderStatus(filled,buys,lc)}
 function lossAtLCJPY(o,lc,c){
   if(!Number.isFinite(lc)||!o||!Number.isFinite(+o.price)||!Number.isFinite(+o.lot)) return null;
   const qr=quoteRateFor(c);
   if(!qr||!Number.isFinite(+c.contract)) return null;
-  if(/^buy\\s*limit$/i.test(String(o.side||'')) || /^buy$/i.test(String(o.side||''))){
+  const side=String(o.side||'').trim().toLowerCase();
+  if(side==='buy limit'||side==='buy'){
     return (lc-(+o.price))*(+o.lot)*(+c.contract)*qr;
   }
-  if(/^sell/i.test(String(o.side||''))){
+  if(side.startsWith('sell')){
     return ((+o.price)-lc)*(+o.lot)*(+c.contract)*qr;
   }
   return null;

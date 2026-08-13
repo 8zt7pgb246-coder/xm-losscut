@@ -379,11 +379,19 @@ function extractPositionsFromWords(words){
     const lm=joined.match(/\b(?:buy|sell)\b\s+([0-9]+(?:\.[0-9]+)?)/i);if(!lm)continue;
     const lot=normalizeOcrNumber(lm[1]);
     const tail=[joined,...lines.slice(i+1,i+3)].join(' ');
-    const beforeArrow=tail.split(/(?:->|→|➜|➔|⇒|›)/)[0];
-    const nums=(beforeArrow.match(/\d[\d,]*(?:\.\d+)?/g)||[]).map(normalizeOcrNumber).filter(Number.isFinite);
-    // lot自身より後ろにある価格候補を優先。MT5の「現在価格 -> 評価価格」の左側が約定価格。
-    let price=null;for(const n of nums){if(Math.abs(n-lot)>1e-12&&n>0){price=n;break}}
-    if(!price){const nm=tail.match(/\b([0-9]{3,8}(?:\.[0-9]+)?)\s*(?:->|→|➜|➔|⇒|›)/);if(nm)price=normalizeOcrNumber(nm[1])}
+
+    // 最優先：MT5の「約定価格 -> 現在価格」の矢印直前の数値。
+    // これを最優先しないと、同じ行にある「-1043 JPY」の1043を約定価格として
+    // 誤認識し、LCが3509付近まで異常に下がる重大バグが発生する。
+    const arrowMatch=tail.match(/([0-9]{3,10}(?:\.[0-9]+)?)\s*(?:->|→|➜|➔|⇒|›)/);
+    let price=arrowMatch?normalizeOcrNumber(arrowMatch[1]):null;
+
+    // 矢印をOCRが落とした場合だけ、価格候補から復元する。
+    if(!price){
+      const beforeArrow=tail.split(/(?:->|→|➜|➔|⇒|›)/)[0];
+      const nums=(beforeArrow.match(/\d[\d,]*(?:\.\d+)?/g)||[]).map(normalizeOcrNumber).filter(Number.isFinite);
+      for(const n of nums){if(Math.abs(n-lot)>1e-12&&n>0){price=n;break}}
+    }
     if(price&&lot>0)out.push({side:side.charAt(0).toUpperCase()+side.slice(1).toLowerCase(),lot,price,symbol:sm});
   }
   const seen=new Set();return out.filter(o=>{const k=[o.symbol,o.side,o.lot,o.price].join('|');if(seen.has(k))return false;seen.add(k);return true});
@@ -416,8 +424,17 @@ function sanitizeRecognizedPositions(positions){
   const q=Number.isFinite(goldBid)?goldBid:null, out=[];
   for(const raw of (positions||[])){
     const side=/^sell$/i.test(String(raw.side||''))?'Sell':/^buy$/i.test(String(raw.side||''))?'Buy':null;
-    let lot=Number(raw.lot), price=Number(raw.price); if(!side||!(lot>0&&lot<=1000)||!(price>0))continue;
-    if(q){const candidates=[price,...Array.from({length:6},(_,i)=>price/10**(i+1)),...Array.from({length:4},(_,i)=>price*10**(i+1))].filter(v=>Number.isFinite(v)&&v>0);candidates.sort((a,b)=>Math.abs(Math.log(a/q))-Math.abs(Math.log(b/q)));if(candidates[0]&&Math.abs(candidates[0]/q-1)<0.35)price=candidates[0];}
+    const lot=Number(raw.lot), price=Number(raw.price);
+    if(!side||!(lot>0&&lot<=1000)||!(price>0))continue;
+
+    // OCR値を10倍/10分の1に勝手補正しない。
+    // 例：GOLDの「-1043 JPY」が約定価格1043として誤認識された場合、
+    // それを自動補正して計算へ流すのではなく、危険値として除外する。
+    // 正しい約定価格は「4367.37 -> 4360.83」の矢印直前を優先して取得する。
+    if(q){
+      const ratio=price/q;
+      if(!(ratio>=0.5&&ratio<=1.5))continue;
+    }
     const k=side+'|'+lot+'|'+price.toFixed(8);if(out.some(o=>o._k===k))continue;out.push({side,lot,price,_k:k});
   }
   return out.map(({_k,...o})=>o);
@@ -492,7 +509,20 @@ function runCalcSelfTest(){
     const t7=ocr1.positions.length===1&&ocr2.positions.length===1&&ocr1.pending.length===1&&ocr2.pending.length===1;
 
     window.__testRate=old;
-    const tests=[t1,t2,t3,t4,t5,t6,t7];
+    // 回帰テスト8：MT5の実スクショで起きた重大OCRバグ。-1043 JPYを約定価格1043として拾わず、4367.37を拾う。
+    const badOcrText='GOLD# buy 0.01 -1043 JPY\n4367.37 -> 4360.83\nGOLD# buy limit\n0.01 / 0 at 4318.16';
+    const ocrBad=parseOCR(badOcrText);
+    const t8=ocrBad.positions.length===1 && Math.abs(ocrBad.positions[0].price-4367.37)<0.0001;
+
+    // 回帰テスト9：現在価格から極端に離れたOCR価格は自動採用しない。
+    const oldBid=goldBid;goldBid=4360.71;const s9=sanitizeRecognizedPositions([{side:'Buy',lot:.01,price:1043}]);goldBid=oldBid;
+    const t9=s9.length===0;
+
+    // 回帰テスト10：正しい1ポジションのみならLCは約4054.82付近。3509付近にはならない。
+    const one=simulateLC(bal,stop,[],pos,c,lev,100,4360.93);
+    const t10=one.filled.length===1 && Math.abs(one.lc-4054.8228)<0.05;
+
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10];
     const passed=tests.filter(Boolean).length;
     const ok=passed===tests.length;
     $('calcCheck').textContent=ok?`✓ 回帰テストOK（${passed}/${tests.length}）`:`⚠ 回帰テストNG（${passed}/${tests.length}）`;

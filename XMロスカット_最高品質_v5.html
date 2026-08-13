@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>XM ロスカット Pro</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
+h1{font-size:25px;margin:3px 0}.sub{font-size:13px;color:#667085;margin-bottom:14px}
+.card,.hero{background:#fff;border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 3px 16px #0000000b}.hero{text-align:center}
+.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#fee2e2;color:#b42318}.gold{font-size:13px;color:#667085;margin-top:10px}.price{font-size:43px;font-weight:850;letter-spacing:-1.5px;margin:3px 0}.change{font-size:12px;color:#667085}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{grid-column:1/-1}label{display:block;font-size:12px;color:#667085;margin:5px 0}
+input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px;font-size:16px;background:#fff}button{border:0;border-radius:12px;padding:12px 15px;font-weight:800;font-size:14px;cursor:pointer}.primary{background:#111;color:#fff}.secondary{background:#eef1f4}
+.file{display:none}.drop{border:2px dashed #cdd3da;border-radius:16px;padding:20px;text-align:center}#preview{display:none;max-width:100%;max-height:430px;border-radius:12px;margin:12px auto 0}
+.small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
+.alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>XM ロスカット Pro</h1>
+<div class="sub">XM気配値スクショ＋注文スクショ → OCR → 銘柄別に価格・注文を保存 → 段階約定をシミュレーションして推定LCを計算</div>
+
+<div class="card">
+  <div class="grid">
+    <div class="wide"><label>計算する銘柄</label><select id="symbol"></select><div id="symbolHint" class="small" style="margin-top:6px"></div></div>
+    <div><label>銘柄レバレッジ</label><input id="symbolLeverage" type="number" min="1" step="1"></div>
+    <div><label>契約サイズ（1 lot）</label><input id="contractSize" type="number" min="0.000001" step="any"></div>
+    <div class="wide"><label id="priceLabel">XM 気配値</label><input id="priceFile" class="file" type="file" accept="image/*"><button class="primary" id="priceChoose">📷 気配値スクショを読み込む</button></div>
+  </div>
+  <div id="specStatus" class="small" style="margin-top:10px"></div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div>
+</div>
+
+<div class="card"><div class="drop"><input id="file" class="file" type="file" accept="image/*"><button class="primary" id="choose">📷 XM注文画面を読み込む</button><div id="ocrStatus" class="small" style="margin-top:10px">選択銘柄の注文スクリーンショットを選択してください</div><img id="preview"></div></div>
+
+<div class="card"><div class="grid">
+<div><label>口座残高（JPY）</label><input id="balance" type="number" value="50000"></div>
+<div><label>口座レバレッジ（参考）</label><input id="leverage" type="number" value="1000"></div>
+<div><label>XM Stop Out（%）</label><input id="stopout" type="number" value="20"></div>
+<div><label>USD/JPY（保存価格）</label><input id="usdjpy" type="number" step="0.001" value="159.427"></div>
+</div></div>
+
+<div class="hero"><div class="badge">推定ロスカットライン</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div></div>
+
+<div class="card">
+<div class="row"><span id="bidLabel">XM Bid</span><b id="goldBid">—</b></div>
+<div class="row"><span id="askLabel">XM Ask</span><b id="goldAsk">—</b></div>
+<div class="row"><span>XM Spread</span><b id="goldSpread">—</b></div>
+<div class="row"><span>現在価格 → LC</span><b id="gap">—</b></div>
+<div class="row"><span>平均約定価格</span><b id="avg">—</b></div>
+<div class="row"><span>合計Lot</span><b id="lots">—</b></div>
+<div class="row"><span>LC時想定含み損 合計</span><b id="lcLoss">—</b></div>
+<div class="row"><span>合計数量</span><b id="qty">—</b></div>
+<div class="row"><span>現在のUSD/JPY</span><b id="usedRate">—</b></div>
+<div class="row"><span>価格最終更新</span><b id="priceUpdated">—</b></div>
+</div>
+
+<div class="card"><div class="row"><b>1 pip / 1 point の変動額</b><span>0.01 lot基準</span></div><div class="row"><span id="pipLabel">現在の銘柄</span><b id="pipValue">—</b></div><div class="small" id="pipNote">—</div><div class="small" style="margin-top:6px">※「LC時想定含み損」は、推定LC価格まで到達した時点の各注文の評価損を概算したものです。実際の損益は約定・スプレッド・スワップ等で変わります。</div></div>
+
+<div class="card"><div class="row"><b>認識した注文</b><span id="count">0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></div>
+
+<div class="card"><label>価格ソース</label><div class="small"><b>XM KIWAMI 気配値スクショ → このアプリ</b>。1枚のスクショから認識できた全銘柄のBid/Askを銘柄別に保存します。新しい気配値を読み込むまで上書きしません。銘柄を切り替えても他銘柄の保存価格は消えません。</div></div>
+
+<div class="alert"><b>重要：</b>LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。表示される「LC時想定約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で約定させます。</div>
+<div id="specWarning" class="danger" style="display:none"></div>
+
+<div class="card footer"><b>計算モデル</b><br>口座残高はJPY。各注文の約定価格で必要証拠金を固定する近似モデルを使用し、Stop Out時のEquity＝Stop Out率×Used MarginとしてLC価格を解きます。Buy Limitの約定判定はAsk、ロングの含み損評価はBidを使い、現在のBid/Askスプレッドをシナリオにも反映します。価格変動による損益は銘柄の決済通貨からJPYへ換算します。既存ポジション、スワップ、手数料、ヘッジ、段階式レバレッジ、銘柄固有の証拠金率等は別途反映が必要です。したがって結果は「推定」です。</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const PRICE_KEY='xm_saved_prices_multi_v5', ORDER_KEY='xm_orders_by_symbol_v5', SPEC_KEY='xm_specs_v5', QUOTE_KEY='xm_quote_snapshot_all_v2';
+let quoteStore={}, priceStore={}, orderStore={}, specStore={};
+try{quoteStore=JSON.parse(localStorage.getItem(QUOTE_KEY)||'{}')||{}}catch(e){}
+try{priceStore=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}')||{}}catch(e){}
+try{orderStore=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}')||{}}catch(e){}
+try{specStore=JSON.parse(localStorage.getItem(SPEC_KEY)||'{}')||{}}catch(e){}
+let currentSymbol=localStorage.getItem('xm_selected_symbol')||'GOLD#', goldBid=null,goldAsk=null,priceUpdatedAt='';
+const BASE_SPECS={
+ 'GOLD#':{name:'GOLD# / XAUUSD',contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfd',known:true},
+ 'BTCUSD#':{name:'BTCUSD# / Bitcoin',contract:1,leverage:1000,unit:'BTC',base:'BTC',quote:'USD',type:'crypto',known:true},
+ 'OILCash#':{name:'OILCash# / WTI原油',contract:100,leverage:200,unit:'barrels',base:'USD',quote:'USD',type:'cfd',known:true},
+ 'JP225Cash#':{name:'JP225Cash# / 日経225',contract:1,leverage:1000,unit:'index',base:'USD',quote:'USD',type:'index',known:true},
+ 'EURUSD#':{name:'EURUSD#',contract:100000,leverage:1000,unit:'EUR',base:'EUR',quote:'USD',type:'fx',known:true},
+ 'GBPUSD#':{name:'GBPUSD#',contract:100000,leverage:1000,unit:'GBP',base:'GBP',quote:'USD',type:'fx',known:true},
+ 'AUDJPY#':{name:'AUDJPY#',contract:100000,leverage:1000,unit:'AUD',base:'AUD',quote:'JPY',type:'fx',known:true},
+ 'AUDUSD#':{name:'AUDUSD#',contract:100000,leverage:1000,unit:'AUD',base:'AUD',quote:'USD',type:'fx',known:true},
+ 'GBPAUD#':{name:'GBPAUD#',contract:100000,leverage:1000,unit:'GBP',base:'GBP',quote:'AUD',type:'fx',known:true},
+ 'USDJPY#':{name:'USDJPY#',contract:100000,leverage:1000,unit:'USD',base:'USD',quote:'JPY',type:'fx',known:true}
+};
+const CURRENCIES=new Set(['USD','EUR','GBP','AUD','JPY','CAD','CHF','NZD','SGD','HKD','CNH','ZAR','SEK','NOK','DKK','PLN','HUF','MXN','TRY']);
+function saveAll(){localStorage.setItem(PRICE_KEY,JSON.stringify(priceStore));localStorage.setItem(ORDER_KEY,JSON.stringify(orderStore));localStorage.setItem(SPEC_KEY,JSON.stringify(specStore));localStorage.setItem(QUOTE_KEY,JSON.stringify(quoteStore));}
+function inferSpec(sym){
+ if(BASE_SPECS[sym]) return {...BASE_SPECS[sym]};
+ const core=sym.replace(/#$/,'').replace(/Cash$/i,'');
+ const fx=core.match(/^([A-Z]{3})([A-Z]{3})$/);
+ if(fx&&CURRENCIES.has(fx[1])&&CURRENCIES.has(fx[2])) return {name:sym,contract:100000,leverage:1000,unit:fx[1],base:fx[1],quote:fx[2],type:'fx',known:false};
+ if(/GOLD|XAU/i.test(core)) return {name:sym,contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfd',known:false};
+ if(/BTC/i.test(core)) return {name:sym,contract:1,leverage:1000,unit:'BTC',base:'BTC',quote:'USD',type:'crypto',known:false};
+ if(/ETH/i.test(core)) return {name:sym,contract:1,leverage:1000,unit:'ETH',base:'ETH',quote:'USD',type:'crypto',known:false};
+ if(/OIL|BRENT|GSOIL/i.test(core)) return {name:sym,contract:100,leverage:200,unit:'barrels',base:'USD',quote:'USD',type:'cfd',known:false};
+ if(/JP225|US30|US100|US500|UK100|GER30|GER40|FRA40|EU50|AUS200|HK50|SING|SPAIN35|SWI20|NETH25|CHI50|IT40|USDX/i.test(core)) return {name:sym,contract:1,leverage:1000,unit:'index',base:'USD',quote:'USD',type:'index',known:false};
+ return {name:sym,contract:1,leverage:1000,unit:'unit',base:'USD',quote:'USD',type:'generic',known:false};
+}
+function ensureSpec(sym){if(!specStore[sym])specStore[sym]=inferSpec(sym);return specStore[sym];}
+function cfg(){return ensureSpec(currentSymbol)}
+function ensureSymbolOption(sym){if(!sym)return;const sel=$('symbol');if(![...sel.options].some(o=>o.value===sym)){const o=document.createElement('option');o.value=sym;o.textContent=ensureSpec(sym).name;sel.appendChild(o)}}
+function populateSymbols(){Object.keys(BASE_SPECS).forEach(ensureSymbolOption);Object.keys(quoteStore).forEach(ensureSymbolOption);Object.keys(specStore).forEach(ensureSymbolOption)}
+function getOrders(){return orderStore[currentSymbol]||[]}
+function setOrders(v){orderStore[currentSymbol]=v;saveAll()}
+function switchSymbol(){currentSymbol=$('symbol').value;localStorage.setItem('xm_selected_symbol',currentSymbol);const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
+function updateSpecUI(){const c=cfg();$('specStatus').innerHTML=c.known?`<span class="ok">✓ ${currentSymbol} の標準仕様を登録済み</span>`:`<span class="warn">⚠ ${currentSymbol} は気配値から追加された銘柄。契約サイズ・レバレッジは推定初期値です。MT5「仕様」の値に合わせて確認してください。</span>`;$('specWarning').style.display=c.known?'none':'block';$('specWarning').innerHTML=`<b>銘柄仕様の確認：</b>${currentSymbol} は自動推定仕様で計算しています。正確なLCが必要なら、MT5の「仕様」に表示される契約サイズ・証拠金条件に合わせて上の数値を確認してください。`}
+function updatePriceUI(){const c=cfg();$('goldBid').textContent=Number.isFinite(goldBid)?formatPrice(goldBid):'—';$('goldAsk').textContent=Number.isFinite(goldAsk)?formatPrice(goldAsk):'—';$('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?formatPrice(goldAsk-goldBid):'—';$('priceUpdated').textContent=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未保存';$('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)?`<span class="ok">✓ 保存済み ${currentSymbol} Bid ${formatPrice(goldBid)} / Ask ${formatPrice(goldAsk)}</span>`:`<span class="warn">${currentSymbol}の気配値スクショを読み込んでください</span>`}
+function formatPrice(v){if(!Number.isFinite(v))return '—';const d=Math.max(0,Math.min(5,decimalPlacesFor(v)));return v.toFixed(d)}
+function decimalPlacesFor(v){const s=String(v);return s.includes('.')?s.split('.')[1].length:0}
+function getQuote(sym){return quoteStore[sym]||priceStore[sym]||null}
+function pairParts(sym){const core=sym.replace(/#$/,'').replace(/Cash$/i,'');const m=core.match(/^([A-Z]{3})([A-Z]{3})$/);return m?[m[1],m[2]]:null}
+function conversionGraph(){const g={};const add=(a,b,r)=>{if(!a||!b||!Number.isFinite(r)||r<=0)return;(g[a]??=[]).push([b,r]);(g[b]??=[]).push([a,1/r]);};Object.entries(quoteStore).forEach(([sym,q])=>{const p=pairParts(sym);if(p&&q&&q.bid>0&&q.ask>0){add(p[0],p[1],+q.bid);add(p[1],p[0],1/+q.ask)}});const u=+$('usdjpy').value||0;if(u>0)add('USD','JPY',u);return g}
+function getRateToJPY(currency){if(currency==='JPY')return 1;const g=conversionGraph();if(currency==='USD'&&+$('usdjpy').value>0)return +$('usdjpy').value;const q=[[currency,1]],seen=new Set();while(q.length){const [cur,r]=q.shift();if(cur==='JPY')return r;if(seen.has(cur))continue;seen.add(cur);for(const [n,m] of (g[cur]||[]))if(!seen.has(n))q.push([n,r*m])}return null}
+function baseRateFor(c){if(c.base==='BTC'||c.base==='ETH'){const usd=getRateToJPY('USD');if(usd&&goldBid)return goldBid*usd}return getRateToJPY(c.base)}
+function quoteRateFor(c){return getRateToJPY(c.quote)}
+function renderOrders(){const arr=getOrders();$('count').textContent=arr.length+'件';$('orders').innerHTML=arr.length?arr.map((o,i)=>`<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editOrder(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editOrder(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>価格</label><input type="number" step="any" value="${o.price}" onchange="editOrder(${i},'price',parseFloat(this.value)||0)"></div></div>`).join(''):'<div class="small">この銘柄の注文はまだありません。</div>';calc()}
+function editOrder(i,k,v){const a=getOrders();a[i][k]=v;setOrders(a);calc()}
+function addOrder(){const a=getOrders();a.push({side:'Buy Limit',lot:.01,price:Number.isFinite(goldBid)?Math.max(0,goldBid-1):0});setOrders(a);renderOrders()}
+function resetOrders(){setOrders([]);renderOrders()}
+function fixedMarginJPY(o,c,lev,contract){const br=baseRateFor(c);return br?o.price*o.lot*contract/lev*br:null}
+function solveLC(bal,stop,filled,c,lev,contract){if(!filled.length)return null;const qr=quoteRateFor(c);if(!qr)return null;let margin=0;for(const o of filled){const m=fixedMarginJPY(o,c,lev,contract);if(m===null)return null;margin+=m}const stopEquity=margin*(stop/100);const pnl=p=>filled.reduce((s,o)=>s+(p-o.price)*o.lot*contract*qr,0);const f=p=>bal+pnl(p)-stopEquity;let hi=Math.max(...filled.map(o=>o.price)),lo=hi-1;while(f(lo)>0&&lo>0)lo=Math.max(0,lo*0.5);if(f(lo)>0)return null;for(let i=0;i<120;i++){const mid=(lo+hi)/2;if(f(mid)>0)hi=mid;else lo=mid}return (lo+hi)/2}
+function simulateLC(bal,stop,buys,c,lev,contract,currentAsk){let filled=buys.filter(o=>currentAsk<=o.price).slice();let remaining=buys.filter(o=>currentAsk>o.price);let lc=null;const spread=(Number.isFinite(goldAsk)&&Number.isFinite(goldBid))?Math.max(0,goldAsk-goldBid):0;while(remaining.length){if(!filled.length){filled.push(remaining.shift());lc=solveLC(bal,stop,filled,c,lev,contract);continue}lc=solveLC(bal,stop,filled,c,lev,contract);const next=remaining[0];const nextTriggerBid=next.price-spread;if(lc!==null&&lc<=nextTriggerBid){filled.push(remaining.shift());continue}break}if(filled.length)lc=solveLC(bal,stop,filled,c,lev,contract);return {filled,lc}}
+function calc(){const bal=+$('balance').value||0,stop=+$('stopout').value||20,c=cfg(),lev=+$('symbolLeverage').value||0,contract=+$('contractSize').value||0,buys=getOrders().filter(o=>/buy\s*limit/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);const qr=quoteRateFor(c);if(!buys.length||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!baseRateFor(c)||!lev||!contract){$('result').textContent='—';$('gap').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=buys.length?'換算レートまたは気配値が不足しています':'この銘柄のBuy Limit注文を読み込んでください';renderOrderStatus([],buys,null);return}
+const sim=simulateLC(bal,stop,buys,c,lev,contract,goldAsk);const filled=sim.filled,lc=sim.lc;const lots=filled.reduce((s,o)=>s+o.lot,0),qty=lots*contract,entry=filled.reduce((s,o)=>s+o.price*o.lot*contract,0);const totalLcLoss=lc!==null?filled.reduce((s,o)=>s+(lossAtLCJPY(o,lc,c)||0),0):null;$('lots').textContent=lots.toFixed(2);$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=qty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('avg').textContent=qty?(entry/qty).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid)))):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();if(lc!==null){$('result').textContent=lc.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid))));const d=goldBid-lc;$('gap').textContent=d>=0?`${d.toFixed(2)} ${c.quote}下`:`LC価格を下回っています`;$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → LC ${formatPrice(lc)} / LC時想定約定 ${filled.length}/${buys.length}本`}else{$('result').textContent='—';$('gap').textContent='LCを解けませんでした';$('distance').textContent='銘柄仕様・換算レート・注文を確認してください'}$('count').textContent=`${getOrders().length}件 / LC時想定約定 ${filled.length}件`;renderOrderStatus(filled,buys,lc)}
+function lossAtLCJPY(o,lc,c){
+  if(!Number.isFinite(lc)||!o||!Number.isFinite(+o.price)||!Number.isFinite(+o.lot)) return null;
+  const qr=quoteRateFor(c);
+  if(!qr||!Number.isFinite(+c.contract)) return null;
+  if(/^buy\\s*limit$/i.test(String(o.side||'')) || /^buy$/i.test(String(o.side||''))){
+    return (lc-(+o.price))*(+o.lot)*(+c.contract)*qr;
+  }
+  if(/^sell/i.test(String(o.side||''))){
+    return ((+o.price)-lc)*(+o.lot)*(+c.contract)*qr;
+  }
+  return null;
+}
+function formatJPYLoss(v){
+  if(!Number.isFinite(v)) return '—';
+  const sign=v<0?'−':'+'; return `${sign}${Math.round(Math.abs(v)).toLocaleString('ja-JP')} 円`;
+}
+function renderOrderStatus(filled,all,lc){
+  const keys=new Set(filled.map(o=>o.price+'|'+o.lot));
+  const c=cfg();
+  $('orders').innerHTML=all.map(o=>{
+    const f=keys.has(o.price+'|'+o.lot);
+    const loss=f?lossAtLCJPY(o,lc,c):null;
+    const lossHtml=f
+      ? `<div class="small" style="margin-top:3px;color:#b42318">LC時想定含み損：<b>${formatJPYLoss(loss)}</b>（${Number(o.lot).toFixed(2)} lot）</div>`
+      : `<div class="small" style="margin-top:3px">LC到達前のため想定含み損：—</div>`;
+    return `<div style="padding:10px 0;border-top:1px solid #eef1f4">
+      <div class="row" style="margin:0">
+        <span>${o.side} ${Number(o.lot).toFixed(2)} / ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}</span>
+        <b class="${f?'ok':'warn'}">${f?'✓ LC時想定約定':'○ LC時想定未約定'}</b>
+      </div>${lossHtml}
+    </div>`;
+  }).join('');
+}
+function updatePipValue(){const c=cfg(),lots=.01;let step,label;if(c.type==='fx'){step=/JPY$/.test(currentSymbol)?0.01:0.0001;label='1 pip'}else{const p=goldBid;const d=p?Math.max(0,Math.min(5,decimalPlacesFor(p))):2;step=Math.pow(10,-d);label='1 point'}const qr=quoteRateFor(c),value=qr?step*lots*c.contract*qr:null;$('pipLabel').textContent=`${currentSymbol} ${label} / 0.01 lot`;$('pipValue').textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';$('pipNote').textContent=c.type==='fx'?`${step} ${label} × 0.01 lot（${(lots*c.contract).toLocaleString()} ${c.unit}）をJPY換算`:`${step} ${label} × 0.01 lot（契約サイズ ${c.contract} ${c.unit} / lot）をJPY換算`}
+function normalizeOcrNumber(s){if(s==null)return null;const x=String(s).replace(/[,$]/g,'').replace(/[^0-9.]/g,'');const n=Number(x);return Number.isFinite(n)?n:null}
+function symbolFromText(s){const x=String(s).toUpperCase().replace(/\s+/g,'');const m=x.match(/^([A-Z0-9]+(?:CASH)?#)$/);return m?m[1]:null}
+function normalizeSymbol(s){let x=String(s).toUpperCase().replace(/\s+/g,'');x=x.replace(/CASH#/,'Cash#');if(x==='GOLD#')return'GOLD#';return x}
+function extractQuotesFromWords(words){
+  const rows={};
+  const all=words||[];
+  for(const w of all){
+    const t=String(w.text||'').trim();
+    const sym=symbolFromText(t);
+    if(!sym)continue;
+    const b=w.bbox||{};
+    const y=((b.y0||0)+(b.y1||0))/2;
+    const x0=b.x0||0;
+    const key=Math.round(y/18)*18;
+    (rows[key]??=[]).push({sym:normalizeSymbol(sym),x:x0,y,t,b});
+  }
+  const out={};
+  for(const arr of Object.values(rows)){
+    const symbols=arr.filter(a=>a.sym);
+    for(const s of symbols){
+      const nums=arr
+        .filter(a=>a.x>s.x+20 && /^[-+]?\d[\d,]*(?:\.\d+)?$/.test(a.t.replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]/g,'')))
+        .map(a=>({v:normalizeOcrNumber(a.t),x:a.x}))
+        .filter(a=>a.v!==null && a.v>0)
+        .sort((a,b)=>a.x-b.x);
+      // 気配値行ではBid/Askが最も右側に並ぶ。左側の変化率・値幅を除外する。
+      if(nums.length>=2){
+        const pair=nums.slice(-2).map(a=>a.v);
+        const bid=Math.min(...pair), ask=Math.max(...pair);
+        if(ask>bid && (ask-bid)/bid<0.20) out[s.sym]={bid,ask};
+      }
+    }
+  }
+  return out;
+}
+function extractAllQuotesText(text){
+  const out={};
+  const clean=text.replace(/\r/g,'\n');
+  const lines=clean.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  for(let i=0;i<lines.length;i++){
+    const sm=lines[i].match(/([A-Z0-9]+(?:Cash)?#)/);
+    if(!sm)continue;
+    const sym=normalizeSymbol(sm[1]);
+    const chunk=lines.slice(i,i+2).join(' ');
+    const nums=(chunk.match(/\d[\d,]*(?:\.\d+)?/g)||[]).map(normalizeOcrNumber).filter(Number.isFinite).filter(n=>n>0);
+    if(nums.length>=2){
+      // フォールバックでも行末の2価格を優先する。
+      const pair=nums.slice(-2);
+      const bid=Math.min(...pair),ask=Math.max(...pair);
+      if(ask>bid && (ask-bid)/bid<0.20) out[sym]={bid,ask};
+    }
+  }
+  return out;
+}
+function getDetectedUsdJpy(quotes,text){if(quotes['USDJPY#']?.bid)return +quotes['USDJPY#'].bid;const m=text.match(/USD\s*JPY\s*#?[\s\n]*(?:\d[\d,.]*\s*){0,3}(\d{2,3}\.\d{2,4})/i);return m?+m[1]:null}
+async function preparePriceImage(file){const url=URL.createObjectURL(file);try{const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url});const c=document.createElement('canvas'),ctx=c.getContext('2d',{willReadFrequently:true});const scale=Math.min(2,2200/img.width);c.width=Math.floor(img.width*scale);c.height=Math.floor(img.height*scale);ctx.drawImage(img,0,0,c.width,c.height);const d=ctx.getImageData(0,0,c.width,c.height),p=d.data;for(let i=0;i<p.length;i+=4){const g=.299*p[i]+.587*p[i+1]+.114*p[i+2];const v=g>175?255:(g<95?0:g);p[i]=p[i+1]=p[i+2]=v}ctx.putImageData(d,0,0);return c.toDataURL('image/png')}finally{URL.revokeObjectURL(url)}}
+function saveQuotes(quotes,usdjpy){const now=new Date().toISOString();for(const [sym,q] of Object.entries(quotes)){if(!(q.ask>q.bid&&q.bid>0))continue;if((q.ask-q.bid)/q.bid>=0.20)continue;quoteStore[sym]={bid:+q.bid,ask:+q.ask,usdjpy:usdjpy||0,updatedAt:now};priceStore[sym]={...quoteStore[sym]};ensureSpec(sym);ensureSymbolOption(sym)}saveAll();if(Number.isFinite(usdjpy)&&usdjpy>0)$('usdjpy').value=usdjpy.toFixed(3);switchSymbol()}
+$('priceChoose').onclick=()=>$('priceFile').click();$('priceFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;$('rateStatus').textContent='気配値スクショを高精度OCR中…';try{const img=await preparePriceImage(f);const r=await Tesseract.recognize(img,'eng',{logger:m=>{if(m.status==='recognizing text')$('rateStatus').textContent=`気配値OCR中… ${Math.round(m.progress*100)}%`},tessedit_pageseg_mode:'11'});let quotes=extractQuotesFromWords(r.data.words);const textQuotes=extractAllQuotesText(r.data.text);for(const [s,q] of Object.entries(textQuotes))if(!quotes[s])quotes[s]=q;const usdjpy=getDetectedUsdJpy(quotes,r.data.text);if(!Object.keys(quotes).length)throw new Error('quotes');saveQuotes(quotes,usdjpy);$('rateStatus').innerHTML=`<span class="ok">✓ ${Object.keys(quotes).length}銘柄を読み取り、Bid/Askを銘柄別に保存しました。新しいスクショまで保持します。</span>`}catch(err){console.error(err);$('rateStatus').innerHTML='<span class="err">気配値のBid/Askを認識できませんでした。前回保存価格は変更していません。</span>'}});
+$('symbol').addEventListener('change',switchSymbol);$('symbolLeverage').addEventListener('input',()=>{const c=cfg();c.leverage=+$('symbolLeverage').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});$('contractSize').addEventListener('input',()=>{const c=cfg();c.contract=+$('contractSize').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});['balance','stopout','usdjpy'].forEach(id=>$(id).addEventListener('input',()=>calc()));$('choose').onclick=()=>$('file').click();
+function parseOCR(text){const found=[];let m;const patterns=[/([0-9]+(?:\.[0-9]+)?)\s*\/\s*0\s*(?:at|@)\s*([0-9]+(?:\.[0-9]+)?)/gi,/0\.0[1-9]\s*(?:\/\s*0)?\s*(?:at|@)\s*([0-9]{1,8}(?:\.[0-9]{1,5})?)/gi];for(const re of patterns){while((m=re.exec(text))!==null){const lot=re===patterns[0]?+m[1]:.01,price=+(re===patterns[0]?m[2]:m[1]);if(lot>0&&price>0)found.push({side:'Buy Limit',lot,price})}}const seen=new Set();return found.filter(o=>{const k=o.lot+'|'+o.price;if(seen.has(k))return false;seen.add(k);return true})}
+$('file').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;$('preview').src=URL.createObjectURL(f);$('preview').style.display='block';$('ocrStatus').textContent='注文スクショをOCR中…';try{const r=await Tesseract.recognize(f,'eng',{logger:m=>{if(m.status==='recognizing text')$('ocrStatus').textContent=`注文OCR中… ${Math.round(m.progress*100)}%`}});const found=parseOCR(r.data.text);if(!found.length)throw new Error('orders');setOrders(found);renderOrders();$('ocrStatus').innerHTML=`<span class="ok">✓ ${found.length}件を${currentSymbol}の注文として保存しました。</span>`}catch(err){console.error(err);$('ocrStatus').innerHTML='<span class="warn">注文を完全には認識できませんでした。下の注文欄を手動修正できます。</span>'}});
+populateSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();
+</script>
+</body>
+</html>

@@ -174,38 +174,59 @@ function calc(){
    $('distance').textContent='XM気配値を読み込んでください'; updatePriceUI(); renderOrderStatus([],buys,null); return;
  }
  const stopRatio=stop/100, contractSize=100;
- // Buy Limit is triggered when Ask reaches the limit price. Any order already at/above current Ask is treated as filled.
- let filled=buys.filter(o=>currentAsk<=o.price).slice();
- let remaining=buys.filter(o=>currentAsk>o.price);
+
+ // 重要：このアプリは「現在の未約定注文を除外」するのではなく、
+ // 現在価格から下落してBuy Limitが順番に約定するシナリオを最後までシミュレーションする。
+ // 現在Ask以下のBuy Limitは、価格がそこまで下落した時点で順番に約定する。
+ // LC価格が次の注文価格より下にある場合、価格はLCへ到達する前にその注文価格を通過するため、
+ // 次の注文も約定させてからLCを再計算する。
+ let filled=buys.filter(o=>o.price>=currentAsk).slice();
+ let remaining=buys.filter(o=>o.price<currentAsk);
  let lc=null;
+
+ // 現在価格以上にある注文は、Buy Limitとしては既に価格条件を満たしているため先に反映。
  if(filled.length) lc=solveLC(bal,lev,stopRatio,u,filled,contractSize);
 
- // Simulate the downward path. If the current LC is at/above the next Buy Limit,
- // that pending order is reached before Stop Out and therefore becomes filled.
+ // 現在価格から下落し、最も高いBuy Limitから順番に約定。
+ // 「lc < next.price」が正しい判定。逆ではない。
  while(remaining.length){
    const next=remaining[0];
-   if(lc!==null && lc>=next.price){
+
+   // まだポジションが無い場合でも、まず最初のBuy Limitまで価格が下落して約定する。
+   if(lc===null){
      filled.push(next);
      remaining.shift();
      lc=solveLC(bal,lev,stopRatio,u,filled,contractSize);
-   }else break;
+     continue;
+   }
+
+   // LCより上に次の注文があるなら、その注文価格を先に通過するので約定。
+   if(lc < next.price){
+     filled.push(next);
+     remaining.shift();
+     lc=solveLC(bal,lev,stopRatio,u,filled,contractSize);
+   }else{
+     break;
+   }
  }
 
  const allLots=filled.reduce((s,o)=>s+o.lot,0), oz=allLots*contractSize;
  const entryOzValue=filled.reduce((s,o)=>s+o.price*o.lot*contractSize,0);
  $('lots').textContent=allLots.toFixed(2); $('oz').textContent=oz.toFixed(2); $('usedRate').textContent=u.toFixed(3);
  $('avg').textContent=oz? (entryOzValue/oz).toFixed(3):'—'; updatePriceUI();
+
  if(lc!==null){
    $('result').textContent=lc.toFixed(2);
    const d=currentBid-lc;
    $('gap').textContent=(d>=0?d.toFixed(2)+'ドル余裕':'ロスカット価格を下回っています');
    $('distance').textContent=`保存XM Bid ${currentBid.toFixed(2)} → LC ${lc.toFixed(2)} / LCまでの想定約定 ${filled.length}/${buys.length}本`;
  } else {
-   $('result').textContent='—'; $('gap').textContent='約定ポジションなし'; $('distance').textContent='現在価格からの下落シナリオで約定する注文を計算します';
+   $('result').textContent='—'; $('gap').textContent='—'; $('distance').textContent='計算できる注文がありません';
  }
  $('count').textContent=`${orders.length}件 / LC時想定約定 ${filled.length}件`;
  renderOrderStatus(filled,buys,lc);
 }
+
 function solveLC(bal,lev,stop,u,filled,contractSize){
  // JPY口座。Buyの含み損益はBidで評価。
  // Equity = balance + (P-avg) * oz * USDJPY

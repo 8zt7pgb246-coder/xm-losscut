@@ -96,12 +96,6 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
 </div>
 
 <div class="card">
-  <div class="row"><b>1 pip / 1 point の変動額</b><span>0.01 lot基準</span></div>
-  <div id="pipTable" class="small"></div>
-  <div class="small" style="margin-top:8px">FXはXMの定義に合わせて1 pip（通常0.0001、JPY/HUF関連は0.01）。GOLDなどCFDは「1 point / 1価格単位」として表示します。金額は保存した気配値からJPY換算します。</div>
-</div>
-
-<div class="card">
   <div class="row"><b>認識した注文</b><span id="count">0件</span></div>
   <div id="orders"></div>
   <div class="toolbar" style="margin-top:10px">
@@ -148,37 +142,22 @@ let quoteStore={};
 let priceUpdatedAt='';
 let currentSymbol=localStorage.getItem('xm_selected_symbol')||'GOLD#';
 const SYMBOLS={
-  'GOLD#':{name:'GOLD# / XAUUSD',label:'XM KIWAMI GOLD# 気配値',contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfdi',pipSize:1,pipLabel:'1 point'},
-  'BTCUSD#':{name:'BTCUSD# / Bitcoin',label:'XM KIWAMI BTCUSD# 気配値',contract:1,leverage:1000,unit:'BTC',base:'BTC',quote:'USD',type:'cfdi',pipSize:1,pipLabel:'1.00 USD'},
-  'OILCash#':{name:'OILCash# / WTI原油',label:'XM KIWAMI OILCash# 気配値',contract:100,leverage:200,unit:'barrels',base:'USD',quote:'USD',type:'cfdi',pipSize:1,pipLabel:'1.00 USD'},
-  'JP225Cash#':{name:'JP225Cash# / 日経225',label:'XM JP225Cash# 気配値',contract:1,leverage:1000,unit:'index',base:'JPY',quote:'JPY',type:'index',pipSize:1,pipLabel:'1 point'},
-  'EURUSD#':{name:'EURUSD#',label:'XM EURUSD# 気配値',contract:100000,leverage:1000,unit:'EUR',base:'EUR',quote:'USD',type:'fx',pipSize:.0001,pipLabel:'1 pip'},
-  'GBPUSD#':{name:'GBPUSD#',label:'XM GBPUSD# 気配値',contract:100000,leverage:1000,unit:'GBP',base:'GBP',quote:'USD',type:'fx',pipSize:.0001,pipLabel:'1 pip'},
-  'AUDJPY#':{name:'AUDJPY#',label:'XM AUDJPY# 気配値',contract:100000,leverage:1000,unit:'AUD',base:'AUD',quote:'JPY',type:'fx',pipSize:.01,pipLabel:'1 pip'},
-  'AUDUSD#':{name:'AUDUSD#',label:'XM AUDUSD# 気配値',contract:100000,leverage:1000,unit:'AUD',base:'AUD',quote:'USD',type:'fx',pipSize:.0001,pipLabel:'1 pip'},
-  'GBPAUD#':{name:'GBPAUD#',label:'XM GBPAUD# 気配値',contract:100000,leverage:1000,unit:'GBP',base:'GBP',quote:'AUD',type:'fx',pipSize:.0001,pipLabel:'1 pip'},
-  'USDJPY#':{name:'USDJPY#',label:'XM USDJPY# 気配値',contract:100000,leverage:1000,unit:'USD',base:'USD',quote:'JPY',type:'fx',pipSize:.01,pipLabel:'1 pip'}
+  'GOLD#':{name:'GOLD# / XAUUSD',label:'XM KIWAMI GOLD# 気配値',contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfdi'},
+  'BTCUSD#':{name:'BTCUSD# / Bitcoin',label:'XM KIWAMI BTCUSD# 気配値',contract:1,leverage:1000,unit:'BTC',base:'BTC',quote:'USD',type:'cfdi'},
+  'OILCash#':{name:'OILCash# / WTI原油',label:'XM KIWAMI OILCash# 気配値',contract:100,leverage:200,unit:'barrels',base:'USD',quote:'USD',type:'cfdi'},
+  'JP225Cash#':{name:'JP225Cash# / 日経225',label:'XM JP225Cash# 気配値',contract:1,leverage:1000,unit:'index',base:'JPY',quote:'JPY',type:'index'},
+  'EURUSD#':{name:'EURUSD#',label:'XM EURUSD# 気配値',contract:100000,leverage:1000,unit:'EUR',base:'EUR',quote:'USD',type:'fx'},
+  'GBPUSD#':{name:'GBPUSD#',label:'XM GBPUSD# 気配値',contract:100000,leverage:1000,unit:'GBP',base:'GBP',quote:'USD',type:'fx'},
+  'AUDJPY#':{name:'AUDJPY#',label:'XM AUDJPY# 気配値',contract:100000,leverage:1000,unit:'AUD',base:'AUD',quote:'JPY',type:'fx'},
+  'AUDUSD#':{name:'AUDUSD#',label:'XM AUDUSD# 気配値',contract:100000,leverage:1000,unit:'AUD',base:'AUD',quote:'USD',type:'fx'},
+  'GBPAUD#':{name:'GBPAUD#',label:'XM GBPAUD# 気配値',contract:100000,leverage:1000,unit:'GBP',base:'GBP',quote:'AUD',type:'fx'},
+  'USDJPY#':{name:'USDJPY#',label:'XM USDJPY# 気配値',contract:100000,leverage:1000,unit:'USD',base:'USD',quote:'JPY',type:'fx'}
 };
-function inferSymbolConfig(sym){
-  if(SYMBOLS[sym]) return SYMBOLS[sym];
-  const s=String(sym||'').replace(/#$/,'');
-  const fx=s.match(/^([A-Z]{3})([A-Z]{3})$/);
-  if(fx){
-    const base=fx[1], quote=fx[2];
-    return {name:sym,label:`XM ${sym} 気配値`,contract:100000,leverage:1000,unit:base,base,quote,type:'fx',pipSize:quote==='JPY'||quote==='HUF'?.01:.0001,pipLabel:'1 pip'};
-  }
-  if(/^JP225/i.test(s)) return {name:sym,label:`XM ${sym} 気配値`,contract:1,leverage:1000,unit:'index',base:'JPY',quote:'JPY',type:'index',pipSize:1,pipLabel:'1 point'};
-  if(/^(GOLD|XAU)/i.test(s)) return {name:sym,label:`XM ${sym} 気配値`,contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfdi',pipSize:1,pipLabel:'1 point'};
-  if(/^OIL/i.test(s)) return {name:sym,label:`XM ${sym} 気配値`,contract:100,leverage:200,unit:'barrels',base:'USD',quote:'USD',type:'cfdi',pipSize:1,pipLabel:'1.00 USD'};
-  if(/^BTCUSD|ETHUSD|LTCUSD|XRPUSD/i.test(s)) return {name:sym,label:`XM ${sym} 気配値`,contract:1,leverage:1000,unit:s.slice(0,3),base:s.slice(0,3),quote:'USD',type:'cfdi',pipSize:1,pipLabel:'1.00 USD'};
-  return {name:sym,label:`XM ${sym} 気配値`,contract:1,leverage:1000,unit:'unit',base:'USD',quote:'USD',type:'cfdi',pipSize:1,pipLabel:'1.00 price unit',assumed:true};
-}
-function allDetectedSymbols(){ return [...new Set([...Object.keys(SYMBOLS),...Object.keys(quoteStore)])]; }
 const PRICE_KEY='xm_saved_prices_multi_v4';
 let priceStore={};
 try{priceStore=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}')||{};}catch(e){priceStore={};}
 try{quoteStore=JSON.parse(localStorage.getItem('xm_quote_snapshot_all_v1')||'{}')||{};}catch(e){quoteStore={};}
-function cfg(){return inferSymbolConfig(currentSymbol);}
+function cfg(){return SYMBOLS[currentSymbol]||SYMBOLS['GOLD#'];}
 function ensureSymbolOption(sym){
   if(!sym) return;
   const sel=$('symbol');
@@ -204,7 +183,7 @@ function switchSymbol(){
   goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;
   if(saved&&Number.isFinite(+saved.usdjpy)) $('usdjpy').value=(+saved.usdjpy).toFixed(3);
   priceUpdatedAt=saved?.updatedAt||'';
-  updatePriceUI(); renderPipTable(); calc();
+  updatePriceUI(); calc();
 }
 function loadSavedPrice(){switchSymbol(); return Number.isFinite(goldBid)&&Number.isFinite(goldAsk);}
 function savePrice(){
@@ -224,53 +203,15 @@ function savePrice(){
 }
 function updatePriceUI(){
   const c=cfg();
-  $('goldBid').textContent=Number.isFinite(goldBid)?goldBid.toFixed(5)+' '+(c.quote||''):'—';
-  $('goldAsk').textContent=Number.isFinite(goldAsk)?goldAsk.toFixed(5)+' '+(c.quote||''):'—';
-  $('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?(goldAsk-goldBid).toFixed(5)+' '+(c.quote||''):'—';
+  $('goldBid').textContent=Number.isFinite(goldBid)?goldBid.toFixed(2)+' USD':'—';
+  $('goldAsk').textContent=Number.isFinite(goldAsk)?goldAsk.toFixed(2)+' USD':'—';
+  $('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?(goldAsk-goldBid).toFixed(2)+' USD':'—';
   $('priceUpdated').textContent=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未保存';
   $('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)
     ? `<span class="ok">✓ 保存済み ${currentSymbol} Bid ${goldBid.toFixed(2)} / Ask ${goldAsk.toFixed(2)}</span>`
     : `<span class="warn">${currentSymbol}の気配値スクショを読み込んでください</span>`;
 }
 function saveMeta(){}
-function convertCurrencyToJPY(currency){
-  if(currency==='JPY') return 1;
-  const direct=quoteStore[currency+'JPY#']||priceStore[currency+'JPY#'];
-  if(direct&&Number.isFinite(+direct.bid)) return +direct.bid;
-  if(currency==='USD') return getRateToJPY('USD');
-  const usdPair=quoteStore[currency+'USD#']||priceStore[currency+'USD#'];
-  if(usdPair&&Number.isFinite(+usdPair.bid)){
-    const usdJpy=convertCurrencyToJPY('USD');
-    return usdPair.bid*usdJpy;
-  }
-  const inv=quoteStore['USD'+currency+'#']||priceStore['USD'+currency+'#'];
-  if(inv&&Number.isFinite(+inv.bid)&&+inv.bid!==0){
-    const usdJpy=convertCurrencyToJPY('USD');
-    return usdJpy/inv.bid;
-  }
-  return null;
-}
-function pipValueJPY(sym, lot){
-  const c=inferSymbolConfig(sym);
-  const q=convertCurrencyToJPY(c.quote);
-  if(!q||!c.pipSize||!c.contract) return null;
-  const quoteAmount=lot*c.contract*c.pipSize;
-  return quoteAmount*q;
-}
-function renderPipTable(){
-  const syms=Object.keys(quoteStore);
-  if(!syms.length){ $('pipTable').innerHTML='<span class="warn">気配値スクショを読み込むと、認識した銘柄をここに表示します。</span>'; return; }
-  const lot=0.01;
-  $('pipTable').innerHTML=syms.map(sym=>{
-    const c=inferSymbolConfig(sym);
-    const v=pipValueJPY(sym,lot);
-    const label=c.type==='fx'?'1 pip':'1 point';
-    const unit=c.quote==='JPY'?'JPY':c.quote;
-    const val=v==null?'—':v.toLocaleString('ja-JP',{maximumFractionDigits:2})+' JPY';
-    return `<div class="row"><span><b>${sym}</b><br><small>${label} / ${lot.toFixed(2)} lot</small></span><b>${val}</b></div>`;
-  }).join('');
-}
-
 function renderOrders(){
  $('count').textContent=orders.length+'件';
  $('orders').innerHTML=orders.map((o,i)=>`
@@ -287,9 +228,13 @@ function resetOrders(){orders=[];renderOrders()}
 function getRateToJPY(currency){
   if(currency==='JPY') return 1;
   if(currency==='USD'){
+    // Account currency is JPY. Prefer the explicitly displayed/saved USDJPY rate;
+    // this prevents a stale per-symbol snapshot from blocking GOLD/BTC/OIL LC calculation.
+    const u=+$('usdjpy').value||0;
+    if(u>0) return u;
     const q=quoteStore['USDJPY#'] || priceStore['USDJPY#'];
-    if(q&&Number.isFinite(+q.bid)) return +q.bid;
-    const u=+$('usdjpy').value||0; return u||null;
+    if(q&&Number.isFinite(+q.bid)&&+q.bid>0) return +q.bid;
+    return null;
   }
   const direct=quoteStore[currency+'JPY#'] || priceStore[currency+'JPY#'];
   if(direct&&Number.isFinite(+direct.bid)) return +direct.bid;
@@ -343,12 +288,20 @@ function calc(){
    $('result').textContent='—'; $('gap').textContent='—'; $('avg').textContent='—'; $('lots').textContent='—'; $('oz').textContent='—'; $('usedRate').textContent=u?u.toFixed(3):'—';
    $('distance').textContent=`${currentSymbol}の気配値・換算レートを確認してください`; updatePriceUI(); renderOrderStatus([],buys,null); return;
  }
- // For a Buy Limit basket, start with orders already below current Ask, then add orders as LC level crosses them.
+ // Buy Limitは「現在価格より下にある未約定注文」も、LCまでの下落シナリオでは順番に約定します。
+ // そのため、現在時点で約定済みが0本でも、最初のBuy Limitを仮想的に約定させてLCを解きます。
  let filled=buys.filter(o=>currentAsk<=o.price).slice();
  let remaining=buys.filter(o=>currentAsk>o.price);
  let lc=filled.length?solveLCGeneric(bal,stop,filled,{...c,leverage:lev,contract:contractSize}):null;
  while(remaining.length){
    const next=remaining[0];
+   // まだポジションが無い場合は、LCシナリオ上の最初の注文を必ず約定させる。
+   if(!filled.length){
+     filled.push(next); remaining.shift();
+     lc=solveLCGeneric(bal,stop,filled,{...c,leverage:lev,contract:contractSize});
+     continue;
+   }
+   // 現在のLCが次のBuy Limit以上なら、その注文もLC到達前に約定する。
    if(lc!==null && lc>=next.price){
      filled.push(next); remaining.shift();
      lc=solveLCGeneric(bal,stop,filled,{...c,leverage:lev,contract:contractSize});
@@ -457,7 +410,7 @@ function setDetectedPrice(quotes,usdjpy){
     priceUpdatedAt=now;
   }
   if(Number.isFinite(usdjpy)) $('usdjpy').value=usdjpy.toFixed(3);
-  updatePriceUI(); renderPipTable(); calc();
+  updatePriceUI(); calc();
 }
 async function preparePriceImage(file){
   const url=URL.createObjectURL(file);
@@ -533,7 +486,7 @@ $("file").addEventListener("change",async e=>{
  }
 });
 
-populateDetectedSymbols(); $('symbol').value=currentSymbol; renderOrders();loadSavedPrice(); renderPipTable();
+populateDetectedSymbols(); $('symbol').value=currentSymbol; renderOrders();loadSavedPrice();
 </script>
 </body>
 </html>

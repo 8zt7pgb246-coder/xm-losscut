@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
 <title>DeadLine positioning｜デラポジ Pro</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
@@ -15,6 +15,43 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .file{display:none}.drop{border:2px dashed #cdd3da;border-radius:16px;padding:20px;text-align:center}#preview{display:none;max-width:100%;max-height:430px;border-radius:12px;margin:12px auto 0}
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
+
+/* v12 — DeadLine positioning / BLACK PRO UI */
+:root{
+  color-scheme:dark;
+  --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
+  --text:#f4f6f8;--muted:#8b95a5;--accent:#ff3b30;--accent2:#ff5a52;
+  --blue:#4da3ff;--green:#35d07f;--amber:#ffad33;
+}
+html,body{background:var(--bg)!important;color:var(--text)!important}
+body{min-height:100vh}
+.app{background:transparent;color:var(--text)}
+h1{color:#fff;letter-spacing:.2px}
+.sub,.small,.footer,.muted,label,.gold,.change{color:var(--muted)!important}
+.card,.hero{background:linear-gradient(180deg,#0d1116 0%,#090c10 100%)!important;border:1px solid var(--line);box-shadow:0 10px 30px #0008}
+.nav button,.secondary{background:#171c23!important;color:#dce2ea!important;border:1px solid #28303a}
+.nav .active,.primary{background:#f1f3f5!important;color:#050607!important}
+input,select{background:#0a0d11!important;color:#f5f7fa!important;border:1px solid #2b333d!important}
+input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!important}
+.drop{border-color:#303945;background:#090c10}
+.alert{background:#17120d;color:#ffbd75;border:1px solid #4a2f18}
+.danger{background:#1a0d0d;color:#ff8f89;border:1px solid #4a2020}
+.ok{color:var(--green)!important}.warn{color:var(--amber)!important}.err{color:#ff6b63!important}
+.row{border-bottom-color:var(--line)}
+.resultBox,.calcHint{background:#0e1319;color:var(--text);border:1px solid var(--line)}
+.badge{background:#301013;color:#ff8179;border:1px solid #6e2428}
+/* DEAD LINE is intentionally the visual focal point */
+.deadlineHero{position:relative;overflow:hidden;padding:22px 16px 20px;border:1px solid #542126!important;box-shadow:0 0 0 1px #1d090b,0 14px 42px #000b,0 0 38px #ff3b3014!important}
+.deadlineHero:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#ff3b300f,transparent 48%,#ff3b3007);pointer-events:none}
+.deadlineKicker{position:relative;display:inline-block;font-size:15px;font-weight:950;letter-spacing:4px;color:#ff625a;border:1px solid #70282d;background:#210c0f;border-radius:999px;padding:7px 16px;margin-bottom:5px}
+.deadlineSub{position:relative;font-size:12px;color:#aeb7c4;margin-bottom:6px;letter-spacing:.4px}
+.deadlineHero .gold{position:relative;font-size:13px}
+.deadlineHero .price{position:relative;font-size:58px;line-height:1.05;color:#fff;text-shadow:0 0 24px #ff3b3033;margin:5px 0 8px}
+.deadlineHero .change{position:relative;color:#c0c7d1!important}
+.deadlineRule{position:relative;margin-top:12px;padding-top:10px;border-top:1px solid #332126;color:#ff8c85;font-size:11px;font-weight:800;letter-spacing:.4px}
+.card .row b{color:#fff}
+#lcLoss{color:#ff6b63}
+#result{font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -44,13 +81,13 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 <div><label>USD/JPY（保存価格）</label><input id="usdjpy" type="number" step="0.001" value="159.427"></div>
 </div></div>
 
-<div class="hero"><div class="badge">推定ロスカットライン</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div></div>
+<div class="hero deadlineHero"><div class="deadlineKicker">DEAD LINE</div><div class="deadlineSub">推定ロスカットライン</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">この価格がデラポジの最重要監視ライン</div></div>
 
 <div class="card">
 <div class="row"><span id="bidLabel">XM Bid</span><b id="goldBid">—</b></div>
 <div class="row"><span id="askLabel">XM Ask</span><b id="goldAsk">—</b></div>
 <div class="row"><span>XM Spread</span><b id="goldSpread">—</b></div>
-<div class="row"><span>現在価格 → LC</span><b id="gap">—</b></div>
+<div class="row"><span>現在価格 → DEAD LINE</span><b id="gap">—</b></div>
 <div class="row"><span>平均約定価格</span><b id="avg">—</b></div>
 <div class="row"><span>合計Lot</span><b id="lots">—</b></div>
 <div class="row"><span>LC時想定含み損 合計</span><b id="lcLoss">—</b></div>
@@ -63,7 +100,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 
 <div class="card"><div class="row"><b>現在ポジション</b><span id="positionCount">0件</span></div><div id="positions"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addPosition()">＋ ポジション追加</button><button class="secondary" onclick="resetPositions()">ポジションリセット</button></div></div>
 
-<div class="card"><div class="row"><b>認識した注文</b><span id="count">0件 / LC時想定追加約定 0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">注文リセット</button></div></div>
+<div class="card"><div class="row"><b>認識した注文 / DEAD LINEシナリオ</b><span id="count">0件 / LC時想定追加約定 0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">注文リセット</button></div></div>
 
 <div class="card"><label>価格ソース</label><div class="small"><b>XM KIWAMI 気配値スクショ → このアプリ</b>。1枚のスクショから認識できた全銘柄のBid/Askを銘柄別に保存します。新しい気配値を読み込むまで上書きしません。銘柄を切り替えても他銘柄の保存価格は消えません。</div></div>
 

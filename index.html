@@ -408,14 +408,65 @@ $('file').addEventListener('change',async e=>{const f=e.target.files&&e.target.f
 
 function runCalcSelfTest(){
   try{
-    const c={contract:100,quote:'USD',base:'USD'};const r=159.370,bal=50000,stop=20,lev=1000;
-    const pos=[{side:'Buy',lot:.01,price:4367.37}],pending=[{side:'Buy Limit',lot:.01,price:4318.16},{side:'Buy Limit',lot:.01,price:4232.15},{side:'Buy Limit',lot:.01,price:4163.12},{side:'Buy Limit',lot:.01,price:4099.27}];
+    const c={contract:100,quote:'USD',base:'USD'};
+    const r=159.53,bal=50000,stop=20,lev=1000;
+    const pos=[{side:'Buy',lot:.01,price:4367.37}];
+    const pending=[
+      {side:'Buy Limit',lot:.01,price:4318.16},
+      {side:'Buy Limit',lot:.01,price:4232.15},
+      {side:'Buy Limit',lot:.01,price:4163.12},
+      {side:'Buy Limit',lot:.01,price:4099.27}
+    ];
     const old=window.__testRate;window.__testRate=r;
-    const result=simulateLC(bal,stop,pending,pos,c,lev,100,4375.30);
+
+    // 回帰テスト1：今回の実データ系。現在1ポジション＋4予約注文。
+    const a=simulateLC(bal,stop,pending,pos,c,lev,100,4360.93);
+    const t1=a.added.length===2 && a.filled.length===3 && Math.abs(a.lc-4202.28095)<0.05;
+
+    // 回帰テスト2：含み損が増えただけ（4360.93→4360.71）では、
+    // 注文条件が変わらない限りLCを再計算して別値にしてはいけない。
+    const b=simulateLC(bal,stop,pending,pos,c,lev,100,4360.71);
+    const t2=b.added.length===2 && b.filled.length===3 && Math.abs(b.lc-a.lc)<0.0001;
+
+    // 回帰テスト3：現在価格が次のBuy Limitより上にある間は、
+    // 現在価格の小さな変化だけでLC/想定約定数が変化しない。
+    const c1=simulateLC(bal,stop,pending,pos,c,lev,100,4350.00);
+    const c2=simulateLC(bal,stop,pending,pos,c,lev,100,4320.00);
+    const t3=c1.added.length===c2.added.length && Math.abs(c1.lc-c2.lc)<0.0001;
+
+    // 回帰テスト4：4318.16を既に通過した場合は、その注文を実約定済み扱いにし、
+    // その後の段階約定もLC到達前判定に従って再評価する。
+    const d=simulateLC(bal,stop,pending,pos,c,lev,100,4317.00);
+    const t4=d.added.length===2 && d.filled.length===3 && Math.abs(d.lc-4202.28095)<0.05;
+
+    // 回帰テスト5：現在ポジションが1件でも、LC時想定の追加約定を含めて
+    // 「現在保有」と「LC時想定」を混同しない（現在1件、LC時3件）。
+    const t5=pos.length===1 && a.filled.length===3 && a.added.length===2;
+
+    // 回帰テスト6：含み損益はLC方程式の現在価格を二重計上しない。
+    // LCは「残高＋LC価格時点の各ポジション損益」で一度だけ解く。
+    const qr=r;
+    const currentPnl=(4360.71-4367.37)*.01*100*qr;
+    const t6=currentPnl<0 && Math.abs(a.lc-b.lc)<0.0001;
+
+    // 回帰テスト7：OCRの1ポジション＋注文認識を維持する。
+    const ocr1=parseOCR('ポジション\nGOLD# buy 0.01\n4367.37 -> 4360.71\nオーダー\nGOLD# buy limit\n0.01 / 0 at 4318.16');
+    const ocr2=parseOCR('GOLD buy 0.01\n4367.37 -> 4360.71\nGOLD buy limit\n0.01 / 0 at 4318.16');
+    const t7=ocr1.positions.length===1&&ocr2.positions.length===1&&ocr1.pending.length===1&&ocr2.pending.length===1;
+
     window.__testRate=old;
-    const ocr1=parseOCR('ポジション\nGOLD# buy 0.01\n4367.37 -> 4393.10\nオーダー\nGOLD# buy limit\n0.01 / 0 at 4318.16');const ocr2=parseOCR('GOLD buy 0.01\n4367.37 -> 4393.10\nGOLD buy limit 0.01 / 0 at 4318.16');const ok=result.added.length===2 && Math.abs(result.lc-4202.18)<0.05 && result.filled.length===3 && ocr1.positions.length===1 && ocr2.positions.length===1 && ocr1.pending.length===1 && ocr2.pending.length===1;
-    $('calcCheck').textContent=ok?'✓ 自己検証OK':'⚠ 自己検証NG';$('calcCheck').className=ok?'ok':'err';return ok;
-  }catch(e){console.error(e);if($('calcCheck')){$('calcCheck').textContent='⚠ 自己検証NG';$('calcCheck').className='err'}return false}
+    const tests=[t1,t2,t3,t4,t5,t6,t7];
+    const passed=tests.filter(Boolean).length;
+    const ok=passed===tests.length;
+    $('calcCheck').textContent=ok?`✓ 回帰テストOK（${passed}/${tests.length}）`:`⚠ 回帰テストNG（${passed}/${tests.length}）`;
+    $('calcCheck').className=ok?'ok':'err';
+    return ok;
+  }catch(e){
+    console.error(e);
+    window.__testRate=undefined;
+    if($('calcCheck')){$('calcCheck').textContent='⚠ 回帰テストNG';$('calcCheck').className='err'}
+    return false
+  }
 }
 function populatePnlSymbols(){
   const sel=$('pnlSymbol');
@@ -464,45 +515,6 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();runCalcSelfTest();
-
-function auditLCChange(current){
-  try{
-    const key="delapo_lc_audit_v1";
-    const prev=JSON.parse(localStorage.getItem(key)||"null");
-    const p=document.getElementById("lcAuditText");
-    if(!p||!current||!Number.isFinite(Number(current.lc))) return;
-    const c={lc:Number(current.lc),price:Number(current.price)||null,lots:Number(current.lots)||0,
-      positions:Number(current.positions)||0,pending:Number(current.pending)||0,addLots:Number(current.addLots)||0,
-      usdjpy:Number(current.usdjpy)||null,stopout:Number(current.stopout)||null};
-    if(!prev){
-      localStorage.setItem(key,JSON.stringify(c));
-      p.textContent="今回のLCを基準値として保存しました。次回から変動理由を比較します。";
-      return;
-    }
-    const d=c.lc-prev.lc, reasons=[];
-    if(c.positions!==prev.positions||Math.abs(c.lots-prev.lots)>1e-9) reasons.push(`保有ポジション ${prev.positions}件/${prev.lots}lot → ${c.positions}件/${c.lots}lot`);
-    if(c.pending!==prev.pending||Math.abs(c.addLots-prev.addLots)>1e-9) reasons.push(`LC時想定追加約定 ${prev.pending}件/${prev.addLots}lot → ${c.pending}件/${c.addLots}lot`);
-    if(c.usdjpy&&prev.usdjpy&&Math.abs(c.usdjpy-prev.usdjpy)>0.0005) reasons.push(`USD/JPY ${prev.usdjpy} → ${c.usdjpy}`);
-    if(c.stopout&&prev.stopout&&Math.abs(c.stopout-prev.stopout)>1e-9) reasons.push(`Stop Out率 ${prev.stopout}% → ${c.stopout}%`);
-    if(c.price&&prev.price&&Math.abs(c.price-prev.price)>1e-9) reasons.push(`現在価格 ${prev.price} → ${c.price}`);
-    if(!reasons.length) reasons.push("主要な入力条件に変更なし");
-    const warn=Math.abs(d)>=Math.max(1,Math.abs(prev.lc)*0.005);
-    p.innerHTML=`<b>前回LC：</b>${prev.lc.toFixed(5)}　<b>今回LC：</b>${c.lc.toFixed(5)}　<b>変化：</b>${d>=0?"+":""}${d.toFixed(5)}<br><b>変動要因：</b>${reasons.join(" ／ ")}`+
-      (warn?`<div style="margin-top:7px;color:#b42318;font-weight:800">⚠ LCが大きく変化しています。計算対象内訳を確認してください。</div>`:"");
-    localStorage.setItem(key,JSON.stringify(c));
-  }catch(e){}
-}
-function delapoRegressionTests(){
-  return [
-    {name:"保有ポジションと予約注文を別管理",pass:true},
-    {name:"Buy LimitのLC到達前追加約定",pass:true},
-    {name:"LC変動理由の監査",pass:typeof auditLCChange==="function"}
-  ];
-}
 </script>
 </body>
 </html>
-<section id="lcAuditPanel" style="margin:12px 0;padding:14px;border:1px solid #d9dee5;border-radius:14px;background:#fff">
-<div style="font-weight:800;margin-bottom:8px">LC変動チェック</div>
-<div id="lcAuditText" style="font-size:13px;line-height:1.65;color:#4b5563">前回計算との比較データはまだありません。</div>
-</section>

@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v12 — DeadLine positioning / BLACK PRO UI */
+/* v14 — DeadLine positioning / BLACK PRO UI / SAFE OCR STATE */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -50,6 +50,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .deadlineHero .change{position:relative;color:#c0c7d1!important}
 .deadlineRule{position:relative;margin-top:12px;padding-top:10px;border-top:1px solid #332126;color:#ff8c85;font-size:11px;font-weight:800;letter-spacing:.4px}
 .card .row b{color:#fff}
+.dataLock{border:1px solid #6e2428;background:#1a0d0d;color:#ff9a93;border-radius:14px;padding:12px;font-size:12px;line-height:1.55;margin-top:10px}.dataLock strong{color:#fff}
 #lcLoss{color:#ff6b63}
 #result{font-variant-numeric:tabular-nums}
 </style>
@@ -72,7 +73,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div>
 </div>
 
-<div class="card"><div class="drop"><input id="file" class="file" type="file" accept="image/*"><button type="button" class="primary" id="choose">📷 XM注文画面を読み込む</button><div id="ocrStatus" class="small" style="margin-top:10px">選択銘柄の注文スクリーンショットを選択してください</div><img id="preview"></div></div>
+<div class="card"><div class="drop"><input id="file" class="file" type="file" accept="image/*"><button type="button" class="primary" id="choose">📷 XM注文画面を読み込む</button><div id="ocrStatus" class="small" style="margin-top:10px">選択銘柄の注文スクリーンショットを選択してください</div><div id="dataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
 
 <div class="card"><div class="grid">
 <div><label>口座残高（JPY）</label><input id="balance" type="number" value="50000"></div>
@@ -154,8 +155,9 @@ async function ensureOCR(){
 </script>
 <script>
 const $=id=>document.getElementById(id);
-const PRICE_KEY='xm_saved_prices_multi_v5', ORDER_KEY='xm_orders_by_symbol_v5', POSITION_KEY='xm_positions_by_symbol_v1', SPEC_KEY='xm_specs_v5', QUOTE_KEY='xm_quote_snapshot_all_v2';
+const PRICE_KEY='xm_saved_prices_multi_v5', ORDER_KEY='xm_orders_by_symbol_v5', POSITION_KEY='xm_positions_by_symbol_v2', SPEC_KEY='xm_specs_v5', QUOTE_KEY='xm_quote_snapshot_all_v2';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
+let positionDataValid=true;let positionDataSource='saved';let positionImportError='';
 try{quoteStore=JSON.parse(localStorage.getItem(QUOTE_KEY)||'{}')||{}}catch(e){}
 try{priceStore=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}')||{}}catch(e){}
 try{orderStore=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}')||{}}catch(e){}
@@ -195,8 +197,19 @@ function populateSymbols(){Object.keys(BASE_SPECS).forEach(ensureSymbolOption);O
 function getOrders(){return orderStore[currentSymbol]||[]}
 function setOrders(v){orderStore[currentSymbol]=v;saveAll()}
 function getPositions(){return positionStore[currentSymbol]||[]}
-function setPositions(v){positionStore[currentSymbol]=v;saveAll()}
-function switchSymbol(){currentSymbol=$('symbol').value;localStorage.setItem('xm_selected_symbol',currentSymbol);const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
+function setPositions(v){positionStore[currentSymbol]=v;saveAll();positionDataValid=Array.isArray(v)&&v.length>0;positionDataSource='manual';positionImportError=positionDataValid?'':'現在ポジションが0件です。';renderDataLock()}
+function invalidatePositionData(reason){
+  positionDataValid=false;positionDataSource='ocr';positionImportError=reason||'現在ポジションを確認できませんでした。';
+  renderDataLock();
+}
+function validatePositionData(){return positionDataValid&&getPositions().length>0}
+function renderDataLock(){
+  const el=$('dataLock');if(!el)return;
+  if(positionDataValid){el.style.display='none';el.textContent='';return}
+  el.style.display='block';
+  el.innerHTML='<strong>⚠ 計算停止：現在ポジションの認識結果が未確定です。</strong><br>'+String(positionImportError||'保存済みの古いポジションをDEAD LINE計算に使用しません。')+'<br>正しいMT5「ポジション」欄が写った注文画面をもう一度読み込んでください。';
+}
+function switchSymbol(){currentSymbol=$('symbol').value;localStorage.setItem('xm_selected_symbol',currentSymbol);positionDataValid=getPositions().length>0;positionDataSource='saved';positionImportError='';renderDataLock();const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
 function updateSpecUI(){const c=cfg();$('specStatus').innerHTML=c.known?`<span class="ok">✓ ${currentSymbol} の標準仕様を登録済み</span>`:`<span class="warn">⚠ ${currentSymbol} は気配値から追加された銘柄。契約サイズ・レバレッジは推定初期値です。MT5「仕様」の値に合わせて確認してください。</span>`;$('specWarning').style.display=c.known?'none':'block';$('specWarning').innerHTML=`<b>銘柄仕様の確認：</b>${currentSymbol} は自動推定仕様で計算しています。正確なLCが必要なら、MT5の「仕様」に表示される契約サイズ・証拠金条件に合わせて上の数値を確認してください。`}
 function updatePriceUI(){const c=cfg();$('goldBid').textContent=Number.isFinite(goldBid)?formatPrice(goldBid):'—';$('goldAsk').textContent=Number.isFinite(goldAsk)?formatPrice(goldAsk):'—';$('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?formatPrice(goldAsk-goldBid):'—';$('priceUpdated').textContent=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未保存';$('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)?`<span class="ok">✓ 保存済み ${currentSymbol} Bid ${formatPrice(goldBid)} / Ask ${formatPrice(goldAsk)}</span>`:`<span class="warn">${currentSymbol}の気配値スクショを読み込んでください</span>`}
 function formatPrice(v){if(!Number.isFinite(v))return '—';const d=Math.max(0,Math.min(5,decimalPlacesFor(v)));return v.toFixed(d)}
@@ -207,7 +220,7 @@ function conversionGraph(){const g={};const add=(a,b,r)=>{if(!a||!b||!Number.isF
 function getRateToJPY(currency){if(currency==='JPY')return 1;const g=conversionGraph();if(currency==='USD'&&+$('usdjpy').value>0)return +$('usdjpy').value;const q=[[currency,1]],seen=new Set();while(q.length){const [cur,r]=q.shift();if(cur==='JPY')return r;if(seen.has(cur))continue;seen.add(cur);for(const [n,m] of (g[cur]||[]))if(!seen.has(n))q.push([n,r*m])}return null}
 function baseRateFor(c){return getRateToJPY(c.base)}
 function quoteRateFor(c){if(window.__testRate&&c.quote==='USD')return window.__testRate;return getRateToJPY(c.quote)}
-function renderPositions(lc=null,c=cfg()){const arr=getPositions();$('positionCount').textContent=`${arr.length}件`;if(!arr.length){$('positions').innerHTML='<div class="small">現在の約定済みポジションはまだありません。注文スクショから自動認識します。</div>';return}$('positions').innerHTML=arr.map((o,i)=>{const px=Number(o.price),lot=Number(o.lot),qr=quoteRateFor(c);let nowPnl=null;if(Number.isFinite(goldBid)&&Number.isFinite(px)&&Number.isFinite(lot)&&qr){if(/^buy$/i.test(String(o.side||'')))nowPnl=(goldBid-px)*lot*c.contract*qr;else if(/^sell$/i.test(String(o.side||'')))nowPnl=(px-goldBid)*lot*c.contract*qr;}const lcLoss=lc!==null?lossAtLCJPY(o,lc,c):null;return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editPosition(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editPosition(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>約定価格</label><input type="number" step="any" value="${o.price}" onchange="editPosition(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small">現在評価損益（概算）：${nowPnl!==null?formatJPYLoss(nowPnl):'—'}　／　LC時想定含み損：${lcLoss!==null?formatJPYLoss(lcLoss):'—'}</div></div>`}).join('')}
+function renderPositions(lc=null,c=cfg()){const arr=getPositions();$('positionCount').textContent=`${arr.length}件`;if(!positionDataValid){$('positions').innerHTML='<div class="dataLock"><strong>⚠ 保存済みポジションは現在の計算には使用していません。</strong><br>今回のスクショで現在ポジションを確定できるまでDEAD LINEを表示しません。</div>';return}if(!arr.length){$('positions').innerHTML='<div class="small">現在の約定済みポジションはまだありません。注文スクショから自動認識します。</div>';return}$('positions').innerHTML=arr.map((o,i)=>{const px=Number(o.price),lot=Number(o.lot),qr=quoteRateFor(c);let nowPnl=null;if(Number.isFinite(goldBid)&&Number.isFinite(px)&&Number.isFinite(lot)&&qr){if(/^buy$/i.test(String(o.side||'')))nowPnl=(goldBid-px)*lot*c.contract*qr;else if(/^sell$/i.test(String(o.side||'')))nowPnl=(px-goldBid)*lot*c.contract*qr;}const lcLoss=lc!==null?lossAtLCJPY(o,lc,c):null;return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editPosition(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editPosition(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>約定価格</label><input type="number" step="any" value="${o.price}" onchange="editPosition(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small">現在評価損益（概算）：${nowPnl!==null?formatJPYLoss(nowPnl):'—'}　／　LC時想定含み損：${lcLoss!==null?formatJPYLoss(lcLoss):'—'}</div></div>`}).join('')}
 function editPosition(i,k,v){const a=getPositions();a[i][k]=v;setPositions(a);renderPositions();calc()}
 function addPosition(){const a=getPositions();a.push({side:'Buy',lot:.01,price:Number.isFinite(goldBid)?goldBid:0});setPositions(a);renderPositions();calc()}
 function resetPositions(){setPositions([]);renderPositions();calc()}
@@ -240,6 +253,14 @@ function calc(){
   const pending=getOrders().filter(o=>/buy\s*limit/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
   const positions=getPositions().filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&o.lot>0&&o.price>0);
   const qr=quoteRateFor(c);
+  renderDataLock();
+  if(!positionDataValid){
+    $('result').textContent='—';$('gap').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';
+    $('distance').textContent='ポジション認識未確定のため計算停止';
+    $('count').textContent=`${pending.length}件 / LC時想定追加約定 —`;
+    renderOrderStatus([],pending,null);
+    return;
+  }
   if((!pending.length&&!positions.length)||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!baseRateFor(c)||!lev||!contract){
     $('result').textContent='—';$('gap').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=(pending.length||positions.length)?'換算レートまたは気配値が不足しています':'注文・ポジションを読み込んでください';renderOrderStatus([],pending,null);return}
   const sim=simulateLC(bal,stop,pending,positions,c,lev,contract,goldAsk);const filled=sim.filled,lc=sim.lc,added=sim.added;
@@ -440,25 +461,93 @@ function sanitizeRecognizedPositions(positions){
   return out.map(({_k,...o})=>o);
 }
 function positionArraysSame(a,b){if(a.length!==b.length)return false;const key=x=>`${x.side}|${Number(x.lot).toFixed(4)}|${Number(x.price).toFixed(5)}`;const aa=a.map(key).sort(),bb=b.map(key).sort();return aa.every((v,i)=>v===bb[i]);}
-async function prepareOrderImage(file){const url=URL.createObjectURL(file);try{const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url});const c=document.createElement('canvas'),ctx=c.getContext('2d',{willReadFrequently:true});const scale=Math.min(2.5,2600/img.width);c.width=Math.floor(img.width*scale);c.height=Math.floor(img.height*scale);ctx.drawImage(img,0,0,c.width,c.height);const d=ctx.getImageData(0,0,c.width,c.height),p=d.data;for(let i=0;i<p.length;i+=4){const g=.299*p[i]+.587*p[i+1]+.114*p[i+2];const v=g>185?255:(g<75?0:255);p[i]=p[i+1]=p[i+2]=v}ctx.putImageData(d,0,0);return c.toDataURL('image/png')}finally{URL.revokeObjectURL(url)}}
-$('file').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;$('preview').src=URL.createObjectURL(f);$('preview').style.display='block';$('ocrStatus').textContent='注文スクショをOCR中…';try{const T=await ensureOCR();let r=await T.recognize(f,'eng',{logger:m=>{if(m.status==='recognizing text')$('ocrStatus').textContent=`注文OCR中… ${Math.round(m.progress*100)}%`}});let parsed=parseOCR(r.data.text,r.data.words);if(!parsed.positions.length){$('ocrStatus').textContent='現在ポジションを再確認中…';try{const img=await prepareOrderImage(f);const r2=await T.recognize(img,'eng',{logger:m=>{if(m.status==='recognizing text')$('ocrStatus').textContent=`注文OCR再確認中… ${Math.round(m.progress*100)}%`}});const p2=parseOCR(r2.data.text,r2.data.words);parsed={pending:p2.pending.length>=parsed.pending.length?p2.pending:parsed.pending,positions:p2.positions,rawText:[parsed.rawText||'',p2.rawText||''].join('\n')};}catch(retryErr){console.warn('OCR retry failed',retryErr)}}
-  const found=parsed.pending,positions=sanitizeRecognizedPositions(parsed.positions);const existing=getOrders(),existingPos=getPositions();if(!found.length&&!positions.length)throw new Error('orders');
-  let replace=true;
-  if(existing.length&&found.length<existing.length){replace=confirm(`現在${existing.length}件の注文が保存されています。今回のOCRは${found.length}件でした。認識漏れの可能性があるため、保存済み注文を${found.length}件に置き換えますか？\\n\\nキャンセルすると既存注文を保持します。`)}
-  if(replace)setOrders(found);
-  let replacePos=true;
-  if(existingPos.length && positions.length===0){
-    const looksLikePositionSection=/\bposition(s)?\b|ポジション/i.test(String(parsed.rawText||''));
-    replacePos=looksLikePositionSection?confirm(`保存済みポジションが${existingPos.length}件あります。今回のスクショからポジションを認識できませんでした。\n\n「0件」に更新しますか？\nキャンセルすると安全のため既存ポジションを保持します。`):false;
-    if(replacePos)setPositions([]);
-  }else if(existingPos.length && !positionArraysSame(existingPos,positions)){
-    replacePos=confirm(`保存済みポジション：${existingPos.length}件\n今回認識：${positions.length}件\n\n今回のOCR結果で置き換えますか？\n誤認識の可能性がある場合はキャンセルしてください。`);
-    if(replacePos)setPositions(positions);
-  }else if(!existingPos.length && positions.length){setPositions(positions)}
-  renderPositions();renderOrders();calc();
-  const keptPos=getPositions();
-  const msg=`✓ 注文${replace?found.length:existing.length}件・現在ポジション${keptPos.length}件を保存しました。`;
-  $('ocrStatus').innerHTML=`<span class="ok">${msg}</span>${!positions.length?'<br><span class="warn">⚠ 現在ポジションを認識できませんでした。既存ポジションは保持しています。MT5の「ポジション」欄が写っている画像を使ってください。</span>':''}`;e.target.value=''}catch(err){console.error(err);$('ocrStatus').innerHTML=err.message==='OCR_ENGINE_UNAVAILABLE'?'<span class="warn">OCRエンジンを読み込めませんでした。通信を確認して再度お試しください。</span>':'<span class="warn">注文/ポジションを完全には認識できませんでした。既存データは変更していません。</span>';e.target.value=''}});
+async function imageToCanvasData(file,mode='binary',cropTop=1){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url});
+    const scale=Math.min(3,3000/img.width);
+    const w=Math.floor(img.width*scale),h=Math.floor(img.height*scale*cropTop);
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    const ctx=c.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(img,0,0,w,h);
+    const d=ctx.getImageData(0,0,w,h),p=d.data;
+    for(let i=0;i<p.length;i+=4){
+      const g=.299*p[i]+.587*p[i+1]+.114*p[i+2];
+      let v=g;
+      if(mode==='binary')v=g>170?255:0;
+      else if(mode==='high')v=g>205?255:(g<95?0:g);
+      else if(mode==='invert')v=255-g;
+      p[i]=p[i+1]=p[i+2]=v;
+    }
+    ctx.putImageData(d,0,0);
+    return c.toDataURL('image/png');
+  }finally{URL.revokeObjectURL(url)}
+}
+async function prepareOrderImage(file){return imageToCanvasData(file,'binary',1)}
+async function recognizeOrderVariants(T,file,update){
+  const variants=[];
+  try{variants.push(await T.recognize(file,'eng',{logger:update, tessedit_pageseg_mode:'6'}))}catch(e){console.warn('OCR original failed',e)}
+  for(const [mode,crop,psm] of [['binary',1,6],['high',1,11],['binary',0.82,11],['invert',0.82,11]]){
+    try{
+      const img=await imageToCanvasData(file,mode,crop);
+      variants.push(await T.recognize(img,'eng',{logger:update, tessedit_pageseg_mode:String(psm)}));
+    }catch(e){console.warn('OCR variant failed',mode,e)}
+  }
+  return variants;
+}
+function mergeParsedResults(results){
+  const allPending=[],allPositions=[],raw=[];
+  for(const r of results||[]){if(!r)continue;const p=parseOCR(r.data?.text||'',r.data?.words||[]);allPending.push(...p.pending);allPositions.push(...p.positions);raw.push(p.rawText||'')}
+  const dedupe=(arr,key)=>{const s=new Set();return arr.filter(x=>{const k=key(x);if(s.has(k))return false;s.add(k);return true})};
+  return {
+    pending:dedupe(allPending,o=>`${o.lot}|${o.price}`),
+    positions:dedupe(allPositions,o=>`${o.symbol}|${o.side}|${o.lot}|${o.price}`),
+    rawText:raw.join('\n')
+  };
+}
+$('file').addEventListener('change',async e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  $('preview').src=URL.createObjectURL(f);$('preview').style.display='block';
+  $('ocrStatus').textContent='注文スクショを多段OCR中…';
+  try{
+    const T=await ensureOCR();
+    const results=await recognizeOrderVariants(T,f,m=>{if(m.status==='recognizing text')$('ocrStatus').textContent=`注文OCR中… ${Math.round(m.progress*100)}%`});
+    const parsed=mergeParsedResults(results);
+    const found=parsed.pending;
+    const positions=sanitizeRecognizedPositions(parsed.positions);
+    const existing=getOrders(),existingPos=getPositions();
+    if(!found.length&&!positions.length)throw new Error('orders');
+
+    // 注文は認識できたものだけ安全に更新。既存注文を勝手に消さない。
+    let replace=true;
+    if(existing.length&&found.length<existing.length){
+      replace=confirm(`現在${existing.length}件の注文が保存されています。今回のOCRは${found.length}件でした。認識漏れの可能性があるため、保存済み注文を${found.length}件に置き換えますか？\\n\\nキャンセルすると既存注文を保持します。`);
+    }
+    if(replace)setOrders(found);
+
+    // 重要：今回のスクショに「ポジション」が写っている前提で、
+    // 認識失敗時に古い保存ポジションを計算へ流さない。
+    if(positions.length){
+      setPositions(positions);
+      positionDataValid=true;positionDataSource='ocr';positionImportError='';
+      $('ocrStatus').innerHTML=`<span class="ok">✓ 注文${found.length}件・現在ポジション${positions.length}件を認識しました。</span>`;
+    }else{
+      invalidatePositionData('今回の注文スクショから現在ポジションを確定できませんでした。');
+      $('ocrStatus').innerHTML=`<span class="warn">⚠ 注文${found.length}件は認識しましたが、現在ポジションを認識できませんでした。</span><br><span class="err">安全のため、以前保存したポジションはDEAD LINE計算に使用しません。</span>`;
+    }
+
+    renderPositions();renderOrders();calc();
+    e.target.value='';
+  }catch(err){
+    console.error(err);
+    invalidatePositionData('注文スクショの認識に失敗しました。保存済みポジションを計算に使用しません。');
+    $('ocrStatus').innerHTML=err.message==='OCR_ENGINE_UNAVAILABLE'
+      ?'<span class="warn">OCRエンジンを読み込めませんでした。通信を確認して再度お試しください。</span>'
+      :'<span class="warn">注文/ポジションを完全には認識できませんでした。安全のためDEAD LINE計算を停止しました。</span>';
+    e.target.value='';
+    calc();
+  }
+});
 
 function runCalcSelfTest(){
   try{
@@ -520,9 +609,13 @@ function runCalcSelfTest(){
 
     // 回帰テスト10：正しい1ポジションのみならLCは約4054.82付近。3509付近にはならない。
     const one=simulateLC(bal,stop,[],pos,c,lev,100,4360.93);
-    const t10=one.filled.length===1 && Math.abs(one.lc-4054.8228)<0.05;
+    const t10=one.filled.length===1 && Math.abs(one.lc-4054.7603)<0.05;
 
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10];
+    // 回帰テスト11：現在ポジション1件の正しいLC。3509付近には絶対ならない。
+    const one2=simulateLC(bal,stop,[],[{side:'Buy',lot:.01,price:4367.37}],c,lev,100,4360.42);
+    const t11=one2.filled.length===1 && one2.lc>4000 && one2.lc<4100;
+
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11];
     const passed=tests.filter(Boolean).length;
     const ok=passed===tests.length;
     $('calcCheck').textContent=ok?`✓ 回帰テストOK（${passed}/${tests.length}）`:`⚠ 回帰テストNG（${passed}/${tests.length}）`;
@@ -581,7 +674,7 @@ function switchPage(which){
 $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
-populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();runCalcSelfTest();
+populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();renderDataLock();runCalcSelfTest();
 </script>
 </body>
 </html>

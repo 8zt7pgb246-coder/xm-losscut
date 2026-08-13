@@ -30,6 +30,18 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
 <div class="sub">注文スクショ＋XM気配値スクショ → 自動OCR → 価格を端末保存 → ロスカットライン更新</div>
 
 <div class="card">
+  <div class="grid">
+    <div class="wide"><label>XM KIWAMI GOLD# 気配値</label>
+      <input id="priceFile" class="file" type="file" accept="image/*">
+      <button class="primary" id="priceChoose">📷 気配値スクショを読み込む</button>
+    </div>
+  </div>
+  <div class="toolbar" style="margin-top:12px">
+    <span id="rateStatus" class="small">保存されたXM価格を確認しています…</span>
+  </div>
+</div>
+
+<div class="card">
   <div class="drop">
     <input id="file" class="file" type="file" accept="image/*">
     <button class="primary" id="choose">📷 XM画面を読み込む</button>
@@ -44,13 +56,6 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
     <div><label>レバレッジ</label><input id="leverage" type="number" value="1000"></div>
     <div><label>XM Stop Out（%）</label><input id="stopout" type="number" value="20"></div>
     <div><label>USD/JPY（保存価格）</label><input id="usdjpy" type="number" step="0.001" value="158.930"></div>
-    <div class="wide"><label>XM KIWAMI GOLD# 気配値</label>
-      <input id="priceFile" class="file" type="file" accept="image/*">
-      <button class="primary" id="priceChoose">📷 気配値スクショを読み込む</button>
-    </div>
-  </div>
-  <div class="toolbar" style="margin-top:12px">
-    <span id="rateStatus" class="small">保存されたXM価格を確認しています…</span>
   </div>
 </div>
 
@@ -189,31 +194,91 @@ function calc(){
  renderOrderStatus(filled,buys,lc);
 }
 function solveLC(bal,lev,stop,u,filled,contractSize){
+ // JPY口座。Buyの含み損益はBidで評価。
+ // Equity = balance + (P-avg) * oz * USDJPY
+ // Margin = P * oz * USDJPY / leverage
+ // Stop Out: Equity = stop * Margin
+ // よって P = (avg*oz - balance/USDJPY) / (oz*(1-stop/leverage))
  const lots=filled.reduce((s,o)=>s+o.lot,0), oz=lots*contractSize;
- if(!oz||!u) return null;
+ if(!oz||!u||!lev) return null;
  const entryOzValue=filled.reduce((s,o)=>s+o.price*o.lot*contractSize,0);
- return (entryOzValue + bal/u)/(oz*(1-stop/lev));
+ const p=(entryOzValue - bal/u)/(oz*(1-stop/lev));
+ return Number.isFinite(p)?p:null;
 }
 function renderOrderStatus(filled,all,lc){
  const f=new Set(filled.map(o=>o.price+'|'+o.lot));
  $('orders').innerHTML=all.map((o,i)=>{const key=o.price+'|'+o.lot;const isF=f.has(key);const label=isF?'✓ 約定済み':'○ 未約定'; return `<div class="row"><span>${o.side} ${o.lot.toFixed(2)} / ${o.price.toFixed(2)}</span><b class="${isF?'ok':'warn'}">${label}</b></div>`}).join('');
 }
 
+function normalizeOcrNumber(v){
+  if(v==null) return null;
+  return Number(String(v).replace(/[^0-9.]/g,''));
+}
+function fixGoldLeadingDigit(a,b){
+  // iPhone OCR can read the leading 4 in 4xxx.xx as 1xxx.xx.
+  // If the two GOLD quotes otherwise match closely, repair only that OCR error.
+  if(!Number.isFinite(a)||!Number.isFinite(b)) return [a,b];
+  const suffixA=(a%1000), suffixB=(b%1000);
+  if(a>=1000&&a<2000&&b>=4000&&b<5000&&Math.abs(suffixA-suffixB)<2){
+    const repaired=4000+suffixA; return [repaired,b];
+  }
+  if(b>=1000&&b<2000&&a>=4000&&a<5000&&Math.abs(suffixA-suffixB)<2){
+    const repaired=4000+suffixB; return [a,repaired];
+  }
+  return [a,b];
+}
 function extractPrices(text){
- const clean=text.replace(/,/g,'').replace(/\s+/g,' ');
- let gold=null, usdjpy=null;
- const goldContext=/(?:gold\s*#?|xauusd|gld|ゴールド)[^\n]{0,160}/i.exec(text);
- const gc=goldContext?goldContext[0]:clean;
- const nums=(gc.match(/\d{3,5}\.\d{1,3}/g)||[]).map(Number).filter(n=>n>1000&&n<10000);
- if(nums.length>=2){ gold=Math.min(nums[0],nums[1]); }
- // Common MT5/Market Watch layouts show two adjacent GOLD prices; if a line contains GOLD# use its first two prices.
- if(!goldContext){
-   const pairs=clean.match(/(4\d{3}\.\d{1,3})\s+(4\d{3}\.\d{1,3})/);
-   if(pairs){ const a=+pairs[1],b=+pairs[2]; gold=Math.min(a,b); }
- }
- const us=(text.match(/USD\s*JPY[^\d]{0,80}(\d{2,3}\.\d{2,4})/i)||[])[1];
- if(us) usdjpy=+us;
- return {goldBid:gold, goldAsk: nums.length>=2?Math.max(nums[0],nums[1]):null, usdjpy};
+  const raw=text.replace(/\r/g,'');
+  const lines=raw.split('\n').map(x=>x.replace(/,/g,'').trim()).filter(Boolean);
+  let goldBid=null,goldAsk=null,usdjpy=null;
+
+  // Prefer the actual GOLD# row. Do NOT use L/H values from the next line.
+  for(let i=0;i<lines.length;i++){
+    if(/GOLD\s*#/i.test(lines[i])){
+      const m=lines[i].match(/GOLD\s*#.*?(\d{3,5}\.\d{1,3})\s+(\d{3,5}\.\d{1,3})/i);
+      if(m){
+        let a=normalizeOcrNumber(m[1]), b=normalizeOcrNumber(m[2]);
+        [a,b]=fixGoldLeadingDigit(a,b);
+        if(a>1000&&a<10000&&b>1000&&b<10000&&Math.abs(a-b)<=50){
+          goldBid=Math.min(a,b); goldAsk=Math.max(a,b);
+        }
+      }
+      if(!Number.isFinite(goldBid)){
+        const nums=(lines[i].match(/\d{3,5}\.\d{1,3}/g)||[]).map(Number).filter(n=>n>1000&&n<10000);
+        if(nums.length>=2){
+          let a=nums[0],b=nums[1]; [a,b]=fixGoldLeadingDigit(a,b);
+          if(Math.abs(a-b)<=50){goldBid=Math.min(a,b);goldAsk=Math.max(a,b);}
+        }
+      }
+      break;
+    }
+  }
+
+  for(let i=0;i<lines.length;i++){
+    if(/USD\s*JPY\s*#/i.test(lines[i])){
+      const nums=(lines[i].match(/\d{2,3}\.\d{2,4}/g)||[]).map(Number).filter(n=>n>80&&n<250);
+      if(nums.length>=2) usdjpy=nums[0];
+      else if(nums.length===1) usdjpy=nums[0];
+      break;
+    }
+  }
+
+  // Fallback for OCR that loses the line break: search only for close GOLD quote pairs.
+  if(!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)){
+    const nums=(raw.match(/\d{3,5}\.\d{1,3}/g)||[]).map(Number).filter(n=>n>1000&&n<10000);
+    let best=null;
+    for(let i=0;i<nums.length;i++) for(let j=i+1;j<nums.length;j++){
+      let a=nums[i],b=nums[j]; [a,b]=fixGoldLeadingDigit(a,b);
+      const d=Math.abs(a-b);
+      if(d>0&&d<=10 && (!best||d<best.d)) best={a,b,d};
+    }
+    if(best){goldBid=Math.min(best.a,best.b);goldAsk=Math.max(best.a,best.b);}
+  }
+  if(!Number.isFinite(usdjpy)){
+    const m=raw.match(/USD\s*JPY\s*#?[\s\S]{0,80}?(\d{2,3}\.\d{2,4})/i);
+    if(m) usdjpy=+m[1];
+  }
+  return {goldBid,goldAsk,usdjpy};
 }
 function setDetectedPrice(x){
  if(!Number.isFinite(x.goldBid)||!Number.isFinite(x.goldAsk)||x.goldAsk<x.goldBid) throw new Error('GOLD#のBid/Askを2つ認識できませんでした');
@@ -221,12 +286,33 @@ function setDetectedPrice(x){
  if(Number.isFinite(x.usdjpy)) $('usdjpy').value=x.usdjpy.toFixed(3);
  savePrice(); calc();
 }
+async function preparePriceImage(file){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=url;});
+    const c=document.createElement('canvas'), ctx=c.getContext('2d',{willReadFrequently:true});
+    // Keep the market-watch rows, enlarge for OCR, and improve contrast.
+    const cropH=Math.min(img.height,Math.floor(img.height*0.72));
+    const scale=1.8; c.width=Math.floor(img.width*scale); c.height=Math.floor(cropH*scale);
+    ctx.drawImage(img,0,0,img.width,cropH,0,0,c.width,c.height);
+    const d=ctx.getImageData(0,0,c.width,c.height), p=d.data;
+    for(let i=0;i<p.length;i+=4){
+      const g=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];
+      const v=g>165?255:(g<90?0:g);
+      p[i]=p[i+1]=p[i+2]=v;
+    }
+    ctx.putImageData(d,0,0);
+    return c.toDataURL('image/png');
+  }finally{URL.revokeObjectURL(url);}
+}
+
 $('priceChoose').onclick=()=>$('priceFile').click();
 $('priceFile').addEventListener('change',async e=>{
  const f=e.target.files[0]; if(!f)return;
  $('rateStatus').textContent='気配値スクショを解析しています…';
  try{
-   const result=await Tesseract.recognize(f,'eng',{logger:m=>{if(m.status==='recognizing text')$('rateStatus').textContent=`気配値OCR中… ${Math.round(m.progress*100)}%`}});
+   const ocrImage=await preparePriceImage(f);
+   const result=await Tesseract.recognize(ocrImage,'eng',{logger:m=>{if(m.status==='recognizing text')$('rateStatus').textContent=`気配値OCR中… ${Math.round(m.progress*100)}%`},tessedit_pageseg_mode:'6'});
    const x=extractPrices(result.data.text);
    setDetectedPrice(x);
    $('rateStatus').innerHTML=`<span class="ok">✓ 読み取り → 即保存・上書きしました。次回起動時もこの価格を使用します。</span>`;

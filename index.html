@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro</title>
+<title>DeadLine positioning｜デラポジ Pro v15</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v14 — DeadLine positioning / BLACK PRO UI / SAFE OCR STATE */
+/* v15 — DeadLine positioning / BLACK PRO UI / HARD OCR SAFETY / DYNAMIC MARGIN */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -91,8 +91,10 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div class="row"><span>現在価格 → DEAD LINE</span><b id="gap">—</b></div>
 <div class="row"><span>平均約定価格</span><b id="avg">—</b></div>
 <div class="row"><span>合計Lot</span><b id="lots">—</b></div>
+<div class="row"><span>現在含み損益 合計</span><b id="currentPnl">—</b></div>
 <div class="row"><span>LC時想定含み損 合計</span><b id="lcLoss">—</b></div>
 <div class="row"><span>合計数量</span><b id="qty">—</b></div>
+<div class="row"><span>LC時想定総ポジション</span><b id="lcTotalPositions">—</b></div>
 <div class="row"><span>現在のUSD/JPY</span><b id="usedRate">—</b></div>
 <div class="row"><span>価格最終更新</span><b id="priceUpdated">—</b></div>
 </div>
@@ -105,10 +107,10 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 <div class="card"><label>価格ソース</label><div class="small"><b>XM KIWAMI 気配値スクショ → このアプリ</b>。1枚のスクショから認識できた全銘柄のBid/Askを銘柄別に保存します。新しい気配値を読み込むまで上書きしません。銘柄を切り替えても他銘柄の保存価格は消えません。</div></div>
 
-<div class="alert"><b>重要：</b>LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。</div>
+<div class="alert"><b>重要：</b>LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。保存済みの古いポジションは起動・銘柄切替時に自動で無効化します。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
 
-<div class="card"><div class="row"><b>計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">現在ポジションを含め、LC到達前に通過するBuy Limitだけを追加約定として計算します。修正後の計算エンジンは、既知の5段階テストケースを起動時に検証します。</div></div>
+<div class="card"><div class="row"><b>計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">現在ポジションを含め、LC到達前に通過するBuy Limitだけを追加約定として計算します。修正後の計算エンジンは、既知の回帰テストケースを起動時に検証します。</div></div>
 <div class="card footer"><b>計算モデル</b><br>口座残高はJPY。各注文の約定価格で必要証拠金を固定する近似モデルを使用し、Stop Out時のEquity＝Stop Out率×Used MarginとしてLC価格を解きます。Buy Limitの約定判定はAsk、ロングの含み損評価はBidを使います。Buy Limitの発動判定にスプレッドを二重適用しません。価格変動による損益は銘柄の決済通貨からJPYへ換算します。既存ポジション、スワップ、手数料、ヘッジ、段階式レバレッジ、銘柄固有の証拠金率等は別途反映が必要です。したがって結果は「推定」です。</div>
 </div>
 
@@ -155,9 +157,9 @@ async function ensureOCR(){
 </script>
 <script>
 const $=id=>document.getElementById(id);
-const PRICE_KEY='xm_saved_prices_multi_v5', ORDER_KEY='xm_orders_by_symbol_v5', POSITION_KEY='xm_positions_by_symbol_v2', SPEC_KEY='xm_specs_v5', QUOTE_KEY='xm_quote_snapshot_all_v2';
+const PRICE_KEY='xm_saved_prices_multi_v6', ORDER_KEY='xm_orders_by_symbol_v6', POSITION_KEY='xm_positions_by_symbol_v3', SPEC_KEY='xm_specs_v6', QUOTE_KEY='xm_quote_snapshot_all_v3';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
-let positionDataValid=true;let positionDataSource='saved';let positionImportError='';
+let positionDataValid=false;let positionDataSource='none';let positionImportError='起動直後は保存済みポジションを信頼しません。現在のMT5ポジション画面を再読込してください。';
 try{quoteStore=JSON.parse(localStorage.getItem(QUOTE_KEY)||'{}')||{}}catch(e){}
 try{priceStore=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}')||{}}catch(e){}
 try{orderStore=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}')||{}}catch(e){}
@@ -209,7 +211,7 @@ function renderDataLock(){
   el.style.display='block';
   el.innerHTML='<strong>⚠ 計算停止：現在ポジションの認識結果が未確定です。</strong><br>'+String(positionImportError||'保存済みの古いポジションをDEAD LINE計算に使用しません。')+'<br>正しいMT5「ポジション」欄が写った注文画面をもう一度読み込んでください。';
 }
-function switchSymbol(){currentSymbol=$('symbol').value;localStorage.setItem('xm_selected_symbol',currentSymbol);positionDataValid=getPositions().length>0;positionDataSource='saved';positionImportError='';renderDataLock();const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
+function switchSymbol(){currentSymbol=$('symbol').value;localStorage.setItem('xm_selected_symbol',currentSymbol);positionDataValid=false;positionDataSource='none';positionImportError='銘柄切替後は現在ポジションを再確認するまで保存済みデータを計算に使用しません。';renderDataLock();const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
 function updateSpecUI(){const c=cfg();$('specStatus').innerHTML=c.known?`<span class="ok">✓ ${currentSymbol} の標準仕様を登録済み</span>`:`<span class="warn">⚠ ${currentSymbol} は気配値から追加された銘柄。契約サイズ・レバレッジは推定初期値です。MT5「仕様」の値に合わせて確認してください。</span>`;$('specWarning').style.display=c.known?'none':'block';$('specWarning').innerHTML=`<b>銘柄仕様の確認：</b>${currentSymbol} は自動推定仕様で計算しています。正確なLCが必要なら、MT5の「仕様」に表示される契約サイズ・証拠金条件に合わせて上の数値を確認してください。`}
 function updatePriceUI(){const c=cfg();$('goldBid').textContent=Number.isFinite(goldBid)?formatPrice(goldBid):'—';$('goldAsk').textContent=Number.isFinite(goldAsk)?formatPrice(goldAsk):'—';$('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?formatPrice(goldAsk-goldBid):'—';$('priceUpdated').textContent=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未保存';$('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)?`<span class="ok">✓ 保存済み ${currentSymbol} Bid ${formatPrice(goldBid)} / Ask ${formatPrice(goldAsk)}</span>`:`<span class="warn">${currentSymbol}の気配値スクショを読み込んでください</span>`}
 function formatPrice(v){if(!Number.isFinite(v))return '—';const d=Math.max(0,Math.min(5,decimalPlacesFor(v)));return v.toFixed(d)}
@@ -228,8 +230,8 @@ function renderOrders(){const arr=getOrders();$('count').textContent=`${arr.leng
 function editOrder(i,k,v){const a=getOrders();a[i][k]=v;setOrders(a);calc()}
 function addOrder(){const a=getOrders();a.push({side:'Buy Limit',lot:.01,price:Number.isFinite(goldBid)?Math.max(0,goldBid-1):0});setOrders(a);renderOrders()}
 function resetOrders(){setOrders([]);renderOrders()}
-function fixedMarginJPY(o,c,lev,contract){const br=baseRateFor(c);return br?o.price*o.lot*contract/lev*br:null}
-function solveLC(bal,stop,filled,c,lev,contract){if(!filled.length)return null;const qr=quoteRateFor(c);if(!qr)return null;let margin=0;for(const o of filled){const m=fixedMarginJPY(o,c,lev,contract);if(m===null)return null;margin+=m}const stopEquity=margin*(stop/100);const pnl=p=>filled.reduce((s,o)=>{const side=/^sell/i.test(String(o.side||''))?-1:1;return s+(p-o.price)*o.lot*contract*qr*side},0);const f=p=>bal+pnl(p)-stopEquity;let hi=Math.max(...filled.map(o=>o.price)),lo=hi-1;while(f(lo)>0&&lo>0)lo=Math.max(0,lo*0.5);if(f(lo)>0)return null;for(let i=0;i<140;i++){const mid=(lo+hi)/2;if(f(mid)>0)hi=mid;else lo=mid}return (lo+hi)/2}
+function marginAtPriceJPY(p,o,c,lev,contract){const br=baseRateFor(c);if(!br||!Number.isFinite(p))return null;return p*o.lot*contract/lev*br}
+function solveLC(bal,stop,filled,c,lev,contract){if(!filled.length)return null;const qr=quoteRateFor(c);if(!qr)return null;const stopRatio=stop/100;const pnl=p=>filled.reduce((s,o)=>{const side=/^sell/i.test(String(o.side||''))?-1:1;return s+(p-o.price)*o.lot*contract*qr*side},0);const margin=p=>filled.reduce((s,o)=>{const m=marginAtPriceJPY(p,o,c,lev,contract);return m===null?NaN:s+m},0);const f=p=>{const m=margin(p);return Number.isFinite(m)?bal+pnl(p)-m*stopRatio:NaN};let hi=Math.max(...filled.map(o=>o.price)),lo=Math.max(0,hi-1);let guard=0;while(Number.isFinite(f(lo))&&f(lo)>0&&lo>0&&guard++<80)lo=Math.max(0,lo*0.5);if(!Number.isFinite(f(lo))||f(lo)>0)return null;for(let i=0;i<160;i++){const mid=(lo+hi)/2;if(f(mid)>0)hi=mid;else lo=mid}return (lo+hi)/2}
 function simulateLC(bal,stop,pending,positions,c,lev,contract,currentAsk){
   const base=[...positions];
   const buys=[...pending].filter(o=>/^buy\s*limit$/i.test(String(o.side||''))).sort((a,b)=>b.price-a.price);
@@ -255,18 +257,19 @@ function calc(){
   const qr=quoteRateFor(c);
   renderDataLock();
   if(!positionDataValid){
-    $('result').textContent='—';$('gap').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';
+    $('result').textContent='—';$('gap').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';
     $('distance').textContent='ポジション認識未確定のため計算停止';
     $('count').textContent=`${pending.length}件 / LC時想定追加約定 —`;
     renderOrderStatus([],pending,null);
     return;
   }
   if((!pending.length&&!positions.length)||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!baseRateFor(c)||!lev||!contract){
-    $('result').textContent='—';$('gap').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=(pending.length||positions.length)?'換算レートまたは気配値が不足しています':'注文・ポジションを読み込んでください';renderOrderStatus([],pending,null);return}
+    $('result').textContent='—';$('gap').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=(pending.length||positions.length)?'換算レートまたは気配値が不足しています':'注文・ポジションを読み込んでください';renderOrderStatus([],pending,null);return}
   const sim=simulateLC(bal,stop,pending,positions,c,lev,contract,goldAsk);const filled=sim.filled,lc=sim.lc,added=sim.added;
   const lots=filled.reduce((s,o)=>s+o.lot,0),qty=lots*contract,entry=filled.reduce((s,o)=>s+o.price*o.lot*contract,0);
+  const currentPnl=positions.reduce((s,o)=>s+(lossAtLCJPY(o,goldBid,c)||0),0);
   const totalLcLoss=lc!==null?filled.reduce((s,o)=>s+(lossAtLCJPY(o,lc,c)||0),0):null;
-  $('lots').textContent=lots.toFixed(2);$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=qty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('avg').textContent=qty?(entry/qty).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid)))):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
+  $('lots').textContent=lots.toFixed(2);$('currentPnl').textContent=Number.isFinite(currentPnl)?formatJPYLoss(currentPnl):'—';$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=qty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('lcTotalPositions').textContent=filled.length+'件';$('avg').textContent=qty?(entry/qty).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid)))):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
   if(lc!==null){$('result').textContent=lc.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid))));const d=goldBid-lc;$('gap').textContent=d>=0?`${d.toFixed(2)} ${c.quote}下`:`LC価格を下回っています`;$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → LC ${formatPrice(lc)} / 現在${positions.length}ポジション・LC時想定追加約定 ${added.length}/${pending.length}件`}
   else{$('result').textContent='—';$('gap').textContent='LCを解けませんでした';$('distance').textContent='銘柄仕様・換算レート・注文を確認してください'}
   $('count').textContent=`${pending.length}件 / LC時想定追加約定 ${added.length}件`;renderOrderStatus(added,pending,lc);renderPositions(lc,c)
@@ -349,12 +352,17 @@ function quoteSanity(sym,q,prev){
   const spread=ask-bid, rel=spread/bid;
   const c=ensureSpec(sym);
   // OCRがHigh/LowをAskと誤認したケースを抑止するため、銘柄カテゴリ別に異常スプレッドを拒否。
-  let maxRel=0.15;
-  if(c.type==='fx') maxRel=0.03;
-  else if(c.type==='index') maxRel=0.10;
-  else if(c.type==='cfd') maxRel=0.10;
-  else if(c.type==='crypto') maxRel=0.20;
+  let maxRel=0.005;
+  if(c.type==='fx') maxRel=0.01;
+  else if(c.type==='index') maxRel=0.03;
+  else if(c.type==='cfd') maxRel=0.005;
+  else if(c.type==='crypto') maxRel=0.10;
   if(rel>maxRel) return false;
+  // 直前の保存スプレッドから大幅に膨らんだ候補はHigh/Low誤認識を疑って拒否。
+  if(prev&&Number.isFinite(+prev.bid)&&Number.isFinite(+prev.ask)){
+    const prevSpread=Math.max(0,+prev.ask-+prev.bid);
+    if(prevSpread>0 && spread>Math.max(prevSpread*8, prevSpread+5)) return false;
+  }
   // 前回値がある場合、Ask/Bidが一気に大幅ジャンプした候補はOCR誤認識として拒否。
   if(prev&&Number.isFinite(+prev.bid)&&Number.isFinite(+prev.ask)){
     const pb=+prev.bid, pa=+prev.ask;
@@ -407,12 +415,9 @@ function extractPositionsFromWords(words){
     const arrowMatch=tail.match(/([0-9]{3,10}(?:\.[0-9]+)?)\s*(?:->|→|➜|➔|⇒|›)/);
     let price=arrowMatch?normalizeOcrNumber(arrowMatch[1]):null;
 
-    // 矢印をOCRが落とした場合だけ、価格候補から復元する。
-    if(!price){
-      const beforeArrow=tail.split(/(?:->|→|➜|➔|⇒|›)/)[0];
-      const nums=(beforeArrow.match(/\d[\d,]*(?:\.\d+)?/g)||[]).map(normalizeOcrNumber).filter(Number.isFinite);
-      for(const n of nums){if(Math.abs(n-lot)>1e-12&&n>0){price=n;break}}
-    }
+    // 矢印が取れない場合は「約定価格不明」として採用しない。
+    // ここで -2613 JPY / -1153 JPY / -1043 JPY などの損益数字を
+    // 約定価格として拾うとDEAD LINEが暴走するため、推測補完は禁止。
     if(price&&lot>0)out.push({side:side.charAt(0).toUpperCase()+side.slice(1).toLowerCase(),lot,price,symbol:sm});
   }
   const seen=new Set();return out.filter(o=>{const k=[o.symbol,o.side,o.lot,o.price].join('|');if(seen.has(k))return false;seen.add(k);return true});
@@ -564,7 +569,7 @@ function runCalcSelfTest(){
 
     // 回帰テスト1：今回の実データ系。現在1ポジション＋4予約注文。
     const a=simulateLC(bal,stop,pending,pos,c,lev,100,4360.93);
-    const t1=a.added.length===2 && a.filled.length===3 && Math.abs(a.lc-4202.28095)<0.05;
+    const t1=a.added.length===2 && a.filled.length===3 && Math.abs(a.lc-4202.21915)<0.05;
 
     // 回帰テスト2：含み損が増えただけ（4360.93→4360.71）では、
     // 注文条件が変わらない限りLCを再計算して別値にしてはいけない。
@@ -580,7 +585,7 @@ function runCalcSelfTest(){
     // 回帰テスト4：4318.16を既に通過した場合は、その注文を実約定済み扱いにし、
     // その後の段階約定もLC到達前判定に従って再評価する。
     const d=simulateLC(bal,stop,pending,pos,c,lev,100,4317.00);
-    const t4=d.added.length===2 && d.filled.length===3 && Math.abs(d.lc-4202.28095)<0.05;
+    const t4=d.added.length===2 && d.filled.length===3 && Math.abs(d.lc-4202.21915)<0.05;
 
     // 回帰テスト5：現在ポジションが1件でも、LC時想定の追加約定を含めて
     // 「現在保有」と「LC時想定」を混同しない（現在1件、LC時3件）。
@@ -609,13 +614,21 @@ function runCalcSelfTest(){
 
     // 回帰テスト10：正しい1ポジションのみならLCは約4054.82付近。3509付近にはならない。
     const one=simulateLC(bal,stop,[],pos,c,lev,100,4360.93);
-    const t10=one.filled.length===1 && Math.abs(one.lc-4054.7603)<0.05;
+    const t10=one.filled.length===1 && Math.abs(one.lc-4054.6366)<0.05;
 
     // 回帰テスト11：現在ポジション1件の正しいLC。3509付近には絶対ならない。
     const one2=simulateLC(bal,stop,[],[{side:'Buy',lot:.01,price:4367.37}],c,lev,100,4360.42);
     const t11=one2.filled.length===1 && one2.lc>4000 && one2.lc<4100;
 
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11];
+    // 回帰テスト12：MT5の実画面の現在価格4,350.99/Ask4,351.24では、
+    // 1ポジション＋4予約注文からLC時想定追加約定2件、LCは約4,202.2。
+    const live=simulateLC(50000,20,pending,pos,c,lev,100,4351.24);
+    const t12=live.added.length===2 && live.filled.length===3 && live.lc>4200 && live.lc<4205;
+
+    // 回帰テスト13：損益数字を含むOCRでも約定価格1043を採用しない。
+    const t13=ocrBad.positions.length===1 && ocrBad.positions[0].price===4367.37;
+
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13];
     const passed=tests.filter(Boolean).length;
     const ok=passed===tests.length;
     $('calcCheck').textContent=ok?`✓ 回帰テストOK（${passed}/${tests.length}）`:`⚠ 回帰テストNG（${passed}/${tests.length}）`;

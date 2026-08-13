@@ -90,7 +90,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
 <div class="card">
   <div class="grid">
     <div class="wide"><label>価格ソース</label>
-      <div class="small"><b>XMのMT5口座 → MetaApi → このアプリ</b>。GOLD#のBid/AskとUSDJPYを口座のMT5価格から取得します。外部XAU/USD価格への自動フォールバックはしません。</div>
+      <div class="small"><b>XM KIWAMI 気配値スクショ → このアプリ</b>。GOLD#のBid/AskとUSDJPYをスクショから読み取り、端末に保存します。新しい気配値を読み込むまで同じ価格を使用します。</div>
     </div>
     <div class="wide"><label>自動更新間隔</label>
       <select id="interval" style="width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px;font-size:16px">
@@ -101,14 +101,12 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 3px;b
 </div>
 
 <div class="alert">
-<b>重要：</b>XMのMT5口座をMetaApiに接続し、<b>GOLD#のBid/Ask</b>を取得できた時だけLCを計算します。取得できない場合はLC価格を表示しません。
-APIトークンは他人に共有しないでください。
+<b>重要：</b>LCは、現在のXM GOLD#価格から下落してBuy Limitが順番に約定していくシナリオをシミュレーションして推定します。気配値スクショを読み込んだ価格を次の読み込みまで保存します。
 </div>
 
 <div class="card footer">
 <b>計算モデル</b><br>
-GOLD# 1 lot = 100 oz を仮定。Buyのみを対象に、全注文が約定した時点の口座残高を基準として、
-証拠金維持率がStop Out値（初期20%）になる価格を解いています。既存ポジションやスワップ等は別途反映が必要です。
+GOLD# 1 lot = 100 oz を仮定。Buy Limitを現在価格から高い順に約定する下落シナリオとして扱い、各注文が約定するたびにStop Out価格を再計算します。Stop Out価格が次のBuy Limit価格以上なら、その注文も約定するとして再計算し、最終的な推定LCを求めます。現在すでに価格以下にあるBuy Limitは約定済みとして扱います。既存ポジション・スワップ等は別途反映が必要です。
 </div>
 </div>
 
@@ -169,28 +167,43 @@ function resetOrders(){orders=[];renderOrders()}
 
 function calc(){
  const bal=+$('balance').value||0, lev=+$('leverage').value||1000, stop=+$('stopout').value||20, u=+$('usdjpy').value||0;
- const price = goldBid;
- const buys=orders.filter(o=>/buy/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
- if(!buys.length||!u||!Number.isFinite(price)){
+ const currentBid=goldBid, currentAsk=goldAsk;
+ const buys=orders.filter(o=>/buy\s*limit|buy/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
+ if(!buys.length||!u||!Number.isFinite(currentBid)||!Number.isFinite(currentAsk)){
    $('result').textContent='—'; $('gap').textContent='—'; $('avg').textContent='—'; $('lots').textContent='—'; $('oz').textContent='—'; $('usedRate').textContent=u?u.toFixed(3):'—';
-   updatePriceUI(); return;
+   $('distance').textContent='XM気配値を読み込んでください'; updatePriceUI(); renderOrderStatus([],buys,null); return;
  }
- let filled=[]; let lc=null; const stopRatio=stop/100; const contractSize=100;
- for(const pending of buys){
-   if(filled.length){
-     const candidate=solveLC(bal,lev,stopRatio,u,filled,contractSize);
-     if(candidate!==null && candidate>=pending.price){ lc=candidate; break; }
-   }
-   filled.push(pending);
+ const stopRatio=stop/100, contractSize=100;
+ // Buy Limit is triggered when Ask reaches the limit price. Any order already at/above current Ask is treated as filled.
+ let filled=buys.filter(o=>currentAsk<=o.price).slice();
+ let remaining=buys.filter(o=>currentAsk>o.price);
+ let lc=null;
+ if(filled.length) lc=solveLC(bal,lev,stopRatio,u,filled,contractSize);
+
+ // Simulate the downward path. If the current LC is at/above the next Buy Limit,
+ // that pending order is reached before Stop Out and therefore becomes filled.
+ while(remaining.length){
+   const next=remaining[0];
+   if(lc!==null && lc>=next.price){
+     filled.push(next);
+     remaining.shift();
+     lc=solveLC(bal,lev,stopRatio,u,filled,contractSize);
+   }else break;
  }
- if(lc===null && filled.length){ lc=solveLC(bal,lev,stopRatio,u,filled,contractSize); }
+
  const allLots=filled.reduce((s,o)=>s+o.lot,0), oz=allLots*contractSize;
  const entryOzValue=filled.reduce((s,o)=>s+o.price*o.lot*contractSize,0);
  $('lots').textContent=allLots.toFixed(2); $('oz').textContent=oz.toFixed(2); $('usedRate').textContent=u.toFixed(3);
  $('avg').textContent=oz? (entryOzValue/oz).toFixed(3):'—'; updatePriceUI();
- if(lc!==null){ $('result').textContent=lc.toFixed(2); const d=goldBid-lc; $('gap').textContent=(d>=0?d.toFixed(2)+'ドル余裕':'ロスカット価格を下回っています'); $('distance').textContent=`保存XM Bid ${goldBid.toFixed(2)} → LC ${lc.toFixed(2)} / 約定 ${filled.length}/${buys.length}本`; }
- else { $('result').textContent='—'; $('gap').textContent='—'; $('distance').textContent='—'; }
- $('count').textContent=`${orders.length}件 / 約定 ${filled.length}件`;
+ if(lc!==null){
+   $('result').textContent=lc.toFixed(2);
+   const d=currentBid-lc;
+   $('gap').textContent=(d>=0?d.toFixed(2)+'ドル余裕':'ロスカット価格を下回っています');
+   $('distance').textContent=`保存XM Bid ${currentBid.toFixed(2)} → LC ${lc.toFixed(2)} / LCまでの想定約定 ${filled.length}/${buys.length}本`;
+ } else {
+   $('result').textContent='—'; $('gap').textContent='約定ポジションなし'; $('distance').textContent='現在価格からの下落シナリオで約定する注文を計算します';
+ }
+ $('count').textContent=`${orders.length}件 / LC時想定約定 ${filled.length}件`;
  renderOrderStatus(filled,buys,lc);
 }
 function solveLC(bal,lev,stop,u,filled,contractSize){

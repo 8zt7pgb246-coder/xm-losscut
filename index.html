@@ -170,7 +170,7 @@ function conversionGraph(){const g={};const add=(a,b,r)=>{if(!a||!b||!Number.isF
 function getRateToJPY(currency){if(currency==='JPY')return 1;const g=conversionGraph();if(currency==='USD'&&+$('usdjpy').value>0)return +$('usdjpy').value;const q=[[currency,1]],seen=new Set();while(q.length){const [cur,r]=q.shift();if(cur==='JPY')return r;if(seen.has(cur))continue;seen.add(cur);for(const [n,m] of (g[cur]||[]))if(!seen.has(n))q.push([n,r*m])}return null}
 function baseRateFor(c){return getRateToJPY(c.base)}
 function quoteRateFor(c){if(window.__testRate&&c.quote==='USD')return window.__testRate;return getRateToJPY(c.quote)}
-function renderPositions(lc=null,c=cfg()){const arr=getPositions();$('positionCount').textContent=`${arr.length}件`;if(!arr.length){$('positions').innerHTML='<div class="small">現在の約定済みポジションはまだありません。注文スクショから自動認識します。</div>';return}$('positions').innerHTML=arr.map((o,i)=>{const px=Number(o.price);const nowLoss=Number.isFinite(goldBid)&&Number.isFinite(px)&&Number.isFinite(+o.lot)?(goldBid-px)*(+o.lot)*c.contract*(quoteRateFor(c)||0):null;const lcLoss=lc!==null?lossAtLCJPY(o,lc,c):null;return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editPosition(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editPosition(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>約定価格</label><input type="number" step="any" value="${o.price}" onchange="editPosition(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small">現在評価損益（概算）：${nowLoss!==null?formatJPYLoss(nowLoss):'—'}　／　LC時想定含み損：${lcLoss!==null?formatJPYLoss(lcLoss):'—'}</div></div>`}).join('')}
+function renderPositions(lc=null,c=cfg()){const arr=getPositions();$('positionCount').textContent=`${arr.length}件`;if(!arr.length){$('positions').innerHTML='<div class="small">現在の約定済みポジションはまだありません。注文スクショから自動認識します。</div>';return}$('positions').innerHTML=arr.map((o,i)=>{const px=Number(o.price),lot=Number(o.lot),qr=quoteRateFor(c);let nowPnl=null;if(Number.isFinite(goldBid)&&Number.isFinite(px)&&Number.isFinite(lot)&&qr){if(/^buy$/i.test(String(o.side||'')))nowPnl=(goldBid-px)*lot*c.contract*qr;else if(/^sell$/i.test(String(o.side||'')))nowPnl=(px-goldBid)*lot*c.contract*qr;}const lcLoss=lc!==null?lossAtLCJPY(o,lc,c):null;return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editPosition(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editPosition(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>約定価格</label><input type="number" step="any" value="${o.price}" onchange="editPosition(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small">現在評価損益（概算）：${nowPnl!==null?formatJPYLoss(nowPnl):'—'}　／　LC時想定含み損：${lcLoss!==null?formatJPYLoss(lcLoss):'—'}</div></div>`}).join('')}
 function editPosition(i,k,v){const a=getPositions();a[i][k]=v;setPositions(a);renderPositions();calc()}
 function addPosition(){const a=getPositions();a.push({side:'Buy',lot:.01,price:Number.isFinite(goldBid)?goldBid:0});setPositions(a);renderPositions();calc()}
 function resetPositions(){setPositions([]);renderPositions();calc()}
@@ -218,9 +218,9 @@ function formatJPYLoss(v){if(!Number.isFinite(v))return '—';const sign=v<0?'�
 function renderOrderStatus(added,all,lc){const keys=new Set(added.map(o=>o.price+'|'+o.lot+'|'+o.side));const c=cfg();$('orders').innerHTML=all.map(o=>{const f=keys.has(o.price+'|'+o.lot+'|'+o.side);const loss=f?lossAtLCJPY(o,lc,c):null;const lossHtml=f?`<div class="small" style="margin-top:3px;color:#b42318">LC時想定含み損：<b>${formatJPYLoss(loss)}</b>（${Number(o.lot).toFixed(2)} lot）</div>`:`<div class="small" style="margin-top:3px">LC到達前のため想定含み損：—</div>`;return `<div style="padding:10px 0;border-top:1px solid #eef1f4"><div class="row" style="margin:0"><span>${o.side} ${Number(o.lot).toFixed(2)} / ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}</span><b class="${f?'ok':'warn'}">${f?'✓ LC時想定追加約定':'○ LC時想定未約定'}</b></div>${lossHtml}</div>`}).join('')}
 function pointStepFor(sym,c){if(c.type==='fx')return /JPY#$/.test(sym)?0.01:0.0001;return Number.isFinite(+c.point)&&+c.point>0?+c.point:(c.type==='index'?1:0.01)}
 function updatePipValue(){const c=cfg(),lots=.01,step=pointStepFor(currentSymbol,c),label=c.type==='fx'?'1 pip':'1 point';const qr=quoteRateFor(c),value=qr?step*lots*c.contract*qr:null;$('pipLabel').textContent=`${currentSymbol} ${label} / 0.01 lot`;$('pipValue').textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';$('pipNote').textContent=c.type==='fx'?`${step} ${label} × 0.01 lot（${(lots*c.contract).toLocaleString()} ${c.unit}）をJPY換算`:`${step} ${label} × 0.01 lot（契約サイズ ${c.contract} ${c.unit} / lot）をJPY換算`}
-function normalizeOcrNumber(s){if(s==null)return null;const x=String(s).replace(/[,$]/g,'').replace(/[^0-9.]/g,'');const n=Number(x);return Number.isFinite(n)?n:null}
-function symbolFromText(s){const x=String(s).toUpperCase().replace(/\s+/g,'');const m=x.match(/^([A-Z0-9]+(?:CASH)?#)$/);return m?m[1]:null}
-function normalizeSymbol(s){let x=String(s).toUpperCase().replace(/\s+/g,'');x=x.replace(/CASH#/,'Cash#');if(x==='GOLD#')return'GOLD#';return x}
+function normalizeOcrNumber(s){if(s==null)return null;let x=String(s).trim().replace(/[,$]/g,'').replace(/[Oo]/g,'0').replace(/[Il|]/g,'1').replace(/[^0-9.]/g,'');if((x.match(/\./g)||[]).length>1){const parts=x.split('.');x=parts.shift()+'.'+parts.join('')}const n=Number(x);return Number.isFinite(n)?n:null}
+function symbolFromText(s){const raw=String(s||'').toUpperCase().replace(/\s+/g,'');const aliases={'GOLD':'GOLD#','XAUUSD':'GOLD#','XAUUSD#':'GOLD#','BTCUSD':'BTCUSD#','BTCUSD#':'BTCUSD#','OILCASH':'OILCash#','OILCASH#':'OILCash#','JP225CASH':'JP225Cash#','JP225CASH#':'JP225Cash#'};if(aliases[raw])return aliases[raw];const m=raw.match(/^([A-Z0-9]+(?:CASH)?#)$/);return m?m[1]:null}
+function normalizeSymbol(s){let x=String(s).toUpperCase().replace(/\s+/g,'');const aliases={'GOLD':'GOLD#','XAUUSD':'GOLD#','XAUUSD#':'GOLD#','BTCUSD':'BTCUSD#','BTCUSD#':'BTCUSD#','OILCASH':'OILCash#','OILCASH#':'OILCash#','JP225CASH':'JP225Cash#','JP225CASH#':'JP225Cash#'};if(aliases[x])return aliases[x];x=x.replace(/CASH#/,'Cash#');if(x==='GOLD#')return'GOLD#';return x}
 function extractQuotesFromWords(words){
   const all=(words||[]).map(w=>{
     const t=String(w.text||'').trim();
@@ -325,28 +325,86 @@ function saveQuotes(quotes,usdjpy){
 }
 $('priceChoose').addEventListener('click',()=>{$('priceFile').click()});$('priceFile').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;$('rateStatus').textContent='気配値スクショを読み込み中…';try{const T=await ensureOCR();const img=await preparePriceImage(f);$('rateStatus').textContent='気配値スクショを高精度OCR中… 0%';const r=await T.recognize(img,'eng',{logger:m=>{if(m.status==='recognizing text')$('rateStatus').textContent=`気配値OCR中… ${Math.round(m.progress*100)}%`},tessedit_pageseg_mode:'11'});let quotes=extractQuotesFromWords(r.data.words);const textQuotes=extractAllQuotesText(r.data.text);for(const [s,q] of Object.entries(textQuotes))if(!quotes[s])quotes[s]=q;const usdjpy=getDetectedUsdJpy(quotes,r.data.text);if(!Object.keys(quotes).length)throw new Error('quotes');const saved=saveQuotes(quotes,usdjpy);if(!saved.accepted.length)throw new Error('quote_validation');$('rateStatus').innerHTML=`<span class="ok">✓ ${saved.accepted.length}銘柄を保存しました。</span>${saved.rejected.length?`<br><span class="warn">⚠ ${saved.rejected.join(', ')} はBid/Askの整合性チェックで除外しました。前回保存価格は変更していません。</span>`:''}`;e.target.value=''}catch(err){console.error(err);$('rateStatus').innerHTML=err.message==='OCR_ENGINE_UNAVAILABLE'?'<span class="err">OCRエンジンを読み込めませんでした。通信を確認して再度お試しください。</span>':'<span class="err">気配値のBid/Askを認識できませんでした。前回保存価格は変更していません。</span>';e.target.value=''}});
 $('symbol').addEventListener('change',switchSymbol);$('symbolLeverage').addEventListener('input',()=>{const c=cfg();c.leverage=+$('symbolLeverage').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});$('contractSize').addEventListener('input',()=>{const c=cfg();c.contract=+$('contractSize').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});['balance','stopout','usdjpy'].forEach(id=>$(id).addEventListener('input',()=>calc()));$('choose').addEventListener('click',()=>{$('file').click()});
-function parseOCR(text){
-  const found=[],positions=[];let m;
-  const normalized=String(text||'').replace(/(?:→|➜|➔|⇒|›)/g,'->').replace(/—/g,'-');
-  // MT5の「ポジション」欄：GOLD# buy 0.01 / 次行 4367.37 -> 4373.23 のような表示を認識。
-  const posRe=/([A-Z0-9]+(?:Cash)?#)\s*(buy|sell)\s*([0-9]+(?:\.[0-9]+)?)\s*[\s\S]{0,80}?([0-9]{1,10}(?:\.[0-9]+)?)\s*->/gi;
-  while((m=posRe.exec(normalized))!==null){const lot=+m[3],price=+m[4];if(lot>0&&price>0)positions.push({side:m[2].charAt(0).toUpperCase()+m[2].slice(1).toLowerCase(),lot,price})}
-  const patterns=[/([0-9]+(?:\.[0-9]+)?)\s*\/\s*0\s*(?:at|@)\s*([0-9]+(?:\.[0-9]+)?)/gi,/0\.0[1-9]\s*(?:\/\s*0)?\s*(?:at|@)\s*([0-9]{1,8}(?:\.[0-9]{1,5})?)/gi];
-  for(const re of patterns){while((m=re.exec(normalized))!==null){const lot=re===patterns[0]?+m[1]:.01,price=+(re===patterns[0]?m[2]:m[1]);if(lot>0&&price>0)found.push({side:'Buy Limit',lot,price})}}
-  const seen=new Set();const pending=found.filter(o=>{const k=o.lot+'|'+o.price;if(seen.has(k))return false;seen.add(k);return true});
-  const pseen=new Set();const pos=positions.filter(o=>{const k=o.side+'|'+o.lot+'|'+o.price;if(pseen.has(k))return false;pseen.add(k);return true});
-  return {pending,positions:pos};
+function ocrWordsToLines(words){
+  const arr=(words||[]).map(w=>{const t=String(w.text||'').trim();const b=w.bbox||{};return{t,x:+(b.x0||0),y:(+(b.y0||0)+ +(b.y1||0))/2,h:Math.max(1,+(b.y1||0)- +(b.y0||0))}}).filter(w=>w.t);
+  arr.sort((a,b)=>a.y-b.y||a.x-b.x);const lines=[];
+  for(const w of arr){let line=lines.find(l=>Math.abs(l.y-w.y)<=Math.max(10,w.h*0.65,l.h*0.65));if(!line){line={y:w.y,h:w.h,words:[]};lines.push(line)}line.words.push(w);line.h=Math.max(line.h,w.h)}
+  return lines.map(l=>{l.words.sort((a,b)=>a.x-b.x);return l.words.map(w=>w.t).join(' ')});
 }
-$('file').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;$('preview').src=URL.createObjectURL(f);$('preview').style.display='block';$('ocrStatus').textContent='注文スクショをOCR中…';try{const T=await ensureOCR();const r=await T.recognize(f,'eng',{logger:m=>{if(m.status==='recognizing text')$('ocrStatus').textContent=`注文OCR中… ${Math.round(m.progress*100)}%`}});const parsed=parseOCR(r.data.text);const found=parsed.pending,positions=parsed.positions;const existing=getOrders(),existingPos=getPositions();if(!found.length&&!positions.length)throw new Error('orders');
+function extractPositionsFromWords(words){
+  const lines=ocrWordsToLines(words), out=[];
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i], joined=line.replace(/\s+/g,' ').trim();
+    const sym=joined.match(/\b(GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,12}Cash#?)\b/i);if(!sym)continue;
+    if(!/\b(buy|sell)\b/i.test(joined)||/\bbuy\s+limit\b/i.test(joined))continue;
+    const sm=symbolFromText(sym[1]);if(!sm)continue;
+    const side=(joined.match(/\b(buy|sell)\b/i)||[])[1];
+    const lm=joined.match(/\b(?:buy|sell)\b\s+([0-9]+(?:\.[0-9]+)?)/i);if(!lm)continue;
+    const lot=normalizeOcrNumber(lm[1]);
+    const tail=[joined,...lines.slice(i+1,i+3)].join(' ');
+    const beforeArrow=tail.split(/(?:->|→|➜|➔|⇒|›)/)[0];
+    const nums=(beforeArrow.match(/\d[\d,]*(?:\.\d+)?/g)||[]).map(normalizeOcrNumber).filter(Number.isFinite);
+    // lot自身より後ろにある価格候補を優先。MT5の「現在価格 -> 評価価格」の左側が約定価格。
+    let price=null;for(const n of nums){if(Math.abs(n-lot)>1e-12&&n>0){price=n;break}}
+    if(!price){const nm=tail.match(/\b([0-9]{3,8}(?:\.[0-9]+)?)\s*(?:->|→|➜|➔|⇒|›)/);if(nm)price=normalizeOcrNumber(nm[1])}
+    if(price&&lot>0)out.push({side:side.charAt(0).toUpperCase()+side.slice(1).toLowerCase(),lot,price,symbol:sm});
+  }
+  const seen=new Set();return out.filter(o=>{const k=[o.symbol,o.side,o.lot,o.price].join('|');if(seen.has(k))return false;seen.add(k);return true});
+}
+function parseOCR(text,words=[]){
+  const found=[],positions=[];let m;
+  const normalized=String(text||'').replace(/(?:→|➜|➔|⇒|›)/g,'->').replace(/—/g,'-').replace(/\u00a0/g,' ');
+  // まず「GOLD# buy 0.01 / 4367.37 -> ...」のような明瞭な現在ポジションを抽出。
+  const posPatterns=[
+    /([A-Z0-9]+(?:Cash)?#?)\s*(buy|sell)\s+([0-9]+(?:\.[0-9]+)?)\s*(?:\/\s*0)?\s*(?:at\s*)?([0-9]{1,10}(?:\.[0-9]+)?)\s*->/gi,
+    /([A-Z0-9]+(?:Cash)?#?)\s*(buy|sell)\s+([0-9]+(?:\.[0-9]+)?)\s*[\r\n ]+([0-9]{3,10}(?:\.[0-9]+)?)\s*->/gi
+  ];
+  for(const re of posPatterns){while((m=re.exec(normalized))!==null){if(/\blimit\b/i.test(m[0]))continue;const sym=symbolFromText(m[1]);const lot=normalizeOcrNumber(m[3]),price=normalizeOcrNumber(m[4]);if(sym&&lot>0&&price>0)positions.push({side:m[2].charAt(0).toUpperCase()+m[2].slice(1).toLowerCase(),lot,price,symbol:sym})}}
+  // 行ベースのフォールバック。OCRが矢印や#を落としても、buy/sell + lot + 価格を拾う。
+  const wordPos=extractPositionsFromWords(words);positions.push(...wordPos);
+  const lines=normalized.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];if(!/\b(buy|sell)\b/i.test(line)||/\bbuy\s+limit\b/i.test(line))continue;
+    const sm=line.match(/([A-Z0-9]+(?:Cash)?#?)/i);const sym=sm?symbolFromText(sm[1]):null;if(!sym)continue;
+    const lm=line.match(/\b(?:buy|sell)\b\s+([0-9]+(?:\.[0-9]+)?)/i);if(!lm)continue;const lot=normalizeOcrNumber(lm[1]);
+    const chunk=[line,...lines.slice(i+1,i+3)].join(' ');const am=chunk.match(/([0-9]{3,10}(?:\.[0-9]+)?)\s*->/);if(am){const price=normalizeOcrNumber(am[1]);if(price>0)positions.push({side:(line.match(/\b(buy|sell)\b/i)||[])[1].replace(/^./,x=>x.toUpperCase()),lot,price,symbol:sym})}
+  }
+  const patterns=[/([0-9]+(?:\.[0-9]+)?)\s*\/\s*0\s*(?:at|@)\s*([0-9]+(?:\.[0-9]+)?)/gi,/0\.0[1-9]\s*(?:\/\s*0)?\s*(?:at|@)\s*([0-9]{1,8}(?:\.[0-9]{1,5})?)/gi];
+  for(const re of patterns){while((m=re.exec(normalized))!==null){const lot=re===patterns[0]?normalizeOcrNumber(m[1]):.01,price=normalizeOcrNumber(re===patterns[0]?m[2]:m[1]);if(lot>0&&price>0)found.push({side:'Buy Limit',lot,price})}}
+  const seen=new Set();const pending=found.filter(o=>{const k=o.lot+'|'+o.price;if(seen.has(k))return false;seen.add(k);return true});
+  const pseen=new Set();const pos=positions.filter(o=>{const k=o.symbol+'|'+o.side+'|'+o.lot+'|'+o.price;if(pseen.has(k))return false;pseen.add(k);return true});
+  return {pending,positions:pos,rawText:normalized};
+}
+function sanitizeRecognizedPositions(positions){
+  const q=Number.isFinite(goldBid)?goldBid:null, out=[];
+  for(const raw of (positions||[])){
+    const side=/^sell$/i.test(String(raw.side||''))?'Sell':/^buy$/i.test(String(raw.side||''))?'Buy':null;
+    let lot=Number(raw.lot), price=Number(raw.price); if(!side||!(lot>0&&lot<=1000)||!(price>0))continue;
+    if(q){const candidates=[price,...Array.from({length:6},(_,i)=>price/10**(i+1)),...Array.from({length:4},(_,i)=>price*10**(i+1))].filter(v=>Number.isFinite(v)&&v>0);candidates.sort((a,b)=>Math.abs(Math.log(a/q))-Math.abs(Math.log(b/q)));if(candidates[0]&&Math.abs(candidates[0]/q-1)<0.35)price=candidates[0];}
+    const k=side+'|'+lot+'|'+price.toFixed(8);if(out.some(o=>o._k===k))continue;out.push({side,lot,price,_k:k});
+  }
+  return out.map(({_k,...o})=>o);
+}
+function positionArraysSame(a,b){if(a.length!==b.length)return false;const key=x=>`${x.side}|${Number(x.lot).toFixed(4)}|${Number(x.price).toFixed(5)}`;const aa=a.map(key).sort(),bb=b.map(key).sort();return aa.every((v,i)=>v===bb[i]);}
+async function prepareOrderImage(file){const url=URL.createObjectURL(file);try{const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url});const c=document.createElement('canvas'),ctx=c.getContext('2d',{willReadFrequently:true});const scale=Math.min(2.5,2600/img.width);c.width=Math.floor(img.width*scale);c.height=Math.floor(img.height*scale);ctx.drawImage(img,0,0,c.width,c.height);const d=ctx.getImageData(0,0,c.width,c.height),p=d.data;for(let i=0;i<p.length;i+=4){const g=.299*p[i]+.587*p[i+1]+.114*p[i+2];const v=g>185?255:(g<75?0:255);p[i]=p[i+1]=p[i+2]=v}ctx.putImageData(d,0,0);return c.toDataURL('image/png')}finally{URL.revokeObjectURL(url)}}
+$('file').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;$('preview').src=URL.createObjectURL(f);$('preview').style.display='block';$('ocrStatus').textContent='注文スクショをOCR中…';try{const T=await ensureOCR();let r=await T.recognize(f,'eng',{logger:m=>{if(m.status==='recognizing text')$('ocrStatus').textContent=`注文OCR中… ${Math.round(m.progress*100)}%`}});let parsed=parseOCR(r.data.text,r.data.words);if(!parsed.positions.length){$('ocrStatus').textContent='現在ポジションを再確認中…';try{const img=await prepareOrderImage(f);const r2=await T.recognize(img,'eng',{logger:m=>{if(m.status==='recognizing text')$('ocrStatus').textContent=`注文OCR再確認中… ${Math.round(m.progress*100)}%`}});const p2=parseOCR(r2.data.text,r2.data.words);parsed={pending:p2.pending.length>=parsed.pending.length?p2.pending:parsed.pending,positions:p2.positions,rawText:[parsed.rawText||'',p2.rawText||''].join('\n')};}catch(retryErr){console.warn('OCR retry failed',retryErr)}}
+  const found=parsed.pending,positions=sanitizeRecognizedPositions(parsed.positions);const existing=getOrders(),existingPos=getPositions();if(!found.length&&!positions.length)throw new Error('orders');
   let replace=true;
-  if(existing.length&&found.length<existing.length){replace=confirm(`現在${existing.length}件の注文が保存されています。今回のOCRは${found.length}件でした。認識漏れの可能性があるため、保存済み注文を${found.length}件に置き換えますか？\n\nキャンセルすると既存注文を保持します。`)}
+  if(existing.length&&found.length<existing.length){replace=confirm(`現在${existing.length}件の注文が保存されています。今回のOCRは${found.length}件でした。認識漏れの可能性があるため、保存済み注文を${found.length}件に置き換えますか？\\n\\nキャンセルすると既存注文を保持します。`)}
   if(replace)setOrders(found);
   let replacePos=true;
-  if(existingPos.length&&positions.length<existingPos.length){replacePos=confirm(`現在${existingPos.length}件のポジションが保存されています。今回のOCRは${positions.length}件でした。保存済みポジションを消してよいですか？\n\nキャンセルすると既存ポジションを保持します。`)}
-  if(replacePos)setPositions(positions);
+  if(existingPos.length && positions.length===0){
+    const looksLikePositionSection=/\bposition(s)?\b|ポジション/i.test(String(parsed.rawText||''));
+    replacePos=looksLikePositionSection?confirm(`保存済みポジションが${existingPos.length}件あります。今回のスクショからポジションを認識できませんでした。\n\n「0件」に更新しますか？\nキャンセルすると安全のため既存ポジションを保持します。`):false;
+    if(replacePos)setPositions([]);
+  }else if(existingPos.length && !positionArraysSame(existingPos,positions)){
+    replacePos=confirm(`保存済みポジション：${existingPos.length}件\n今回認識：${positions.length}件\n\n今回のOCR結果で置き換えますか？\n誤認識の可能性がある場合はキャンセルしてください。`);
+    if(replacePos)setPositions(positions);
+  }else if(!existingPos.length && positions.length){setPositions(positions)}
   renderPositions();renderOrders();calc();
-  const msg=`✓ 注文${replace?found.length:existing.length}件・現在ポジション${replacePos?positions.length:existingPos.length}件を保存しました。`;
-  $('ocrStatus').innerHTML=`<span class="ok">${msg}</span>${!positions.length?'<br><span class="warn">⚠ 現在ポジションを認識していません。MT5の「ポジション」欄が写っているか確認してください。</span>':''}`;e.target.value=''}catch(err){console.error(err);$('ocrStatus').innerHTML=err.message==='OCR_ENGINE_UNAVAILABLE'?'<span class="warn">OCRエンジンを読み込めませんでした。通信を確認して再度お試しください。</span>':'<span class="warn">注文/ポジションを完全には認識できませんでした。既存データは変更していません。</span>';e.target.value=''}});
+  const keptPos=getPositions();
+  const msg=`✓ 注文${replace?found.length:existing.length}件・現在ポジション${keptPos.length}件を保存しました。`;
+  $('ocrStatus').innerHTML=`<span class="ok">${msg}</span>${!positions.length?'<br><span class="warn">⚠ 現在ポジションを認識できませんでした。既存ポジションは保持しています。MT5の「ポジション」欄が写っている画像を使ってください。</span>':''}`;e.target.value=''}catch(err){console.error(err);$('ocrStatus').innerHTML=err.message==='OCR_ENGINE_UNAVAILABLE'?'<span class="warn">OCRエンジンを読み込めませんでした。通信を確認して再度お試しください。</span>':'<span class="warn">注文/ポジションを完全には認識できませんでした。既存データは変更していません。</span>';e.target.value=''}});
 
 function runCalcSelfTest(){
   try{
@@ -355,7 +413,7 @@ function runCalcSelfTest(){
     const old=window.__testRate;window.__testRate=r;
     const result=simulateLC(bal,stop,pending,pos,c,lev,100,4375.30);
     window.__testRate=old;
-    const ok=result.added.length===2 && Math.abs(result.lc-4202.18)<0.05 && result.filled.length===3;
+    const ocr1=parseOCR('ポジション\nGOLD# buy 0.01\n4367.37 -> 4393.10\nオーダー\nGOLD# buy limit\n0.01 / 0 at 4318.16');const ocr2=parseOCR('GOLD buy 0.01\n4367.37 -> 4393.10\nGOLD buy limit 0.01 / 0 at 4318.16');const ok=result.added.length===2 && Math.abs(result.lc-4202.18)<0.05 && result.filled.length===3 && ocr1.positions.length===1 && ocr2.positions.length===1 && ocr1.pending.length===1 && ocr2.pending.length===1;
     $('calcCheck').textContent=ok?'✓ 自己検証OK':'⚠ 自己検証NG';$('calcCheck').className=ok?'ok':'err';return ok;
   }catch(e){console.error(e);if($('calcCheck')){$('calcCheck').textContent='⚠ 自己検証NG';$('calcCheck').className='err'}return false}
 }

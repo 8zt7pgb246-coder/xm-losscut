@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v16</title>
+<title>DeadLine positioning｜デラポジ Pro v17</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v16 — broker P&L reconciliation / strict pending-state validation */
+/* v17 — OCR position recognition hardening / broker P&L reconciliation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -430,7 +430,12 @@ function extractPositionsFromWords(words){
 }
 function parseOCR(text,words=[]){
   const found=[],positions=[];let m;
-  const normalized=String(text||'').replace(/(?:→|➜|➔|⇒|›)/g,'->').replace(/—/g,'-').replace(/\u00a0/g,' ');
+  // MT5の「約定価格 → 現在価格」はOCRで矢印が「—」「–」「−」「-」に化けることがある。
+  // ここを単なるマイナス記号として扱うと、現在ポジションを認識できず計算停止になる。
+  // 「数字 + 区切り + 数字」の組だけを矢印として正規化し、損益の -4045 JPY 等は触らない。
+  let normalized=String(text||'').replace(/(?:→|➜|➔|⇒|›)/g,'->').replace(/\u00a0/g,' ');
+  normalized=normalized.replace(/([0-9]{3,10}(?:\.[0-9]+)?)\s*(?:—|–|−|-)\s*([0-9]{3,10}(?:\.[0-9]+)?)/g,'$1 -> $2');
+  normalized=normalized.replace(/([0-9]{3,10}(?:\.[0-9]+)?)\s*(?:—|–|−|-)(?=\s*[0-9]{3,10}(?:\.[0-9]+)?)/g,'$1 -> ');
   // まず「GOLD# buy 0.01 / 4367.37 -> ...」のような明瞭な現在ポジションを抽出。
   const posPatterns=[
     /([A-Z0-9]+(?:Cash)?#?)\s*(buy|sell)\s+([0-9]+(?:\.[0-9]+)?)\s*(?:\/\s*0)?\s*(?:at\s*)?([0-9]{1,10}(?:\.[0-9]+)?)\s*->/gi,
@@ -444,7 +449,21 @@ function parseOCR(text,words=[]){
     const line=lines[i];if(!/\b(buy|sell)\b/i.test(line)||/\bbuy\s+limit\b/i.test(line))continue;
     const sm=line.match(/([A-Z0-9]+(?:Cash)?#?)/i);const sym=sm?symbolFromText(sm[1]):null;if(!sym)continue;
     const lm=line.match(/\b(?:buy|sell)\b\s+([0-9]+(?:\.[0-9]+)?)/i);if(!lm)continue;const lot=normalizeOcrNumber(lm[1]);
-    const chunk=[line,...lines.slice(i+1,i+3)].join(' ');const am=chunk.match(/([0-9]{3,10}(?:\.[0-9]+)?)\s*->/);if(am){const price=normalizeOcrNumber(am[1]);if(price>0)positions.push({side:(line.match(/\b(buy|sell)\b/i)||[])[1].replace(/^./,x=>x.toUpperCase()),lot,price,symbol:sym})}
+    const side=(line.match(/\b(buy|sell)\b/i)||[])[1].replace(/^./,x=>x.toUpperCase());
+    const chunk=[line,...lines.slice(i+1,i+3)].join(' ');
+    const am=chunk.match(/([0-9]{1,10}(?:\.[0-9]+)?)\s*->/);
+    if(am){const price=normalizeOcrNumber(am[1]);if(price>0)positions.push({side,lot,price,symbol:sym});continue}
+
+    // 矢印そのものをOCRが完全に落とした場合の保険。
+    // 「ポジション見出し」の直後1〜2行に価格が2つ並んでいれば、先頭を約定価格とする。
+    // P&Lや残高の数字を拾わないよう、ポジション行直後だけを対象にする。
+    for(const pl of lines.slice(i+1,i+3)){
+      const nums=(pl.match(/\d{1,10}(?:\.[0-9]+)?/g)||[]).map(normalizeOcrNumber).filter(Number.isFinite);
+      if(nums.length>=2){
+        const price=nums[0];
+        if(price>0){positions.push({side,lot,price,symbol:sym});break}
+      }
+    }
   }
   const patterns=[/([0-9]+(?:\.[0-9]+)?)\s*\/\s*0\s*(?:at|@)\s*([0-9]+(?:\.[0-9]+)?)/gi,/0\.0[1-9]\s*(?:\/\s*0)?\s*(?:at|@)\s*([0-9]{1,8}(?:\.[0-9]{1,5})?)/gi];
   for(const re of patterns){while((m=re.exec(normalized))!==null){const lot=re===patterns[0]?normalizeOcrNumber(m[1]):.01,price=normalizeOcrNumber(re===patterns[0]?m[2]:m[1]);if(lot>0&&price>0)found.push({side:'Buy Limit',lot,price})}}
@@ -638,7 +657,17 @@ function runCalcSelfTest(){
     const t13=ocrBad.positions.length===1 && ocrBad.positions[0].price===4367.37;
 
     const adjModel=((4359.99-4367.37)*.01*100*159.455); const t14=(()=>{const x=simulateLC(50000,20,[],[{side:'Buy',lot:.01,price:4367.37}],c,lev,100,4360.26,-1193-adjModel);return x.filled.length===1&&x.lc>4054.6&&x.lc<4054.9})(); const t15x=simulateLC(50000,20,[{side:'Buy Limit',lot:.01,price:4361}],pos,c,lev,100,4360.26,0); const t15=t15x.inconsistent.length===1&&t15x.added.length===0;
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15];
+
+    // 回帰テスト16：今回実際に失敗したOCR。矢印が「—」になっても1ポジションを認識する。
+    const actualScreenOcr='-4 045 JPY\nGOLD# buy 0.01\n4367.37 — 4342.00 4045\nGOLD# buy limit\n0.01 / 0 at 4318.16\nGOLD# buy limit\n0.01 / 0 at 4099.27\nGOLD# buy limit\n0.01 / 0 at 4232.15\nGOLD# buy limit\n0.01 / 0 at 4163.12';
+    const ocrActual=parseOCR(actualScreenOcr);
+    const t16=ocrActual.positions.length===1&&ocrActual.positions[0].symbol==='GOLD#'&&ocrActual.positions[0].lot===0.01&&Math.abs(ocrActual.positions[0].price-4367.37)<0.0001&&ocrActual.pending.length===4;
+
+    // 回帰テスト17：矢印が完全に消えても、ポジション見出し直後の価格ペアから約定価格を復元する。
+    const ocrNoArrow=parseOCR('GOLD# buy 0.01\n4367.37 4342.00 4045\nGOLD# buy limit\n0.01 / 0 at 4318.16');
+    const t17=ocrNoArrow.positions.length===1&&Math.abs(ocrNoArrow.positions[0].price-4367.37)<0.0001;
+
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17];
     const passed=tests.filter(Boolean).length;
     const ok=passed===tests.length;
     $('calcCheck').textContent=ok?`✓ 回帰テストOK（${passed}/${tests.length}）`:`⚠ 回帰テストNG（${passed}/${tests.length}）`;

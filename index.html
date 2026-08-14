@@ -106,7 +106,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 <div class="card"><div class="row"><b>認識した注文 / DEAD LINEシナリオ</b><span id="count">0件 / LC時想定追加約定 0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">注文リセット</button></div></div>
 
-<div class="card"><label>価格ソース</label><div class="small"><b>XM KIWAMI 気配値スクショ → このアプリ</b>。1枚のスクショから認識できた全銘柄のBid/Askを銘柄別に保存します。新しい気配値を読み込むまで上書きしません。銘柄を切り替えても他銘柄の保存価格は消えません。</div></div>
+<div class="card"><label>価格ソース</label><div class="small"><b>XM画面（スクショ/動画） → このアプリ</b>。1枚のスクショから認識できた全銘柄のBid/Askを銘柄別に保存します。新しい気配値を読み込むまで上書きしません。銘柄を切り替えても他銘柄の保存価格は消えません。</div></div>
 
 <div class="alert"><b>重要：</b>LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。保存済みの古いポジションは起動・銘柄切替時に自動で無効化します。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。現在Askが既に注文価格以下なのに「placed」のままの注文は、時系列不整合として自動約定扱いせず計算を停止します。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
@@ -212,7 +212,7 @@ function renderDataLock(){
   el.style.display='block';
   el.innerHTML='<strong>⚠ 計算停止：現在ポジションの認識結果が未確定です。</strong><br>'+String(positionImportError||'保存済みの古いポジションをDEAD LINE計算に使用しません。')+'<br>正しいMT5「ポジション」欄が写った注文画面をもう一度読み込んでください。';
 }
-function switchSymbol(){currentSymbol=$('symbol').value;localStorage.setItem('xm_selected_symbol',currentSymbol);positionDataValid=false;positionDataSource='none';positionImportError='銘柄切替後は現在ポジションを再確認するまで保存済みデータを計算に使用しません。';renderDataLock();const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
+function switchSymbol(resetPositionState=true){const nextSymbol=$('symbol').value;const changed=nextSymbol!==currentSymbol;currentSymbol=nextSymbol;localStorage.setItem('xm_selected_symbol',currentSymbol);if(resetPositionState&&changed){positionDataValid=false;positionDataSource='none';positionImportError='銘柄切替後は現在ポジションを再確認するまで保存済みデータを計算に使用しません。';renderDataLock();}const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
 function updateSpecUI(){const c=cfg();$('specStatus').innerHTML=c.known?`<span class="ok">✓ ${currentSymbol} の標準仕様を登録済み</span>`:`<span class="warn">⚠ ${currentSymbol} は気配値から追加された銘柄。契約サイズ・レバレッジは推定初期値です。MT5「仕様」の値に合わせて確認してください。</span>`;$('specWarning').style.display=c.known?'none':'block';$('specWarning').innerHTML=`<b>銘柄仕様の確認：</b>${currentSymbol} は自動推定仕様で計算しています。正確なLCが必要なら、MT5の「仕様」に表示される契約サイズ・証拠金条件に合わせて上の数値を確認してください。`}
 function updatePriceUI(){const c=cfg();$('goldBid').textContent=Number.isFinite(goldBid)?formatPrice(goldBid):'—';$('goldAsk').textContent=Number.isFinite(goldAsk)?formatPrice(goldAsk):'—';$('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?formatPrice(goldAsk-goldBid):'—';$('priceUpdated').textContent=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未保存';$('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)?`<span class="ok">✓ 保存済み ${currentSymbol} Bid ${formatPrice(goldBid)} / Ask ${formatPrice(goldAsk)}</span>`:`<span class="warn">${currentSymbol}の気配値スクショを読み込んでください</span>`}
 function formatPrice(v){if(!Number.isFinite(v))return '—';const d=Math.max(0,Math.min(5,decimalPlacesFor(v)));return v.toFixed(d)}
@@ -391,9 +391,227 @@ function saveQuotes(quotes,usdjpy){
   }
   saveAll();
   if(Number.isFinite(usdjpy)&&usdjpy>0)$('usdjpy').value=usdjpy.toFixed(3);
-  switchSymbol();
+  switchSymbol(false);
   return {accepted:Object.keys(valid),rejected:checked.rejected};
 }
+
+/* v25 OCR/media pipeline
+   - Restores the missing recognizeFileFrames / parse / merge pipeline.
+   - One button accepts image or video.
+   - Video uses real frames; no price averaging.
+   - Quote selection rejects transient spread outliers.
+*/
+function normalizeOcrLine(s){
+  return String(s||'')
+    .replace(/\u2013|\u2014/g,'-')
+    .replace(/\u2192/g,'->')
+    .replace(/\u00a0/g,' ')
+    .replace(/[|]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function parseSignedMoney(s){
+  if(s==null)return null;
+  const raw=String(s).replace(/,/g,'').replace(/ /g,'').replace(/[−–—]/g,'-');
+  const m=raw.match(/^([+-]?\d+(?:\.\d+)?)$/);
+  return m?Number(m[1]):null;
+}
+function parseOCR(text){
+  const raw=String(text||'');
+  const lines=raw.split(/\r?\n/).map(normalizeOcrLine).filter(Boolean);
+  const positions=[], pending=[];
+  let brokerPnl=null;
+  // MT5 account/position P/L: prefer an explicit JPY suffix.
+  const moneyMatches=[...raw.replace(/,/g,'').matchAll(/([+-]?\s*\d+(?:\.\d+)?)\s*JPY/gi)];
+  if(moneyMatches.length){
+    const vals=moneyMatches.map(m=>parseSignedMoney(m[1])).filter(Number.isFinite);
+    if(vals.length) brokerPnl=vals[0];
+  }
+
+  const isSymbolLine=(s)=>!!symbolFromText(s.replace(/[^A-Za-z0-9#]/g,''));
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    const symMatch=line.match(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i);
+    if(!symMatch) continue;
+    const sym=symbolFromText(symMatch[0]);
+    if(!sym) continue;
+
+    const low=line.toLowerCase();
+    const sideMatch=low.match(/\b(buy\s*limit|sell\s*limit|buy|sell)\b/);
+    if(!sideMatch) continue;
+    const sideRaw=sideMatch[1].replace(/\s+/g,' ');
+    const isPending=/limit$/.test(sideRaw);
+    // Look at this line and the next 2 lines for lot/price data.
+    const chunk=lines.slice(i,i+3).join(' ');
+    let lotMatch=line.match(/(?:buy\s*limit|sell\s*limit|buy|sell)\s*(?:#?\s*)?(\d+(?:\.\d+)?)/i)
+                 || line.match(/\b(\d+(?:\.\d+)?)\s*(?:lot)?\b/i);
+    // MT5 pending orders often put "0.01 / 0 at PRICE" on the next line.
+    if(!lotMatch){
+      lotMatch=chunk.match(/\b(\d+(?:\.\d+)?)\s*\/\s*0\b/i)
+             || chunk.match(/\b(0\.\d+)\s+(?:\/|at)\b/i);
+    }
+    const lot=lotMatch?Number(lotMatch[1]):null;
+    if(!Number.isFinite(lot)||lot<=0||lot>1000) continue;
+
+    const arrow=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|to)\s*(\d[\d,.]*\.\d+)/i);
+    const nums=(chunk.match(/\d[\d,.]*\.\d+/g)||[])
+      .map(normalizeOcrNumber).filter(Number.isFinite)
+      .filter(n=>n>0);
+    let price=null;
+    if(arrow) price=normalizeOcrNumber(arrow[1]);
+    else if(nums.length){
+      // For a position line, the first plausible market price after the lot is entry.
+      // For a pending line, prefer the last number in the "at PRICE" pattern.
+      const at=chunk.match(/\bat\s+(\d[\d,.]*\.\d+)/i);
+      if(at) price=normalizeOcrNumber(at[1]);
+      else {
+        const filtered=nums.filter(n=>n!==lot);
+        price=filtered.length?filtered[0]:null;
+      }
+    }
+    if(!Number.isFinite(price)||price<=0) continue;
+    const obj={side:sideRaw.replace(/\s+/g,' '),lot:+lot.toFixed(4),price};
+    if(isPending) pending.push(obj);
+    else positions.push({side:/^buy/i.test(sideRaw)?'Buy':'Sell',lot:+lot.toFixed(4),price});
+  }
+
+  // Compact/split-line fallback: only run when a 3-line primary pattern
+  // was not already captured, and never reinterpret a pending-order chunk as a position.
+  for(let i=0;i<lines.length;i++){
+    const chunk=lines.slice(i,i+3).join(' ');
+    if(/->|→|\bat\s+\d/i.test(chunk)) continue; // primary pass should handle these.
+    const sm=chunk.match(/(GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i);
+    if(!sm) continue;
+    const sym=symbolFromText(sm[1]); if(!sym) continue;
+    const sideM=chunk.match(/\b(buy\s*limit|sell\s*limit|buy|sell)\b/i); if(!sideM) continue;
+    const sideRaw=sideM[1].replace(/\s+/g,' ');
+    let lm=chunk.match(/(?:buy\s*limit|sell\s*limit|buy|sell)\s+(\d+(?:\.\d+)?)/i);
+    if(!lm) lm=chunk.match(/\b(\d+(?:\.\d+)?)\s*\/\s*0\b/i);
+    const lot=lm?Number(lm[1]):null;
+    if(!Number.isFinite(lot)||lot<=0||lot>1000) continue;
+    const nums=(chunk.match(/\d[\d,.]*\.\d+/g)||[]).map(normalizeOcrNumber).filter(Number.isFinite);
+    const price=nums.find(n=>Math.abs(n-lot)>1e-8&&n>0);
+    if(!Number.isFinite(price)||price<=0) continue;
+    const obj={side:/limit$/i.test(sideRaw)?sideRaw:(/^buy/i.test(sideRaw)?'Buy':'Sell'),lot:+lot.toFixed(4),price};
+    const arr=/limit$/i.test(sideRaw)?pending:positions;
+    if(!arr.some(o=>String(o.side).toLowerCase()===String(obj.side).toLowerCase()&&Math.abs(o.price-obj.price)<1e-5&&Math.abs(o.lot-obj.lot)<1e-6))arr.push(obj);
+  }
+
+  return {positions,pending,brokerPnl,rawText:raw};
+}
+function mergeParsedResults(results){
+  const out={positions:[],pending:[],brokerPnl:null,rawText:''};
+  for(const r of (results||[])){
+    const text=r?.data?.text||r?.text||'';
+    out.rawText += (out.rawText?'\n':'') + text;
+    const p=parseOCR(text);
+    out.positions.push(...p.positions);
+    out.pending.push(...p.pending);
+    if(!Number.isFinite(out.brokerPnl)&&Number.isFinite(p.brokerPnl))out.brokerPnl=p.brokerPnl;
+  }
+  const uniq=(arr)=>arr.filter((o,i,a)=>a.findIndex(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(+x.lot-+o.lot)<1e-6&&Math.abs(+x.price-+o.price)<1e-5)===i);
+  out.positions=uniq(out.positions);
+  out.pending=uniq(out.pending);
+  return out;
+}
+function sanitizeRecognizedPositions(arr){
+  const out=[];
+  for(const o of (arr||[])){
+    const side=/^buy$/i.test(String(o.side))?'Buy':/^sell$/i.test(String(o.side))?'Sell':null;
+    const lot=Number(o.lot), price=Number(o.price);
+    if(!side||!Number.isFinite(lot)||lot<=0||lot>1000||!Number.isFinite(price)||price<=0)continue;
+    // Never accept a P/L number as an entry price.
+    if(Number.isFinite(goldBid)){
+      const rel=Math.abs(price-goldBid)/goldBid;
+      if(rel>0.35)continue;
+    }
+    if(!out.some(x=>x.side===side&&Math.abs(x.lot-lot)<1e-6&&Math.abs(x.price-price)<1e-5))
+      out.push({side,lot:+lot.toFixed(4),price});
+  }
+  return out;
+}
+async function imageToCanvasSource(input){
+  if(typeof input==='string')return input;
+  const url=URL.createObjectURL(input);
+  try{
+    const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url});
+    const scale=Math.min(2,2200/img.width);
+    const c=document.createElement('canvas');
+    c.width=Math.max(1,Math.floor(img.width*scale)); c.height=Math.max(1,Math.floor(img.height*scale));
+    c.getContext('2d',{willReadFrequently:true}).drawImage(img,0,0,c.width,c.height);
+    return c;
+  }finally{URL.revokeObjectURL(url)}
+}
+async function videoFrameSources(file,maxFrames=8){
+  const url=URL.createObjectURL(file);
+  try{
+    const v=document.createElement('video');
+    v.preload='metadata'; v.muted=true; v.playsInline=true; v.src=url;
+    await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=rej});
+    const dur=Number(v.duration);
+    if(!Number.isFinite(dur)||dur<=0)throw new Error('VIDEO_DURATION_INVALID');
+    const count=Math.min(maxFrames,Math.max(4,Math.ceil(dur/3)));
+    const times=[];
+    for(let i=0;i<count;i++) times.push(Math.min(dur-0.05, (dur*(i+0.5))/count));
+    const frames=[];
+    for(const t of times){
+      await new Promise((res,rej)=>{v.onseeked=res;v.onerror=rej;v.currentTime=t});
+      const scale=Math.min(2,2200/v.videoWidth);
+      const c=document.createElement('canvas');
+      c.width=Math.max(1,Math.floor(v.videoWidth*scale)); c.height=Math.max(1,Math.floor(v.videoHeight*scale));
+      c.getContext('2d',{willReadFrequently:true}).drawImage(v,0,0,c.width,c.height);
+      frames.push({canvas:c,time:t});
+    }
+    return frames;
+  }finally{URL.revokeObjectURL(url)}
+}
+async function recognizeOne(TesseractNS,source,psm,logger){
+  const worker=await TesseractNS.createWorker('eng',1,{logger});
+  try{
+    await worker.setParameters({tessedit_pageseg_mode:String(psm||6),preserve_interword_spaces:'1'});
+    const r=await worker.recognize(source);
+    return r;
+  }finally{await worker.terminate()}
+}
+async function recognizeFileFrames(T,file,mode,onProgress){
+  const isVideo=file.type.startsWith('video/');
+  const sources=isVideo?await videoFrameSources(file,8):[{canvas:await imageToCanvasSource(file),time:0}];
+  const results=[];
+  // PSM 6 is robust for MT5's mixed rows. PSM 11 is a useful sparse-text fallback.
+  const psm=mode==='order'?6:6;
+  for(let i=0;i<sources.length;i++){
+    const r=await recognizeOne(T,sources[i].canvas,psm,m=>{
+      if(onProgress)onProgress({...m,frame:i+1,total:sources.length});
+    });
+    results.push({data:r.data,time:sources[i].time,frameIndex:i});
+  }
+  return results;
+}
+function aggregateVideoQuotes(results){
+  const by={};
+  for(const r of (results||[])){
+    const q1=extractQuotesFromWords(r.data?.words||[]);
+    const q2=extractAllQuotesText(r.data?.text||'');
+    const merged={...q2,...q1};
+    for(const [sym,q] of Object.entries(merged)){
+      if(!quoteSanity(sym,q,quoteStore[sym]||priceStore[sym]))continue;
+      const spread=+q.ask-+q.bid;
+      if(!(spread>0))continue;
+      (by[sym]??=[]).push({bid:+q.bid,ask:+q.ask,spread,time:+r.time||0,frameIndex:r.frameIndex||0});
+    }
+  }
+  const out={};
+  for(const [sym,arr] of Object.entries(by)){
+    if(!arr.length)continue;
+    const spreads=arr.map(x=>x.spread).sort((a,b)=>a-b);
+    const med=spreads[Math.floor(spreads.length/2)];
+    // Pick an actual frame, not an averaged price. Among equally stable frames prefer the latest.
+    arr.sort((a,b)=>Math.abs(a.spread-med)-Math.abs(b.spread-med)||b.time-a.time);
+    out[sym]={bid:arr[0].bid,ask:arr[0].ask};
+  }
+  return out;
+}
+
 $('symbol').addEventListener('change',switchSymbol);$('symbolLeverage').addEventListener('input',()=>{const c=cfg();c.leverage=+$('symbolLeverage').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});$('contractSize').addEventListener('input',()=>{const c=cfg();c.contract=+$('contractSize').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});['balance','stopout','usdjpy','brokerPnl'].forEach(id=>$(id).addEventListener('input',()=>calc()));
 $('mediaChoose').addEventListener('click',()=>$('mediaFile').click());
 $('mediaFile').addEventListener('change',async e=>{

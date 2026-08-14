@@ -111,7 +111,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div class="alert"><b>重要：</b>LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。保存済みの古いポジションは起動・銘柄切替時に自動で無効化します。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。MT5実測含み損益は検証専用で、OCR値をLC計算へ自動補正入力しません。現在Askが既に注文価格以下なのに「placed」のままの注文は、時系列不整合として自動約定扱いせず計算を停止します。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
 
-<div class="card"><div class="row"><b>計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">現在ポジションを含め、LC到達前に通過するBuy Limitだけを追加約定として計算します。修正後の計算エンジンは、既知の回帰テストケースを起動時に検証します。</div></div>
+<div id="diagnosticPanel" class="card" style="display:none"><div class="row"><b>開発者診断：計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">本番画面には表示せず、?debug=1 または診断モードでのみ表示します。回帰テストが失敗した場合、DEAD LINEの計算は安全側で停止します。</div></div>
 <div class="card footer"><b>計算モデル</b><br>口座残高はJPY。各注文の約定価格で必要証拠金を固定する近似モデルを使用し、Stop Out時のEquity＝Stop Out率×Used MarginとしてLC価格を解きます。Buy Limitの約定判定はAsk、ロングの含み損評価はBidを使います。Buy Limitの発動判定にスプレッドを二重適用しません。価格変動による損益は銘柄の決済通貨からJPYへ換算します。既存ポジション、スワップ、手数料、ヘッジ、段階式レバレッジ、銘柄固有の証拠金率等は別途反映が必要です。したがって結果は「推定」です。</div>
 </div>
 
@@ -252,6 +252,9 @@ function simulateLC(bal,stop,pending,positions,c,lev,contract,currentAsk,adjustm
   for(const next of buys){if(!filled.length){filled.push(next);added.push(next);lc=solveLC(bal,stop,filled,c,lev,contract,adjustment);continue} if(lc!==null&&lc<=next.price){filled.push(next);added.push(next);lc=solveLC(bal,stop,filled,c,lev,contract,adjustment);continue} break}
   return {filled,lc,added,initialPending:[],inconsistent:[]};
 }
+function diagnosticsEnabled(){return /(?:^|\?)debug=1(?:&|$)/.test(location.search)||localStorage.getItem('delapoji_debug')==='1'}
+function setDiagnosticVisible(){const p=$('diagnosticPanel');if(p)p.style.display=diagnosticsEnabled()?'block':'none'}
+
 function calc(){
   const bal=+$('balance').value||0,stop=+$('stopout').value||20,c=cfg(),lev=+$('symbolLeverage').value||0,contract=+$('contractSize').value||0;
   const pending=getOrders().filter(o=>/buy\s*limit/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
@@ -391,6 +394,24 @@ function validateQuotes(quotes){
   }
   return {valid:out,rejected};
 }
+function assessQuoteCoverage(rawText, acceptedQuotes){
+  const raw=String(rawText||'');
+  // A quote-board screen usually contains several instrument names plus L:/H:
+  // rows. Estimate only from clearly visible instrument labels; never block an
+  // order-only screen. This is a safety gate, not a requirement to know a fixed
+  // number of symbols.
+  const looksLikeQuoteBoard=/(?:\bL\s*[:：]|\bH\s*[:：])/.test(raw) &&
+    (raw.match(/(?:GOLD|XAUUSD|USDJPY|BTCUSD|OILCash|JP225Cash|EURUSD|GBPUSD|AUDJPY|AUDUSD|GBPAUD|[A-Z]{6}(?:#|Cash#)?)/gi)||[]).length>=4;
+  if(!looksLikeQuoteBoard)return {ok:true,expected:0,accepted:Object.keys(acceptedQuotes||{}).length};
+  const labels=new Set();
+  for(const m of raw.matchAll(/(?:GOLD|XAUUSD|USDJPY|BTCUSD|OILCash|JP225Cash|EURUSD|GBPUSD|AUDJPY|AUDUSD|GBPAUD|[A-Z]{6}(?:#|Cash#)?)/gi)){
+    const n=normalizeSymbol(m[0]); if(n)labels.add(n);
+  }
+  const expected=labels.size, accepted=Object.keys(acceptedQuotes||{}).filter(k=>labels.has(normalizeSymbol(k))).length;
+  const ok=expected<4 || accepted>=Math.max(3,Math.ceil(expected*0.70));
+  return {ok,expected,accepted};
+}
+
 function saveQuotes(quotes,usdjpy){
   const checked=validateQuotes(quotes); const valid=checked.valid; const now=new Date().toISOString();
   for(const [sym,q] of Object.entries(valid)){
@@ -723,6 +744,15 @@ $('mediaFile').addEventListener('change',async e=>{
     }
 
     let quoteNote='';
+    const coverage=assessQuoteCoverage(parsed.rawText,quotes);
+    if(!coverage.ok){
+      $('specWarning').style.display='block';
+      $('specWarning').textContent=`⚠ 気配値の認識が不完全です（画面上の推定${coverage.expected}銘柄 / 採用${coverage.accepted}銘柄）。不足した状態でDEAD LINEを計算しません。気配値画面をもう一度、銘柄が十分映る状態で読み込んでください。`;
+      $('result').textContent='—';$('distance').textContent='気配値認識不足のため計算停止';
+      $('rateStatus').innerHTML='<span class="err">✕ 気配値認識不足。再読み込みしてください。</span>';
+      return;
+    }
+    $('specWarning').style.display='none';
     if(Object.keys(quotes).length){
       const saved=saveQuotes(quotes,usdjpy);
       quoteNote=`気配値${saved.accepted.length}銘柄`;
@@ -945,12 +975,16 @@ function runCalcSelfTest(){
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;
+    window.__regressionOK=ok;
+    setDiagnosticVisible();
     $('calcCheck').textContent=ok?`✓ 回帰テストOK（${passed}/${tests.length}）`:`⚠ 回帰テストNG（${passed}/${tests.length}） ${failed.join(', ')}`;
     $('calcCheck').className=ok?'ok':'err';
     return ok;
   }catch(e){
     console.error(e);
     window.__testRate=undefined;
+    window.__regressionOK=false;
+    setDiagnosticVisible();
     if($('calcCheck')){$('calcCheck').textContent='⚠ 回帰テストNG';$('calcCheck').className='err'}
     return false
   }
@@ -1001,7 +1035,7 @@ function switchPage(which){
 $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
-populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();renderDataLock();runCalcSelfTest();
+setDiagnosticVisible();populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();renderDataLock();runCalcSelfTest();
 </script>
 </body>
 </html>

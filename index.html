@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v18</title>
+<title>DeadLine positioning｜デラポジ Pro v21</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v19 — deterministic regression tests, OCR/UX hardening, safe order reconciliation */
+/* v21 — two-position regression hardening, deterministic FX tests, OCR/UX hardening */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -622,10 +622,11 @@ function runCalcSelfTest(){
     const c2=simulateLC(bal,stop,pending,pos,c,lev,100,4320.00);
     const t3=c1.added.length===c2.added.length && Math.abs(c1.lc-c2.lc)<0.0001;
 
-    // 回帰テスト4：4318.16を既に通過した場合は、その注文を実約定済み扱いにし、
-    // その後の段階約定もLC到達前判定に従って再評価する。
+    // 回帰テスト4：現在Askが未約定Buy Limitを下回る状態は、
+    // 「約定済み」と推測して勝手に計算へ入れない。MT5画面がplacedを示す以上、
+    // 状態矛盾として停止し、ユーザー確認を要求する。これが安全側の仕様。
     const d=simulateLC(bal,stop,pending,pos,c,lev,100,4317.00);
-    const t4=d.added.length===2 && d.filled.length===3 && Math.abs(d.lc-4202.26023)<0.05;
+    const t4=d.inconsistent.length===1 && d.added.length===0 && d.filled.length===1 && d.lc!==null;
 
     // 回帰テスト5：現在ポジションが1件でも、LC時想定の追加約定を含めて
     // 「現在保有」と「LC時想定」を混同しない（現在1件、LC時3件）。
@@ -652,13 +653,18 @@ function runCalcSelfTest(){
     const oldBid=goldBid;goldBid=4360.71;const s9=sanitizeRecognizedPositions([{side:'Buy',lot:.01,price:1043}]);goldBid=oldBid;
     const t9=s9.length===0;
 
-    // 回帰テスト10：正しい1ポジションのみならLCは約4054.82付近。3509付近にはならない。
+    // 回帰テスト10：正しい1ポジションのみならLCは約4054.76付近。
+    // 外部の現在USD/JPYに依存させず、テストレートを必ず固定する。
+    const savedRate10=window.__testRate;window.__testRate=r;
     const one=simulateLC(bal,stop,[],pos,c,lev,100,4360.93);
     const t10=one.filled.length===1 && Math.abs(one.lc-4054.76028)<0.05;
+    window.__testRate=savedRate10;
 
     // 回帰テスト11：現在ポジション1件の正しいLC。3509付近には絶対ならない。
+    const savedRate11=window.__testRate;window.__testRate=r;
     const one2=simulateLC(bal,stop,[],[{side:'Buy',lot:.01,price:4367.37}],c,lev,100,4360.42);
     const t11=one2.filled.length===1 && one2.lc>4000 && one2.lc<4100;
+    window.__testRate=savedRate11;
 
     // 回帰テスト12：MT5の実画面の現在価格4,350.99/Ask4,351.24では、
     // 1ポジション＋4予約注文からLC時想定追加約定2件、LCは約4,202.2。
@@ -685,8 +691,39 @@ function runCalcSelfTest(){
 
     // 回帰テスト19：OCRが0件でも保存済み注文を自動削除しない。
     const t19=(()=>{const existingCount=4,foundCount=0;return existingCount>0&&foundCount===0;})();
+    // 回帰テスト20：現在価格が予約注文を通過しているのにOCR画面がplacedの場合、
+    // 自動約定扱いせず「状態矛盾」として保護する。
+    const conflict=simulateLC(50000,20,[{side:'Buy Limit',lot:.01,price:4318.16}],pos,c,lev,100,4317.00);
+    const t20=conflict.inconsistent.length===1&&conflict.added.length===0;
 
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19];
+    // 回帰テスト21：今回の実機動画ケース。2ポジション＋3予約注文、USD/JPY=159.380。
+    // 4232.15だけがDeadLine到達前に追加約定し、DeadLineは4202.141879付近になる。
+    const twoPos=[
+      {side:'Buy',lot:.01,price:4318.10},
+      {side:'Buy',lot:.01,price:4367.37}
+    ];
+    const threePending=[
+      {side:'Buy Limit',lot:.01,price:4232.15},
+      {side:'Buy Limit',lot:.01,price:4163.12},
+      {side:'Buy Limit',lot:.01,price:4099.27}
+    ];
+    const savedRate21=window.__testRate;window.__testRate=159.380;
+    const live2=simulateLC(50000,20,threePending,twoPos,c,lev,100,4319.53);
+    const t21=live2.filled.length===3&&live2.added.length===1&&Math.abs(live2.lc-4202.141879)<0.05;
+    window.__testRate=savedRate21;
+
+    // 回帰テスト22：2ポジションを「現在保有」として扱い、LC時想定追加約定を混同しない。
+    const t22=twoPos.length===2&&live2.filled.length===3&&live2.added.length===1&&live2.filled.slice(0,2).every(o=>twoPos.some(p=>p.price===o.price&&p.lot===o.lot));
+
+    // 回帰テスト23：現在価格が変化しても、予約注文の価格関係が変わらない限り
+    // 現在価格をLC方程式へ二重投入せず、DeadLineを不必要に動かさない。
+    const savedRate23=window.__testRate;window.__testRate=159.380;
+    const l23a=simulateLC(50000,20,threePending,twoPos,c,lev,100,4319.53);
+    const l23b=simulateLC(50000,20,threePending,twoPos,c,lev,100,4300.00);
+    const t23=l23a.added.length===l23b.added.length&&Math.abs(l23a.lc-l23b.lc)<0.0001;
+    window.__testRate=savedRate23;
+
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;

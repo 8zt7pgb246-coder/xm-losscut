@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v29 — professional safety hardening: regression-gate, broker P/L verification-only, stronger OCR/video validation */
+/* v30 — quote coverage no longer hard-blocks calculation: regression-gate, broker P/L verification-only, stronger OCR/video validation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -70,7 +70,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・注文画面のスクショ/動画を自動判定します。動画は最大16フレームを解析し、1フレームごとにOCRワーカーを作り直さず同一ワーカーで連続解析します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外して安定した実フレームの値を採用します。気配値だけを読み込んだ場合は既存のポジション/注文を消しません。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・注文画面のスクショ/動画を自動判定します。動画は最大16フレームを解析し、1フレームごとにOCRワーカーを作り直さず同一ワーカーで連続解析します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外して安定した実フレームの値を採用します。気配値だけを読み込んだ場合は既存のポジション/注文を消しません。表示中の全銘柄を認識できなくても、現在選択銘柄と計算に必要な換算レートが確定していれば計算します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -419,7 +419,8 @@ function assessQuoteCoverage(rawText, acceptedQuotes){
     const n=normalizeSymbol(m[0]); if(n)labels.add(n);
   }
   const expected=labels.size, accepted=Object.keys(acceptedQuotes||{}).filter(k=>labels.has(normalizeSymbol(k))).length;
-  const ok=expected<4 || accepted>=Math.max(3,Math.ceil(expected*0.70));
+  // Coverage is diagnostic information only. It must never block DEAD LINE.
+  const ok=true;
   return {ok,expected,accepted};
 }
 
@@ -756,13 +757,8 @@ $('mediaFile').addEventListener('change',async e=>{
 
     let quoteNote='';
     const coverage=assessQuoteCoverage(parsed.rawText,quotes);
-    if(!coverage.ok){
-      $('specWarning').style.display='block';
-      $('specWarning').textContent=`⚠ 気配値の認識が不完全です（画面上の推定${coverage.expected}銘柄 / 採用${coverage.accepted}銘柄）。不足した状態でDEAD LINEを計算しません。気配値画面をもう一度、銘柄が十分映る状態で読み込んでください。`;
-      $('result').textContent='—';$('distance').textContent='気配値認識不足のため計算停止';
-      $('rateStatus').innerHTML='<span class="err">✕ 気配値認識不足。再読み込みしてください。</span>';
-      return;
-    }
+    // 気配値画面の全銘柄認識率はDEAD LINE計算の成立条件にしない。
+    // 表示銘柄数やスクロール位置はMT5側で変動するため、部分認識だけで計算停止しない。
     $('specWarning').style.display='none';
     if(Object.keys(quotes).length){
       const saved=saveQuotes(quotes,usdjpy);
@@ -771,6 +767,19 @@ $('mediaFile').addEventListener('change',async e=>{
       const savedCurrent=quoteStore[currentSymbol]||priceStore[currentSymbol];
       if(savedCurrent?.usdjpy) $('usdjpy').value=(+savedCurrent.usdjpy).toFixed(3);
       updateSpecUI(); updatePriceUI(); updatePipValue();
+    }
+
+    // 安全停止は「気配値の銘柄数不足」ではなく、現在銘柄に必要な価格/換算レート不足だけ。
+    const requiredQuote=quoteStore[currentSymbol]||priceStore[currentSymbol];
+    const requiredBid=requiredQuote&&Number.isFinite(+requiredQuote.bid)?+requiredQuote.bid:goldBid;
+    const requiredAsk=requiredQuote&&Number.isFinite(+requiredQuote.ask)?+requiredQuote.ask:goldAsk;
+    const requiredRate=quoteRateFor(cfg());
+    if(!(requiredBid>0 && requiredAsk>0 && requiredRate>0)){
+      $('specWarning').style.display='block';
+      $('specWarning').textContent=`⚠ ${currentSymbol} の計算に必要な価格またはJPY換算レートが未確定です。気配値画面を再読み込みしてください。`;
+      $('result').textContent='—';$('distance').textContent='必要価格未確定のため計算停止';
+      $('rateStatus').innerHTML='<span class="err">✕ 計算に必要な価格が未確定です。</span>';
+      return;
     }
 
     const found=parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);

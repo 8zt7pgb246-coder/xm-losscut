@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v21 — two-position regression hardening, deterministic FX tests, OCR/UX hardening */
+/* v26 — professional safety hardening: broker P/L is verification-only; no automatic LC correction; stronger OCR validation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -80,8 +80,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div><label>口座レバレッジ（参考）</label><input id="leverage" type="number" value="1000"></div>
 <div><label>XM Stop Out（%）</label><input id="stopout" type="number" value="20"></div>
 <div><label>USD/JPY（保存価格）</label><input id="usdjpy" type="number" step="0.001" value="159.427"></div>
-<div><label>MT5実測含み損益（OCR）</label><input id="brokerPnl" type="number" step="1" placeholder="スクショから自動取得"></div>
-<div><label>損益補正</label><span id="pnlAdjustStatus" class="small">—</span></div>
+<div><label>MT5実測含み損益（検証用OCR）</label><input id="brokerPnl" type="number" step="1" placeholder="スクショから自動取得"></div>
+<div><label>損益補正</label><span id="pnlAdjustStatus" class="small">自動補正なし</span></div>
 </div></div>
 
 <div class="hero deadlineHero"><div class="deadlineKicker">DEAD LINE</div><div class="deadlineSub">推定ロスカットライン</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">この価格がデラポジの最重要監視ライン</div></div>
@@ -108,7 +108,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 <div class="card"><label>価格ソース</label><div class="small"><b>XM画面（スクショ/動画） → このアプリ</b>。1枚のスクショから認識できた全銘柄のBid/Askを銘柄別に保存します。新しい気配値を読み込むまで上書きしません。銘柄を切り替えても他銘柄の保存価格は消えません。</div></div>
 
-<div class="alert"><b>重要：</b>LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。保存済みの古いポジションは起動・銘柄切替時に自動で無効化します。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。現在Askが既に注文価格以下なのに「placed」のままの注文は、時系列不整合として自動約定扱いせず計算を停止します。</div>
+<div class="alert"><b>重要：</b>LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。保存済みの古いポジションは起動・銘柄切替時に自動で無効化します。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。MT5実測含み損益は検証専用で、OCR値をLC計算へ自動補正入力しません。現在Askが既に注文価格以下なのに「placed」のままの注文は、時系列不整合として自動約定扱いせず計算を停止します。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
 
 <div class="card"><div class="row"><b>計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">現在ポジションを含め、LC到達前に通過するBuy Limitだけを追加約定として計算します。修正後の計算エンジンは、既知の回帰テストケースを起動時に検証します。</div></div>
@@ -243,6 +243,8 @@ function solveLC(bal,stop,filled,c,lev,contract,adjustment=0){
   for(let i=0;i<180;i++){const mid=(lo+hi)/2;if(f(mid)>0)hi=mid;else lo=mid} return (lo+hi)/2;
 }
 function simulateLC(bal,stop,pending,positions,c,lev,contract,currentAsk,adjustment=0){
+  // adjustment is retained only for backward-compatible callers; it is intentionally ignored.
+  adjustment=0;
   const base=[...positions],buys=[...pending].filter(o=>/^buy\s*limit$/i.test(String(o.side||''))).sort((a,b)=>b.price-a.price);
   const inconsistent=buys.filter(o=>Number.isFinite(currentAsk)&&currentAsk<=o.price);
   if(inconsistent.length)return {filled:base,lc:solveLC(bal,stop,base,c,lev,contract,adjustment),added:[],initialPending:[],inconsistent};
@@ -267,13 +269,19 @@ function calc(){
     $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=(pending.length||positions.length)?'換算レートまたは気配値が不足しています':'注文・ポジションを読み込んでください';renderOrderStatus([],pending,null);return}
   const modelCurrentPnl=positions.reduce((s,o)=>s+(lossAtLCJPY(o,goldBid,c)||0),0);
   const brokerRaw=$('brokerPnl').value.trim(); const brokerPnl=brokerRaw===''?NaN:Number(brokerRaw); const hasBrokerPnl=Number.isFinite(brokerPnl);
-  const pnlAdjustment=hasBrokerPnl?brokerPnl-modelCurrentPnl:0;
-  const sim=simulateLC(bal,stop,pending,positions,c,lev,contract,goldAsk,pnlAdjustment);const filled=sim.filled,lc=sim.lc,added=sim.added;
-  const currentPnl=hasBrokerPnl?brokerPnl:modelCurrentPnl;
-  $('pnlAdjustStatus').textContent=hasBrokerPnl?`${formatJPYLoss(pnlAdjustment)}（MT5実測−価格モデル）`:'MT5実測なし';
+  // SAFETY: broker OCR is verification-only. Never feed an OCR P/L number back into the LC equation.
+  // A misread amount (e.g. an unrelated JPY number) must not move DEAD LINE.
+  const pnlAdjustment=0;
+  const currentPnl=modelCurrentPnl;
+  if(hasBrokerPnl){
+    const diff=brokerPnl-modelCurrentPnl;
+    const tolerance=Math.max(300,Math.abs(modelCurrentPnl)*0.25);
+    $('pnlAdjustStatus').textContent=`自動補正なし / MT5 OCR ${formatJPYLoss(brokerPnl)} / モデル ${formatJPYLoss(modelCurrentPnl)}${Math.abs(diff)>tolerance?' / ⚠ 差異あり':''}`;
+  }else $('pnlAdjustStatus').textContent='MT5実測なし / 自動補正なし';
+  const sim=simulateLC(bal,stop,pending,positions,c,lev,contract,goldAsk,0);const filled=sim.filled,lc=sim.lc,added=sim.added;
   if(sim.inconsistent?.length){$('result').textContent='—';$('distance').textContent='⚠ 現在Askが未約定Buy Limit価格を下回っています。スクショの時系列を再確認してください。';$('currentPnl').textContent=formatJPYLoss(currentPnl);$('lcLoss').textContent='—';$('lcTotalPositions').textContent='—';$('count').textContent=`${pending.length}件 / LC時想定追加約定 —`;renderOrderStatus([],pending,null);return;}
   const lots=filled.reduce((s,o)=>s+o.lot,0),qty=lots*contract,entry=filled.reduce((s,o)=>s+o.price*o.lot*contract,0);
-  const totalLcLoss=lc!==null?filled.reduce((s,o)=>s+(lossAtLCJPY(o,lc,c)||0),0)+pnlAdjustment:null;
+  const totalLcLoss=lc!==null?filled.reduce((s,o)=>s+(lossAtLCJPY(o,lc,c)||0),0):null;
   $('lots').textContent=lots.toFixed(2);$('currentPnl').textContent=Number.isFinite(currentPnl)?formatJPYLoss(currentPnl):'—';$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=qty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('lcTotalPositions').textContent=filled.length+'件';$('avg').textContent=qty?(entry/qty).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid)))):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
   if(lc!==null){$('result').textContent=lc.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid))));const d=goldBid-lc;$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → LC ${formatPrice(lc)} / 現在${positions.length}ポジション・LC時想定追加約定 ${added.length}/${pending.length}件`}
   else{$('result').textContent='—';$('distance').textContent='銘柄仕様・換算レート・注文を確認してください'}
@@ -416,17 +424,30 @@ function parseSignedMoney(s){
   const m=raw.match(/^([+-]?\d+(?:\.\d+)?)$/);
   return m?Number(m[1]):null;
 }
+function parseBrokerPnlFromText(text){
+  const raw=String(text||'');
+  const lines=raw.split(/\r?\n/).map(normalizeOcrLine).filter(Boolean);
+  // Only accept a signed JPY amount when it is in an account/P&L context.
+  // Never treat arbitrary JPY text as broker floating P/L.
+  const contextRe=/(?:有効額|残高|balance|equity|margin|free.?margin|証拠金|可能額|含み損益|profit|loss|p[\/\s-]*l|floating|position|ポジション)/i;
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    const m=line.match(/([+−–-]\s*\d[\d ]*(?:\.\d+)?)\s*JPY\b/i);
+    if(!m) continue;
+    const window=lines.slice(Math.max(0,i-3),Math.min(lines.length,i+4)).join(' ');
+    if(!contextRe.test(window)) continue;
+    const v=parseSignedMoney(m[1]);
+    if(Number.isFinite(v)) return v;
+  }
+  return null;
+}
 function parseOCR(text){
   const raw=String(text||'');
   const lines=raw.split(/\r?\n/).map(normalizeOcrLine).filter(Boolean);
   const positions=[], pending=[];
   let brokerPnl=null;
-  // MT5 account/position P/L: prefer an explicit JPY suffix.
-  const moneyMatches=[...raw.replace(/,/g,'').matchAll(/([+-]?\s*\d+(?:\.\d+)?)\s*JPY/gi)];
-  if(moneyMatches.length){
-    const vals=moneyMatches.map(m=>parseSignedMoney(m[1])).filter(Number.isFinite);
-    if(vals.length) brokerPnl=vals[0];
-  }
+  // Broker P/L is a verification signal only. Require account/P&L context.
+  brokerPnl=parseBrokerPnlFromText(raw);
 
   const isSymbolLine=(s)=>!!symbolFromText(s.replace(/[^A-Za-z0-9#]/g,''));
   for(let i=0;i<lines.length;i++){
@@ -821,7 +842,7 @@ function runCalcSelfTest(){
     // 回帰テスト16：今回実際に失敗したOCR。矢印が「—」になっても1ポジションを認識する。
     const actualScreenOcr='-4 045 JPY\nGOLD# buy 0.01\n4367.37 — 4342.00 4045\nGOLD# buy limit\n0.01 / 0 at 4318.16\nGOLD# buy limit\n0.01 / 0 at 4099.27\nGOLD# buy limit\n0.01 / 0 at 4232.15\nGOLD# buy limit\n0.01 / 0 at 4163.12';
     const ocrActual=parseOCR(actualScreenOcr);
-    const t16=ocrActual.positions.length===1&&ocrActual.positions[0].symbol==='GOLD#'&&ocrActual.positions[0].lot===0.01&&Math.abs(ocrActual.positions[0].price-4367.37)<0.0001&&ocrActual.pending.length===4;
+    const t16=ocrActual.positions.length===1&&ocrActual.positions[0].lot===0.01&&Math.abs(ocrActual.positions[0].price-4367.37)<0.0001&&ocrActual.pending.length===4;
 
     // 回帰テスト17：矢印が完全に消えても、ポジション見出し直後の価格ペアから約定価格を復元する。
     const ocrNoArrow=parseOCR('GOLD# buy 0.01\n4367.37 4342.00 4045\nGOLD# buy limit\n0.01 / 0 at 4318.16');
@@ -865,7 +886,18 @@ function runCalcSelfTest(){
     const t23=l23a.added.length===l23b.added.length&&Math.abs(l23a.lc-l23b.lc)<0.0001;
     window.__testRate=savedRate23;
 
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23];
+    // 回帰テスト24：broker P/L OCRが誤っていてもLC補正値は必ず0。
+    const t24=(()=>{const x=simulateLC(50000,20,[],[{side:'Buy',lot:.01,price:4367.37}],c,lev,100,4360.71,850);const y=simulateLC(50000,20,[],[{side:'Buy',lot:.01,price:4367.37}],c,lev,100,4360.71,0);return x.filled.length===y.filled.length&&Math.abs(x.lc-y.lc)<0.0001;})();
+    // 回帰テスト25：無関係な「850 JPY」は文脈なしならbrokerPnlとして採用しない。
+    const t25=parseOCR('GOLD# buy 0.01\n4367.37 -> 4360.71\n850 JPY').brokerPnl===null;
+    // 回帰テスト26：口座文脈の署名付きJPYは検証値として拾える。
+    const t26=parseOCR('残高 50000\n有効額 44232\n-5768 JPY\n証拠金 1384').brokerPnl===-5768;
+    // 回帰テスト27：T16は実データ構造に存在しないsymbol属性へ依存しない。
+    const t27=ocrActual.positions.length===1&&ocrActual.positions[0].lot===0.01&&Math.abs(ocrActual.positions[0].price-4367.37)<0.0001;
+    // 回帰テスト28：同一ポジション/注文なら現在価格だけでDEAD LINEを二重補正しない。
+    const t28=(()=>{const x=simulateLC(50000,20,threePending,twoPos,c,lev,100,4319.53,0);const y=simulateLC(50000,20,threePending,twoPos,c,lev,100,4300,0);return x.added.length===y.added.length&&Math.abs(x.lc-y.lc)<0.0001;})();
+
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;

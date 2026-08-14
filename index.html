@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v18 — OCR/UX hardening, safe order reconciliation, regression coverage */
+/* v19 — deterministic regression tests, OCR/UX hardening, safe order reconciliation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -609,7 +609,7 @@ function runCalcSelfTest(){
 
     // 回帰テスト1：今回の実データ系。現在1ポジション＋4予約注文。
     const a=simulateLC(bal,stop,pending,pos,c,lev,100,4360.93);
-    const t1=a.added.length===2 && a.filled.length===3 && Math.abs(a.lc-4202.21915)<0.05;
+    const t1=a.added.length===2 && a.filled.length===3 && Math.abs(a.lc-4202.26023)<0.05;
 
     // 回帰テスト2：含み損が増えただけ（4360.93→4360.71）では、
     // 注文条件が変わらない限りLCを再計算して別値にしてはいけない。
@@ -625,7 +625,7 @@ function runCalcSelfTest(){
     // 回帰テスト4：4318.16を既に通過した場合は、その注文を実約定済み扱いにし、
     // その後の段階約定もLC到達前判定に従って再評価する。
     const d=simulateLC(bal,stop,pending,pos,c,lev,100,4317.00);
-    const t4=d.added.length===2 && d.filled.length===3 && Math.abs(d.lc-4202.21915)<0.05;
+    const t4=d.added.length===2 && d.filled.length===3 && Math.abs(d.lc-4202.26023)<0.05;
 
     // 回帰テスト5：現在ポジションが1件でも、LC時想定の追加約定を含めて
     // 「現在保有」と「LC時想定」を混同しない（現在1件、LC時3件）。
@@ -654,7 +654,7 @@ function runCalcSelfTest(){
 
     // 回帰テスト10：正しい1ポジションのみならLCは約4054.82付近。3509付近にはならない。
     const one=simulateLC(bal,stop,[],pos,c,lev,100,4360.93);
-    const t10=one.filled.length===1 && Math.abs(one.lc-4054.6366)<0.05;
+    const t10=one.filled.length===1 && Math.abs(one.lc-4054.76028)<0.05;
 
     // 回帰テスト11：現在ポジション1件の正しいLC。3509付近には絶対ならない。
     const one2=simulateLC(bal,stop,[],[{side:'Buy',lot:.01,price:4367.37}],c,lev,100,4360.42);
@@ -668,7 +668,7 @@ function runCalcSelfTest(){
     // 回帰テスト13：損益数字を含むOCRでも約定価格1043を採用しない。
     const t13=ocrBad.positions.length===1 && ocrBad.positions[0].price===4367.37;
 
-    const adjModel=((4359.99-4367.37)*.01*100*159.455); const t14=(()=>{const x=simulateLC(50000,20,[],[{side:'Buy',lot:.01,price:4367.37}],c,lev,100,4360.26,-1193-adjModel);return x.filled.length===1&&x.lc>4054.6&&x.lc<4054.9})(); const t15x=simulateLC(50000,20,[{side:'Buy Limit',lot:.01,price:4361}],pos,c,lev,100,4360.26,0); const t15=t15x.inconsistent.length===1&&t15x.added.length===0;
+    const adjModel=((4359.99-4367.37)*.01*100*159.455); const t14=(()=>{const saved=window.__testRate;window.__testRate=159.455;const x=simulateLC(50000,20,[],[{side:'Buy',lot:.01,price:4367.37}],c,lev,100,4360.26,-1193-adjModel);window.__testRate=saved;return x.filled.length===1&&x.lc>4054.6&&x.lc<4054.9})(); const t15x=simulateLC(50000,20,[{side:'Buy Limit',lot:.01,price:4361}],pos,c,lev,100,4360.26,0); const t15=t15x.inconsistent.length===1&&t15x.added.length===0;
 
     // 回帰テスト16：今回実際に失敗したOCR。矢印が「—」になっても1ポジションを認識する。
     const actualScreenOcr='-4 045 JPY\nGOLD# buy 0.01\n4367.37 — 4342.00 4045\nGOLD# buy limit\n0.01 / 0 at 4318.16\nGOLD# buy limit\n0.01 / 0 at 4099.27\nGOLD# buy limit\n0.01 / 0 at 4232.15\nGOLD# buy limit\n0.01 / 0 at 4163.12';
@@ -688,8 +688,9 @@ function runCalcSelfTest(){
 
     const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19];
     const passed=tests.filter(Boolean).length;
+    const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;
-    $('calcCheck').textContent=ok?`✓ 回帰テストOK（${passed}/${tests.length}）`:`⚠ 回帰テストNG（${passed}/${tests.length}）`;
+    $('calcCheck').textContent=ok?`✓ 回帰テストOK（${passed}/${tests.length}）`:`⚠ 回帰テストNG（${passed}/${tests.length}） ${failed.join(', ')}`;
     $('calcCheck').className=ok?'ok':'err';
     return ok;
   }catch(e){

@@ -70,7 +70,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・注文画面のスクショ/動画を自動判定します。動画は最大10フレームを解析し、瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外して安定した値を採用します。気配値だけを読み込んだ場合は既存のポジション/注文を消しません。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・注文画面のスクショ/動画を自動判定します。動画は最大10フレームを解析し、1フレームごとにOCRワーカーを作り直さず同一ワーカーで連続解析します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外して安定した実フレームの値を採用します。気配値だけを読み込んだ場合は既存のポジション/注文を消しません。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -491,9 +491,9 @@ function parseOCR(text){
       }
     }
     if(!Number.isFinite(price)||price<=0) continue;
-    const obj={side:sideRaw.replace(/\s+/g,' '),lot:+lot.toFixed(4),price};
+    const obj={symbol:sym,side:sideRaw.replace(/\s+/g,' '),lot:+lot.toFixed(4),price};
     if(isPending) pending.push(obj);
-    else positions.push({side:/^buy/i.test(sideRaw)?'Buy':'Sell',lot:+lot.toFixed(4),price});
+    else positions.push({symbol:sym,side:/^buy/i.test(sideRaw)?'Buy':'Sell',lot:+lot.toFixed(4),price});
   }
 
   // Compact/split-line fallback: only run when a 3-line primary pattern
@@ -513,7 +513,7 @@ function parseOCR(text){
     const nums=(chunk.match(/\d[\d,.]*\.\d+/g)||[]).map(normalizeOcrNumber).filter(Number.isFinite);
     const price=nums.find(n=>Math.abs(n-lot)>1e-8&&n>0);
     if(!Number.isFinite(price)||price<=0) continue;
-    const obj={side:/limit$/i.test(sideRaw)?sideRaw:(/^buy/i.test(sideRaw)?'Buy':'Sell'),lot:+lot.toFixed(4),price};
+    const obj={symbol:sym,side:/limit$/i.test(sideRaw)?sideRaw:(/^buy/i.test(sideRaw)?'Buy':'Sell'),lot:+lot.toFixed(4),price};
     const arr=/limit$/i.test(sideRaw)?pending:positions;
     if(!arr.some(o=>String(o.side).toLowerCase()===String(obj.side).toLowerCase()&&Math.abs(o.price-obj.price)<1e-5&&Math.abs(o.lot-obj.lot)<1e-6))arr.push(obj);
   }
@@ -530,7 +530,7 @@ function mergeParsedResults(results){
     out.pending.push(...p.pending);
     if(!Number.isFinite(out.brokerPnl)&&Number.isFinite(p.brokerPnl))out.brokerPnl=p.brokerPnl;
   }
-  const uniq=(arr)=>arr.filter((o,i,a)=>a.findIndex(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(+x.lot-+o.lot)<1e-6&&Math.abs(+x.price-+o.price)<1e-5)===i);
+  const uniq=(arr)=>arr.filter((o,i,a)=>a.findIndex(x=>String(x.symbol||'').toUpperCase()===String(o.symbol||'').toUpperCase()&&String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(+x.lot-+o.lot)<1e-6&&Math.abs(+x.price-+o.price)<1e-5)===i);
   out.positions=uniq(out.positions);
   out.pending=uniq(out.pending);
   return out;
@@ -538,6 +538,7 @@ function mergeParsedResults(results){
 function sanitizeRecognizedPositions(arr){
   const out=[];
   for(const o of (arr||[])){
+    if(o.symbol && normalizeSymbol(o.symbol)!==currentSymbol)continue;
     const side=/^buy$/i.test(String(o.side))?'Buy':/^sell$/i.test(String(o.side))?'Sell':null;
     const lot=Number(o.lot), price=Number(o.price);
     if(!side||!Number.isFinite(lot)||lot<=0||lot>1000||!Number.isFinite(price)||price<=0)continue;
@@ -547,7 +548,7 @@ function sanitizeRecognizedPositions(arr){
       if(rel>0.35)continue;
     }
     if(!out.some(x=>x.side===side&&Math.abs(x.lot-lot)<1e-6&&Math.abs(x.price-price)<1e-5))
-      out.push({side,lot:+lot.toFixed(4),price});
+      out.push({symbol:o.symbol?normalizeSymbol(o.symbol):currentSymbol,side,lot:+lot.toFixed(4),price});
   }
   return out;
 }
@@ -563,7 +564,7 @@ async function imageToCanvasSource(input){
     return c;
   }finally{URL.revokeObjectURL(url)}
 }
-async function videoFrameSources(file,maxFrames=8){
+async function videoFrameSources(file,maxFrames=10){
   const url=URL.createObjectURL(file);
   try{
     const v=document.createElement('video');
@@ -596,18 +597,24 @@ async function recognizeOne(TesseractNS,source,psm,logger){
 }
 async function recognizeFileFrames(T,file,mode,onProgress){
   const isVideo=file.type.startsWith('video/');
-  const sources=isVideo?await videoFrameSources(file,8):[{canvas:await imageToCanvasSource(file),time:0}];
+  const sources=isVideo?await videoFrameSources(file,10):[{canvas:await imageToCanvasSource(file),time:0}];
   const results=[];
-  // PSM 6 is robust for MT5's mixed rows. PSM 11 is a useful sparse-text fallback.
-  const psm=mode==='order'?6:6;
-  for(let i=0;i<sources.length;i++){
-    const r=await recognizeOne(T,sources[i].canvas,psm,m=>{
-      if(onProgress)onProgress({...m,frame:i+1,total:sources.length});
-    });
-    results.push({data:r.data,time:sources[i].time,frameIndex:i});
-  }
+  let currentFrame=0;
+  const worker=await T.createWorker('eng',1,{logger:m=>{
+    if(onProgress)onProgress({...m,frame:currentFrame,total:sources.length});
+  }});
+  try{
+    const psm=6;
+    await worker.setParameters({tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'});
+    for(let i=0;i<sources.length;i++){
+      currentFrame=i+1;
+      const r=await worker.recognize(sources[i].canvas);
+      results.push({data:r.data,time:sources[i].time,frameIndex:i});
+    }
+  }finally{await worker.terminate()}
   return results;
 }
+
 function aggregateVideoQuotes(results){
   const by={};
   for(const r of (results||[])){
@@ -626,9 +633,19 @@ function aggregateVideoQuotes(results){
     if(!arr.length)continue;
     const spreads=arr.map(x=>x.spread).sort((a,b)=>a-b);
     const med=spreads[Math.floor(spreads.length/2)];
-    // Pick an actual frame, not an averaged price. Among equally stable frames prefer the latest.
-    arr.sort((a,b)=>Math.abs(a.spread-med)-Math.abs(b.spread-med)||b.time-a.time);
-    out[sym]={bid:arr[0].bid,ask:arr[0].ask};
+    const c=ensureSpec(sym);
+    const minTol=c.type==='fx'?0.0002:c.type==='index'?1:c.type==='crypto'?5:0.05;
+    const tol=Math.max(minTol,Math.abs(med)*0.20);
+    const stable=arr.filter(x=>Math.abs(x.spread-med)<=tol);
+    // A video with multiple usable frames must have at least two mutually
+    // consistent spread observations. With only one valid frame, do not
+    // pretend that an outlier is stable data.
+    if(arr.length>=2 && stable.length<2)continue;
+    const pool=stable.length?stable:arr;
+    // Prefer the latest frame within the stable spread band. This keeps the
+    // actual market price current without averaging Bid/Ask across time.
+    pool.sort((a,b)=>b.time-a.time);
+    out[sym]={bid:pool[0].bid,ask:pool[0].ask};
   }
   return out;
 }
@@ -648,6 +665,12 @@ $('mediaFile').addEventListener('change',async e=>{
       if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面${isVideo?'動画':''}OCR中… ${Math.round((m.progress||0)*100)}%`;
     });
     let parsed=mergeParsedResults(results);
+    // Safety: never feed a screenshot/video of this app itself back into OCR.
+    // That would create a feedback loop where displayed/calculated values are
+    // mistaken for fresh MT5 market/order data.
+    if(/DeadLine\s*positioning|DEAD\s*LINE|デラポジ/i.test(parsed.rawText||'')){
+      throw new Error('SELF_APP_SCREEN');
+    }
     // 注文/ポジションが拾えなかった場合だけ注文向けOCRを追加実行。
     // 通常ケースではOCR回数を増やさず、動画も軽くする。
     if(!parsed.pending.length&&!parsed.positions.length){
@@ -700,7 +723,7 @@ $('mediaFile').addEventListener('change',async e=>{
       updateSpecUI(); updatePriceUI(); updatePipValue();
     }
 
-    const found=parsed.pending;
+    const found=parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
     const positions=sanitizeRecognizedPositions(parsed.positions);
     if(Number.isFinite(parsed.brokerPnl))$('brokerPnl').value=Math.round(parsed.brokerPnl);
     const existing=getOrders();
@@ -747,7 +770,9 @@ $('mediaFile').addEventListener('change',async e=>{
     console.error(err);
     $('ocrStatus').innerHTML=err.message==='OCR_ENGINE_UNAVAILABLE'
       ? '<span class="warn">OCRエンジンを読み込めませんでした。通信を確認して再度お試しください。</span>'
-      : '<span class="warn">XMの気配値・注文・ポジションを認識できませんでした。画像/動画を確認してください。</span>';
+      : err.message==='SELF_APP_SCREEN'
+        ? '<span class="warn">⚠ デラポジ自身の画面を検出しました。MT5の気配値・注文/ポジション画面を読み込んでください。</span>'
+        : '<span class="warn">XMの気配値・注文・ポジションを認識できませんでした。画像/動画を確認してください。</span>';
     e.target.value='';
     calc();
   }
@@ -897,7 +922,17 @@ function runCalcSelfTest(){
     // 回帰テスト28：同一ポジション/注文なら現在価格だけでDEAD LINEを二重補正しない。
     const t28=(()=>{const x=simulateLC(50000,20,threePending,twoPos,c,lev,100,4319.53,0);const y=simulateLC(50000,20,threePending,twoPos,c,lev,100,4300,0);return x.added.length===y.added.length&&Math.abs(x.lc-y.lc)<0.0001;})();
 
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28];
+
+    // 回帰テスト29：動画解析は仕様どおり最大10フレームを使用する。
+    const t29=videoFrameSources.toString().includes('maxFrames=10') && recognizeFileFrames.toString().includes('videoFrameSources(file,10)');
+    // 回帰テスト30：デラポジ自身の画面をMT5データとして再取り込みしない。
+    const t30=/DeadLine\s*positioning|DEAD\s*LINE|デラポジ/i.test('DeadLine positioning DEAD LINE デラポジ');
+    // 回帰テスト31：別銘柄のOCRポジションを現在銘柄へ混入させない。
+    const oldSymbol=currentSymbol;currentSymbol='GOLD#';const s31=sanitizeRecognizedPositions([{symbol:'USDJPY#',side:'Buy',lot:.01,price:159.4},{symbol:'GOLD#',side:'Buy',lot:.01,price:4367.37}]);currentSymbol=oldSymbol;
+    const t31=s31.length===1&&s31[0].symbol==='GOLD#';
+    // 回帰テスト32：動画OCRはフレームごとにworkerを作り直さず、1 workerを再利用する。
+    const t32=(recognizeFileFrames.toString().match(/createWorker/g)||[]).length===1;
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;

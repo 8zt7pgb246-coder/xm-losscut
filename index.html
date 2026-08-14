@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v22</title>
+<title>DeadLine positioning｜デラポジ Pro v29</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v26 — professional safety hardening: broker P/L is verification-only; no automatic LC correction; stronger OCR validation */
+/* v29 — professional safety hardening: regression-gate, broker P/L verification-only, stronger OCR/video validation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -252,10 +252,21 @@ function simulateLC(bal,stop,pending,positions,c,lev,contract,currentAsk,adjustm
   for(const next of buys){if(!filled.length){filled.push(next);added.push(next);lc=solveLC(bal,stop,filled,c,lev,contract,adjustment);continue} if(lc!==null&&lc<=next.price){filled.push(next);added.push(next);lc=solveLC(bal,stop,filled,c,lev,contract,adjustment);continue} break}
   return {filled,lc,added,initialPending:[],inconsistent:[]};
 }
+window.__regressionOK=null;
 function diagnosticsEnabled(){return /(?:^|\?)debug=1(?:&|$)/.test(location.search)||localStorage.getItem('delapoji_debug')==='1'}
 function setDiagnosticVisible(){const p=$('diagnosticPanel');if(p)p.style.display=diagnosticsEnabled()?'block':'none'}
 
 function calc(){
+  // HARD SAFETY GATE: a failed regression suite must never leave a DEAD LINE on screen.
+  // The self-test runs on startup; once it reports false, all calculations remain locked
+  // until the code passes again. Undefined is allowed only during the brief startup phase.
+  if(window.__regressionOK===false){
+    $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';
+    $('distance').textContent='⚠ 内部整合性テストNGのため計算停止';
+    $('count').textContent='計算停止';
+    if($('rateStatus'))$('rateStatus').innerHTML='<span class="err">✕ 内部整合性テストNG。DEAD LINEを表示していません。</span>';
+    return;
+  }
   const bal=+$('balance').value||0,stop=+$('stopout').value||20,c=cfg(),lev=+$('symbolLeverage').value||0,contract=+$('contractSize').value||0;
   const pending=getOrders().filter(o=>/buy\s*limit/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
   const positions=getPositions().filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&o.lot>0&&o.price>0);
@@ -962,7 +973,7 @@ function runCalcSelfTest(){
     const t28=(()=>{const x=simulateLC(50000,20,threePending,twoPos,c,lev,100,4319.53,0);const y=simulateLC(50000,20,threePending,twoPos,c,lev,100,4300,0);return x.added.length===y.added.length&&Math.abs(x.lc-y.lc)<0.0001;})();
 
 
-    // 回帰テスト29：動画解析は仕様どおり最大10フレームを使用する。
+    // 回帰テスト29：動画解析は仕様どおり最大16フレームを使用する。
     const t29=videoFrameSources.toString().includes('maxFrames=16') && recognizeFileFrames.toString().includes('videoFrameSources(file,16)');
     // 回帰テスト30：デラポジ自身の画面をMT5データとして再取り込みしない。
     const t30=/DeadLine\s*positioning|DEAD\s*LINE|デラポジ/i.test('DeadLine positioning DEAD LINE デラポジ');
@@ -1035,7 +1046,7 @@ function switchPage(which){
 $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
-setDiagnosticVisible();populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();renderDataLock();runCalcSelfTest();
+setDiagnosticVisible();populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();renderDataLock();const __startupRegressionOK=runCalcSelfTest();if(!__startupRegressionOK)calc();
 </script>
 </body>
 </html>

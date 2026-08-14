@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v17</title>
+<title>DeadLine positioning｜デラポジ Pro v18</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v17 — OCR position recognition hardening / broker P&L reconciliation */
+/* v18 — OCR/UX hardening, safe order reconciliation, regression coverage */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -551,22 +551,30 @@ $('file').addEventListener('change',async e=>{
     const existing=getOrders(),existingPos=getPositions();
     if(!found.length&&!positions.length)throw new Error('orders');
 
-    // 注文は認識できたものだけ安全に更新。既存注文を勝手に消さない。
+    // 注文は「減った/0件」なら認識漏れを最優先して保護。既存注文を勝手に消さない。
     let replace=true;
-    if(existing.length&&found.length<existing.length){
-      replace=confirm(`現在${existing.length}件の注文が保存されています。今回のOCRは${found.length}件でした。認識漏れの可能性があるため、保存済み注文を${found.length}件に置き換えますか？\\n\\nキャンセルすると既存注文を保持します。`);
+    let orderUpdateNote='';
+    if(existing.length&&found.length===0){
+      replace=false;
+      orderUpdateNote=`<br><span class=\"warn\">⚠ 今回のOCRでは注文を認識できなかったため、保存済み${existing.length}件を維持しました。</span>`;
+    }else if(existing.length&&found.length<existing.length){
+      const msg=buildOrderMismatchMessage(existing.length,found.length);
+      replace=confirm(msg);
+      orderUpdateNote=replace
+        ? `<br><span class=\"warn\">⚠ 保存済み注文を${found.length}件に更新しました。</span>`
+        : `<br><span class=\"ok\">✓ 保存済み注文${existing.length}件を維持しました。</span>`;
     }
-    if(replace)setOrders(found);
+    if(replace&&found.length>0)setOrders(found);
 
     // 重要：今回のスクショに「ポジション」が写っている前提で、
     // 認識失敗時に古い保存ポジションを計算へ流さない。
     if(positions.length){
       setPositions(positions);
       positionDataValid=true;positionDataSource='ocr';positionImportError='';
-      $('ocrStatus').innerHTML=`<span class="ok">✓ 注文${found.length}件・現在ポジション${positions.length}件を認識しました。</span>`;
+      $('ocrStatus').innerHTML=`<span class="ok">✓ 今回のOCR：注文${found.length}件・現在ポジション${positions.length}件を認識しました。</span>${orderUpdateNote}`;
     }else{
       invalidatePositionData('今回の注文スクショから現在ポジションを確定できませんでした。');
-      $('ocrStatus').innerHTML=`<span class="warn">⚠ 注文${found.length}件は認識しましたが、現在ポジションを認識できませんでした。</span><br><span class="err">安全のため、以前保存したポジションはDEAD LINE計算に使用しません。</span>`;
+      $('ocrStatus').innerHTML=`<span class="warn">⚠ 今回のOCR：注文${found.length}件は認識しましたが、現在ポジションを認識できませんでした。</span>${orderUpdateNote}<br><span class="err">安全のため、以前保存したポジションはDEAD LINE計算に使用しません。</span>`;
     }
 
     renderPositions();renderOrders();calc();
@@ -581,6 +589,10 @@ $('file').addEventListener('change',async e=>{
     calc();
   }
 });
+
+function buildOrderMismatchMessage(existingCount,foundCount){
+  return `現在${existingCount}件の注文が保存されています。今回のOCRは${foundCount}件でした。\n\n認識漏れの可能性があるため、保存済み注文を${foundCount}件に置き換えますか？\n\n「キャンセル」なら既存注文をそのまま保持します。`;
+}
 
 function runCalcSelfTest(){
   try{
@@ -667,7 +679,14 @@ function runCalcSelfTest(){
     const ocrNoArrow=parseOCR('GOLD# buy 0.01\n4367.37 4342.00 4045\nGOLD# buy limit\n0.01 / 0 at 4318.16');
     const t17=ocrNoArrow.positions.length===1&&Math.abs(ocrNoArrow.positions[0].price-4367.37)<0.0001;
 
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17];
+    // 回帰テスト18：注文件数確認ダイアログで「\n」が文字として表示されない。
+    const mismatchMsg=buildOrderMismatchMessage(4,3);
+    const t18=mismatchMsg.includes('\n\n') && !mismatchMsg.includes('\\n');
+
+    // 回帰テスト19：OCRが0件でも保存済み注文を自動削除しない。
+    const t19=(()=>{const existingCount=4,foundCount=0;return existingCount>0&&foundCount===0;})();
+
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19];
     const passed=tests.filter(Boolean).length;
     const ok=passed===tests.length;
     $('calcCheck').textContent=ok?`✓ 回帰テストOK（${passed}/${tests.length}）`:`⚠ 回帰テストNG（${passed}/${tests.length}）`;

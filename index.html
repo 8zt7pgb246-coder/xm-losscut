@@ -70,7 +70,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM 気配値</label><input id="priceFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="priceChoose">📷/🎬 気配値スクショ・動画を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">動画を選択した場合は複数フレームを解析し、最後に正常認識できた気配値を採用します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">動画は最大10フレームを解析。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、安定したスプレッド帯の最後のフレームを採用します。</div>
 </div>
 
 <div class="card"><div class="drop"><input id="file" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="choose">📷/🎬 XM注文画面・動画を読み込む</button><div id="ocrStatus" class="small" style="margin-top:10px">選択銘柄の注文スクショまたは画面収録動画を選択してください。動画は複数フレームを解析します。</div><div id="dataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -400,7 +400,14 @@ $('priceFile').addEventListener('change',async e=>{const f=e.target.files&&e.tar
   try{const T=await ensureOCR();
     const results=await recognizeFileFrames(T,f,'price',m=>{if(m.status==='recognizing text')$('rateStatus').textContent=`気配値${isVideo?'動画':''}OCR中… ${Math.round((m.progress||0)*100)}%`});
     let quotes={},usdjpy=null;
-    for(const r of results){const q=extractQuotesFromWords(r.data.words);const tq=extractAllQuotesText(r.data.text);for(const [sym,val] of Object.entries(tq))if(!q[sym])q[sym]=val;const u=getDetectedUsdJpy(q,r.data.text);if(u)usdjpy=u;if(Object.keys(q).length)quotes=q;}
+    if(isVideo){
+      // 動画はフレーム間でスプレッドが一瞬だけ異常化することがあるため、
+      // 安定スプレッド帯を作ってから最後の安定フレームを採用する。
+      quotes=aggregateVideoQuotes(results);
+      const usd=quotes['USDJPY#']; if(usd?.bid)usdjpy=+usd.bid;
+    }else{
+      for(const r of results){const q=extractQuotesFromWords(r.data.words);const tq=extractAllQuotesText(r.data.text);for(const [sym,val] of Object.entries(tq))if(!q[sym])q[sym]=val;const u=getDetectedUsdJpy(q,r.data.text);if(u)usdjpy=u;if(Object.keys(q).length)quotes=q;}
+    }
     if(!Object.keys(quotes).length)throw new Error('quotes');const saved=saveQuotes(quotes,usdjpy);if(!saved.accepted.length)throw new Error('quote_validation');
     $('rateStatus').innerHTML=`<span class="ok">✓ ${saved.accepted.length}銘柄を保存しました。</span>${saved.rejected.length?`<br><span class="warn">⚠ ${saved.rejected.join(', ')} はBid/Askの整合性チェックで除外しました。前回保存価格は変更していません。</span>`:''}`;e.target.value='';
   }catch(err){console.error(err);$('rateStatus').innerHTML=err.message==='OCR_ENGINE_UNAVAILABLE'?'<span class="err">OCRエンジンを読み込めませんでした。通信を確認して再度お試しください。</span>':'<span class="err">気配値のBid/Askを認識できませんでした。前回保存価格は変更していません。</span>';e.target.value='';}
@@ -543,12 +550,55 @@ async function videoToFrameDataUrls(file, maxFrames=8){
 }
 async function recognizeFileFrames(T,file,kind,update){
   if(!file.type.startsWith('video/')) return [await T.recognize(file,'eng',{logger:update,tessedit_pageseg_mode:kind==='price'?'11':'6'})];
-  const frames=await videoToFrameDataUrls(file,8),results=[];
+  const frames=await videoToFrameDataUrls(file,10),results=[];
   for(let i=0;i<frames.length;i++){
     try{results.push(await T.recognize(frames[i],'eng',{logger:m=>update?.({status:m.status,progress:(i+(m.progress||0))/frames.length}),tessedit_pageseg_mode:kind==='price'?'11':'6'}));}
     catch(e){console.warn('video OCR frame failed',i,e)}
   }
   if(!results.length)throw new Error('OCR_EMPTY');return results;
+}
+
+// 動画の気配値は「最後の1フレーム」をそのまま採用しない。
+// 一瞬だけ広がったスプレッド、High/Lowの誤読、画面切替途中のBid/Askずれを
+// そのまま保存するとDeadLineが大きく動くため、複数フレームの同一銘柄を
+// 「スプレッドの安定性」と「Bid/Askの同時性」でロバストに集約する。
+function aggregateVideoQuotes(results){
+  const bySym={};
+  for(let i=0;i<(results||[]).length;i++){
+    const r=results[i]; if(!r)continue;
+    let q={};
+    try{q=extractQuotesFromWords(r.data?.words||{})||{}}catch(e){}
+    let tq={};
+    try{tq=extractAllQuotesText(r.data?.text||'')||{}}catch(e){}
+    for(const [sym,val] of Object.entries(tq)) if(!q[sym]) q[sym]=val;
+    for(const [sym,v] of Object.entries(q)){
+      if(!v||!Number.isFinite(+v.bid)||!Number.isFinite(+v.ask))continue;
+      const bid=+v.bid,ask=+v.ask,spread=ask-bid;
+      if(!(bid>0&&ask>bid&&spread>0))continue;
+      const prev=quoteStore[sym]||priceStore[sym];
+      if(!quoteSanity(sym,{bid,ask},prev))continue;
+      (bySym[sym]||(bySym[sym]=[])).push({bid,ask,spread,frame:i});
+    }
+  }
+  const out={};
+  for(const [sym,arr] of Object.entries(bySym)){
+    if(!arr.length)continue;
+    const spreads=arr.map(x=>x.spread).sort((a,b)=>a-b);
+    const median=spreads[Math.floor(spreads.length/2)];
+    const dev=spreads.map(x=>Math.abs(x-median)).sort((a,b)=>a-b);
+    const mad=dev[Math.floor(dev.length/2)]||0;
+    // スプレッド外れ値を除外。MADが0のときは中央値から15%以内を許容し、
+    // それでも広い候補は採用しない。
+    const tol=Math.max(median*0.15, mad*4, 0.00001);
+    const stable=arr.filter(x=>Math.abs(x.spread-median)<=tol);
+    const pool=stable.length?stable:arr;
+    // 同じスプレッド帯に複数フレームある場合は「最後の安定フレーム」を採用。
+    // 価格そのものは平均化せず、実際の気配値の組を維持する。
+    pool.sort((a,b)=>a.frame-b.frame);
+    const pick=pool[pool.length-1];
+    out[sym]={bid:pick.bid,ask:pick.ask,videoFrames:pool.length,medianSpread:median};
+  }
+  return out;
 }
 async function prepareOrderImage(file){return imageToCanvasData(file,'binary',1)}
 async function recognizeOrderVariants(T,file,update){

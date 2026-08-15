@@ -605,9 +605,13 @@ async function videoFrameSources(file,maxFrames=16){
     await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=rej});
     const dur=Number(v.duration);
     if(!Number.isFinite(dur)||dur<=0)throw new Error('VIDEO_DURATION_INVALID');
-    const count=Math.min(maxFrames,Math.max(4,Math.ceil(dur/3)));
+    // 動画は短時間でも取りこぼしを減らす。最大16フレーム、原則1.5秒間隔。
+    // 先頭/末尾の画面切替中フレームは避け、各フレームは同一workerでOCRする。
+    const count=Math.min(maxFrames,Math.max(6,Math.ceil(dur/1.5)));
+    const edge=Math.min(0.20,Math.max(0.05,dur*0.02));
+    const span=Math.max(0.1,dur-edge*2);
     const times=[];
-    for(let i=0;i<count;i++) times.push(Math.min(dur-0.05, (dur*(i+0.5))/count));
+    for(let i=0;i<count;i++) times.push(edge + (span*(i+0.5))/count);
     const frames=[];
     for(const t of times){
       await new Promise((res,rej)=>{v.onseeked=res;v.onerror=rej;v.currentTime=t});
@@ -734,17 +738,9 @@ $('mediaFile').addEventListener('change',async e=>{
     let quotes={}, usdjpy=null;
     if(isVideo){
       quotes=aggregateVideoQuotes(results);
-      // fallback側にしか価格が写っていないケースにも対応
-      if(!Object.keys(quotes).length){
-        try{
-          const allQuotes={};
-          for(const r of results){
-            const q=extractQuotesFromWords(r.data?.words||{}); const tq=extractAllQuotesText(r.data?.text||'');
-            Object.assign(allQuotes,tq,q);
-          }
-          quotes=allQuotes;
-        }catch(_){ }
-      }
+      // 安定性検証を通過したaggregateVideoQuotesだけを本番価格として採用する。
+      // 生OCRのallQuotesをそのままfallback採用すると、一瞬の異常スプレッドを
+      // DEAD LINE計算へ流し込む可能性があるため、ここでは意図的に採用しない。
       const usd=quotes['USDJPY#']; if(usd?.bid)usdjpy=+usd.bid;
     }else{
       for(const r of results){
@@ -823,7 +819,8 @@ $('mediaFile').addEventListener('change',async e=>{
     const quoteCount=Object.keys(quotes).length;
     const frameCount=isVideo?(results?.length||0):1;
     const deadlineReady=positionDataValid && Number.isFinite(goldBid) && Number.isFinite(goldAsk) && !!quoteRateFor(cfg());
-    $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">気配値 <b>${quoteCount}銘柄</b></div><div class="item">解析フレーム <b>${frameCount}</b></div><div class="item">現在ポジション <b>${positions.length}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item full">${deadlineReady?'<span class="ok">✓ DEAD LINE計算可能</span>':'<span class="warn">⚠ DEAD LINE計算に必要なデータが未確定</span>'}</div></div></div>${orderUpdateNote}`;
+    const quoteQuality=isVideo?(quoteCount?`安定スプレッド判定済み ${quoteCount}銘柄`:'安定価格を確定できた銘柄なし'):'スクショ価格を検証済み';
+    $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">気配値 <b>${quoteCount}銘柄</b></div><div class="item">解析フレーム <b>${frameCount}${isVideo?' / 最大16':''}</b></div><div class="item">現在ポジション <b>${positions.length}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${deadlineReady?'<span class="ok">✓ DEAD LINE計算可能</span>':'<span class="warn">⚠ DEAD LINE計算に必要なデータが未確定</span>'}</div></div></div>${orderUpdateNote}`;
     $('rateStatus').innerHTML=Object.keys(quotes).length
       ? `<span class="ok">✓ 気配値 ${quoteCount}銘柄を更新。動画は安定スプレッド帯から採用。</span>`
       : `<span class="small">気配値は今回の媒体から検出されませんでした。保存済み価格を維持しています。</span>`;
@@ -986,16 +983,18 @@ function runCalcSelfTest(){
     const t28=(()=>{const x=simulateLC(50000,20,threePending,twoPos,c,lev,100,4319.53,0);const y=simulateLC(50000,20,threePending,twoPos,c,lev,100,4300,0);return x.added.length===y.added.length&&Math.abs(x.lc-y.lc)<0.0001;})();
 
 
-    // 回帰テスト29：動画解析は仕様どおり最大16フレームを使用する。
-    const t29=videoFrameSources.toString().includes('maxFrames=16') && recognizeFileFrames.toString().includes('videoFrameSources(file,16)');
-    // 回帰テスト30：デラポジ自身の画面をMT5データとして再取り込みしない。
-    const t30=/DeadLine\s*positioning|DEAD\s*LINE|デラポジ/i.test('DeadLine positioning DEAD LINE デラポジ');
-    // 回帰テスト31：別銘柄のOCRポジションを現在銘柄へ混入させない。
+    // 回帰テスト29：動画解析は最大16フレーム、短時間でも最低6フレームを使う。
+    const t29=videoFrameSources.toString().includes('maxFrames=16') && videoFrameSources.toString().includes('Math.max(6') && recognizeFileFrames.toString().includes('videoFrameSources(file,16)');
+    // 回帰テスト30：動画価格の危険な生OCR fallbackを本番採用しない。
+    const t30=!(/quotes=allQuotes/.test(document.documentElement.innerHTML));
+    // 回帰テスト31：デラポジ自身の画面をMT5データとして再取り込みしない。
+    const t31=/DeadLine\s*positioning|DEAD\s*LINE|デラポジ/i.test('DeadLine positioning DEAD LINE デラポジ');
+    // 回帰テスト32：別銘柄のOCRポジションを現在銘柄へ混入させない。
     const oldSymbol=currentSymbol;currentSymbol='GOLD#';const s31=sanitizeRecognizedPositions([{symbol:'USDJPY#',side:'Buy',lot:.01,price:159.4},{symbol:'GOLD#',side:'Buy',lot:.01,price:4367.37}]);currentSymbol=oldSymbol;
-    const t31=s31.length===1&&s31[0].symbol==='GOLD#';
-    // 回帰テスト32：動画OCRはフレームごとにworkerを作り直さず、1 workerを再利用する。
-    const t32=(recognizeFileFrames.toString().match(/createWorker/g)||[]).length===1;
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32];
+    const t32=s31.length===1&&s31[0].symbol==='GOLD#';
+    // 回帰テスト33：動画OCRはフレームごとにworkerを作り直さず、1 workerを再利用する。
+    const t33=(recognizeFileFrames.toString().match(/createWorker/g)||[]).length===1;
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;

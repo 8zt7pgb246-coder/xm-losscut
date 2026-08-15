@@ -75,7 +75,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・注文画面のスクショ/動画を自動判定します。動画は最大16フレームを解析し、1フレームごとにOCRワーカーを作り直さず同一ワーカーで連続解析します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外して安定した実フレームの値を採用します。気配値だけを読み込んだ場合は既存のポジション/注文を消しません。表示中の全銘柄を認識できなくても、現在選択銘柄と計算に必要な換算レートが確定していれば計算します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・注文画面のスクショ/動画を自動判定します。動画は6〜16フレームを解析し、原則1.5秒間隔で実フレームを抽出します。解析後の実フレーム数を画面に表示し、1フレームごとにOCRワーカーを作り直さず同一ワーカーで連続解析します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外して安定した実フレームの値を採用します。気配値だけを読み込んだ場合は既存のポジション/注文を消しません。表示中の全銘柄を認識できなくても、現在選択銘柄と計算に必要な換算レートが確定していれば計算します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -563,9 +563,29 @@ function mergeParsedResults(results){
     out.pending.push(...p.pending);
     if(!Number.isFinite(out.brokerPnl)&&Number.isFinite(p.brokerPnl))out.brokerPnl=p.brokerPnl;
   }
-  const uniq=(arr)=>arr.filter((o,i,a)=>a.findIndex(x=>String(x.symbol||'').toUpperCase()===String(o.symbol||'').toUpperCase()&&String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(+x.lot-+o.lot)<1e-6&&Math.abs(+x.price-+o.price)<1e-5)===i);
-  out.positions=uniq(out.positions);
-  out.pending=uniq(out.pending);
+  // OCR may read the same MT5 position slightly differently between frames
+  // (e.g. 4318.10 vs 4318.16). Treat nearby readings as the same position/order
+  // and use the median price instead of creating phantom extra positions.
+  const cluster=(arr)=>{
+    const groups=[];
+    for(const o of arr){
+      const symbol=normalizeSymbol(o.symbol||currentSymbol);
+      const side=String(o.side||'').toLowerCase();
+      const lot=Number(o.lot), price=Number(o.price);
+      if(!symbol||!side||!Number.isFinite(lot)||!Number.isFinite(price))continue;
+      const tol=Math.max(0.05,Math.abs(price)*0.00002);
+      let g=groups.find(x=>x.symbol===symbol&&x.side===side&&Math.abs(x.lot-lot)<1e-6&&Math.abs(x.prices[0]-price)<=tol);
+      if(!g){g={symbol,side,lot,prices:[],items:[]};groups.push(g)}
+      g.prices.push(price);g.items.push(o);
+    }
+    return groups.map(g=>{
+      const ps=[...g.prices].sort((a,b)=>a-b), m=Math.floor(ps.length/2);
+      const median=ps.length%2?ps[m]:(ps[m-1]+ps[m])/2;
+      return {...g.items[0],symbol:g.symbol,side:g.items[0].side,lot:+g.lot.toFixed(4),price:+median.toFixed(5),frameCount:g.items.length};
+    });
+  };
+  out.positions=cluster(out.positions);
+  out.pending=cluster(out.pending);
   return out;
 }
 function sanitizeRecognizedPositions(arr){
@@ -680,9 +700,13 @@ function aggregateVideoQuotes(results){
     // extractQuotesFromWords由来の行内Bid/Askで、銘柄別の厳しいスプレッド上限を
     // 満たした場合だけ暫定採用する。テキストだけの推測値は1フレーム採用しない。
     if(arr.length<2){
-      if(!arr[0].fromWords)continue;
+      // A single frame is acceptable only for the currently selected symbol or
+      // USDJPY (needed for JPY conversion), and only when it came from a real
+      // Bid/Ask row with a conservative spread bound. Never use a one-frame
+      // guess for unrelated symbols.
+      if(!arr[0].fromWords || (sym!==currentSymbol && sym!=='USDJPY#'))continue;
       const q=arr[0], rel1=q.bid>0?(q.ask-q.bid)/q.bid:1;
-      const oneFrameMax=c.type==='fx'?0.002:c.type==='index'?0.01:c.type==='crypto'?0.05:c.type==='cfd'?0.003:0.002;
+      const oneFrameMax=c.type==='fx'?0.001:c.type==='index'?0.005:c.type==='crypto'?0.02:c.type==='cfd'?0.0015:0.001;
       if(rel1>oneFrameMax)continue;
     }else if(stable.length<2){
       continue;
@@ -818,9 +842,10 @@ $('mediaFile').addEventListener('change',async e=>{
     const mediaLabel=isVideo?'動画':'スクショ';
     const quoteCount=Object.keys(quotes).length;
     const frameCount=isVideo?(results?.length||0):1;
+    const expectedFrameCount=isVideo?Math.min(16,Math.max(6,Math.ceil((Number(f.duration)||0)/1.5))):1;
     const deadlineReady=positionDataValid && Number.isFinite(goldBid) && Number.isFinite(goldAsk) && !!quoteRateFor(cfg());
     const quoteQuality=isVideo?(quoteCount?`安定スプレッド判定済み ${quoteCount}銘柄`:'安定価格を確定できた銘柄なし'):'スクショ価格を検証済み';
-    $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">気配値 <b>${quoteCount}銘柄</b></div><div class="item">解析フレーム <b>${frameCount}${isVideo?' / 最大16':''}</b></div><div class="item">現在ポジション <b>${positions.length}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${deadlineReady?'<span class="ok">✓ DEAD LINE計算可能</span>':'<span class="warn">⚠ DEAD LINE計算に必要なデータが未確定</span>'}</div></div></div>${orderUpdateNote}`;
+    $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">気配値 <b>${quoteCount}銘柄</b></div><div class="item">解析フレーム <b>${frameCount}${isVideo?` / 予定${expectedFrameCount}`:''}</b></div><div class="item">現在ポジション <b>${positions.length}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${deadlineReady?'<span class="ok">✓ DEAD LINE計算可能</span>':'<span class="warn">⚠ DEAD LINE計算に必要なデータが未確定</span>'}</div></div></div>${orderUpdateNote}`;
     $('rateStatus').innerHTML=Object.keys(quotes).length
       ? `<span class="ok">✓ 気配値 ${quoteCount}銘柄を更新。動画は安定スプレッド帯から採用。</span>`
       : `<span class="small">気配値は今回の媒体から検出されませんでした。保存済み価格を維持しています。</span>`;

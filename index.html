@@ -559,13 +559,16 @@ function mergeParsedResults(results){
     const text=r?.data?.text||r?.text||'';
     out.rawText += (out.rawText?'\n':'') + text;
     const p=parseOCR(text);
-    out.positions.push(...p.positions);
-    out.pending.push(...p.pending);
+    const frameIndex=Number.isFinite(r?.frameIndex)?r.frameIndex:null;
+    out.positions.push(...p.positions.map(o=>({...o,frameIndex})));
+    out.pending.push(...p.pending.map(o=>({...o,frameIndex})));
     if(!Number.isFinite(out.brokerPnl)&&Number.isFinite(p.brokerPnl))out.brokerPnl=p.brokerPnl;
   }
-  // OCR may read the same MT5 position slightly differently between frames
-  // (e.g. 4318.10 vs 4318.16). Treat nearby readings as the same position/order
-  // and use the median price instead of creating phantom extra positions.
+
+  // Merge OCR readings only when they can be explained as the SAME row across
+  // different video frames. A same-frame duplicate is never collapsed merely
+  // because the entry prices are close; that protects genuine separate
+  // positions/orders entered at nearby prices.
   const cluster=(arr)=>{
     const groups=[];
     for(const o of arr){
@@ -573,15 +576,33 @@ function mergeParsedResults(results){
       const side=String(o.side||'').toLowerCase();
       const lot=Number(o.lot), price=Number(o.price);
       if(!symbol||!side||!Number.isFinite(lot)||!Number.isFinite(price))continue;
-      const tol=Math.max(0.05,Math.abs(price)*0.00002);
-      let g=groups.find(x=>x.symbol===symbol&&x.side===side&&Math.abs(x.lot-lot)<1e-6&&Math.abs(x.prices[0]-price)<=tol);
-      if(!g){g={symbol,side,lot,prices:[],items:[]};groups.push(g)}
-      g.prices.push(price);g.items.push(o);
+      const tol=Math.max(0.03,Math.abs(price)*0.00001);
+      let best=null;
+      for(const g of groups){
+        if(g.symbol!==symbol||g.side!==side||Math.abs(g.lot-lot)>=1e-6)continue;
+        if(g.frameSet.has(o.frameIndex))continue; // same frame => possible real second position
+        const center=g.prices.reduce((a,b)=>a+b,0)/g.prices.length;
+        const d=Math.abs(center-price);
+        if(d<=tol && (!best||d<best.d))best={g,d};
+      }
+      if(best){
+        best.g.prices.push(price); best.g.items.push(o); best.g.frameSet.add(o.frameIndex);
+      }else{
+        groups.push({symbol,side,lot,prices:[price],items:[o],frameSet:new Set([o.frameIndex])});
+      }
     }
     return groups.map(g=>{
       const ps=[...g.prices].sort((a,b)=>a-b), m=Math.floor(ps.length/2);
       const median=ps.length%2?ps[m]:(ps[m-1]+ps[m])/2;
-      return {...g.items[0],symbol:g.symbol,side:g.items[0].side,lot:+g.lot.toFixed(4),price:+median.toFixed(5),frameCount:g.items.length};
+      const frameCount=[...g.frameSet].filter(x=>x!==null).length;
+      return {
+        ...g.items[0],
+        symbol:g.symbol,
+        side:g.items[0].side,
+        lot:+g.lot.toFixed(4),
+        price:+median.toFixed(5),
+        frameCount
+      };
     });
   };
   out.positions=cluster(out.positions);
@@ -641,6 +662,11 @@ async function videoFrameSources(file,maxFrames=16){
       c.getContext('2d',{willReadFrequently:true}).drawImage(v,0,0,c.width,c.height);
       frames.push({canvas:c,time:t});
     }
+    // Keep the planned count with the extracted frames so the UI reports the
+    // same value the sampler actually used. Do not recompute it later from a
+    // possibly-unavailable file duration.
+    frames.expectedFrameCount=count;
+    frames.videoDuration=dur;
     return frames;
   }finally{URL.revokeObjectURL(url)}
 }
@@ -669,6 +695,8 @@ async function recognizeFileFrames(T,file,mode,onProgress){
       results.push({data:r.data,time:sources[i].time,frameIndex:i});
     }
   }finally{await worker.terminate()}
+  results.expectedFrameCount=sources.expectedFrameCount||sources.length;
+  results.videoDuration=sources.videoDuration||0;
   return results;
 }
 
@@ -842,7 +870,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const mediaLabel=isVideo?'動画':'スクショ';
     const quoteCount=Object.keys(quotes).length;
     const frameCount=isVideo?(results?.length||0):1;
-    const expectedFrameCount=isVideo?Math.min(16,Math.max(6,Math.ceil((Number(f.duration)||0)/1.5))):1;
+    const expectedFrameCount=isVideo?(results?.expectedFrameCount||results?.length||0):1;
     const deadlineReady=positionDataValid && Number.isFinite(goldBid) && Number.isFinite(goldAsk) && !!quoteRateFor(cfg());
     const quoteQuality=isVideo?(quoteCount?`安定スプレッド判定済み ${quoteCount}銘柄`:'安定価格を確定できた銘柄なし'):'スクショ価格を検証済み';
     $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">気配値 <b>${quoteCount}銘柄</b></div><div class="item">解析フレーム <b>${frameCount}${isVideo?` / 予定${expectedFrameCount}`:''}</b></div><div class="item">現在ポジション <b>${positions.length}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${deadlineReady?'<span class="ok">✓ DEAD LINE計算可能</span>':'<span class="warn">⚠ DEAD LINE計算に必要なデータが未確定</span>'}</div></div></div>${orderUpdateNote}`;
@@ -867,6 +895,8 @@ function buildOrderMismatchMessage(existingCount,foundCount){
   return `現在${existingCount}件の注文が保存されています。今回のOCRは${foundCount}件でした。\n\n認識漏れの可能性があるため、保存済み注文を${foundCount}件に置き換えますか？\n\n「キャンセル」なら既存注文をそのまま保持します。`;
 }
 
+// Regression: frame-aware position clustering must preserve same-frame close-price positions.
+  /* frame-aware position clustering */
 function runCalcSelfTest(){
   try{
     const c={contract:100,quote:'USD',base:'USD'};

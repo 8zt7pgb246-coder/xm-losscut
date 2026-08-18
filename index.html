@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v43-20260819">
+<meta name="build-id" content="v45-20260819">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v43</title>
+<title>DeadLine positioning｜デラポジ Pro v45</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,8 +65,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v43</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v44</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v45</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v45</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v44</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v45</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -199,7 +199,7 @@ async function createOCRWorker(T,logger){
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
 // Expose the small public API explicitly on window so inline handlers and internal calls
 // resolve identically after a cold load or a cached-page refresh.
-window.__APP_BUILD__='v43-20260819';
+window.__APP_BUILD__='v45-20260819';
 const $=id=>document.getElementById(id);
 const PRICE_KEY='xm_saved_prices_multi_v6', ORDER_KEY='xm_orders_by_symbol_v6', POSITION_KEY='xm_positions_by_symbol_v3', SPEC_KEY='xm_specs_v6', QUOTE_KEY='xm_quote_snapshot_all_v3';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
@@ -573,7 +573,7 @@ function saveQuotes(quotes,usdjpy,meta=null){
   return {accepted:Object.keys(valid),rejected:checked.rejected};
 }
 
-/* v43 OCR/media pipeline
+/* v45 OCR/media pipeline
    - Restores the missing recognizeFileFrames / parse / merge pipeline.
    - One button accepts image or video.
    - Video uses real frames; no price averaging.
@@ -632,11 +632,20 @@ function parseOCR(text){
     if(!sideMatch) continue;
     const sideRaw=sideMatch[1].replace(/\s+/g,' ');
     const isPending=/limit$/.test(sideRaw);
-    // Look at this line and the next 2 lines for lot/price data.
-    const chunk=lines.slice(i,i+3).join(' ');
+    // MT5 OCR may split a row into: "GOLD# buy 0.01" + "entry > current",
+    // or (especially on iPhone) reverse those two lines.  Check same/next/prev
+    // line explicitly instead of assuming a fixed OCR reading order.
+    const same=line;
+    const next=lines[i+1]||'';
+    const prev=lines[i-1]||'';
+    const arrowRe=/(\d[\d,.]*\.\d+)\s*(?:->|→|>|-|to)\s*(\d[\d,.]*\.\d+)/i;
+    let arrow=same.match(arrowRe);
+    if(!arrow && !isPending) arrow=next.match(arrowRe);
+    if(!arrow && !isPending) arrow=prev.match(arrowRe);
+    const chunk=(isPending?lines.slice(i,i+3):lines.slice(Math.max(0,i-1),Math.min(lines.length,i+3))).join(' ');
+
     let lotMatch=line.match(/(?:buy\s*limit|sell\s*limit|buy|sell)\s*(?:#?\s*)?(\d+(?:\.\d+)?)/i)
                  || line.match(/\b(\d+(?:\.\d+)?)\s*(?:lot)?\b/i);
-    // MT5 pending orders often put "0.01 / 0 at PRICE" on the next line.
     if(!lotMatch){
       lotMatch=chunk.match(/\b(\d+(?:\.\d+)?)\s*\/\s*0\b/i)
              || chunk.match(/\b(0\.\d+)\s+(?:\/|at)\b/i);
@@ -644,25 +653,17 @@ function parseOCR(text){
     const lot=lotMatch?Number(lotMatch[1]):null;
     if(!Number.isFinite(lot)||lot<=0||lot>1000) continue;
 
-    const arrow=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|→|to)\s*(\d[\d,.]*\.\d+)/i);
-    // MT5の約定済みポジションは「約定価格 → 現在価格」の行を伴う。
-    // 口座残高・証拠金率・P/Lなどの数値を約定価格として誤認しないため、
-    // ポジションはこの矢印付きパターンを必須条件にする。
+    // For positions, an entry/current pair is mandatory. For pending orders,
+    // use the explicit "at PRICE" value.
     if(!isPending && !arrow) continue;
     const nums=(chunk.match(/\d[\d,.]*\.\d+/g)||[])
-      .map(normalizeOcrNumber).filter(Number.isFinite)
-      .filter(n=>n>0);
+      .map(normalizeOcrNumber).filter(Number.isFinite).filter(n=>n>0);
     let price=null;
     if(arrow) price=normalizeOcrNumber(arrow[1]);
     else if(nums.length){
-      // For a position line, the first plausible market price after the lot is entry.
-      // For a pending line, prefer the last number in the "at PRICE" pattern.
       const at=chunk.match(/\bat\s+(\d[\d,.]*\.\d+)/i);
       if(at) price=normalizeOcrNumber(at[1]);
-      else {
-        const filtered=nums.filter(n=>n!==lot);
-        price=filtered.length?filtered[0]:null;
-      }
+      else { const filtered=nums.filter(n=>n!==lot); price=filtered.length?filtered[0]:null; }
     }
     if(!Number.isFinite(price)||price<=0) continue;
     const obj={symbol:sym,side:sideRaw.replace(/\s+/g,' '),lot:+lot.toFixed(4),price};
@@ -974,7 +975,7 @@ async function recognizeFileFrames(T,file,mode,onProgress){
 }
 function makeTradeFocusCanvas(source){
   const w=source.width,h=source.height;
-  const y0=Math.floor(h*0.39), y1=Math.floor(h*0.94);
+  const y0=Math.floor(h*0.18), y1=Math.floor(h*0.94);
   const crop=document.createElement('canvas');
   crop.width=w; crop.height=Math.max(1,y1-y0);
   const ctx=crop.getContext('2d',{willReadFrequently:true});
@@ -1477,18 +1478,22 @@ function runCalcSelfTest(){
     // 回帰テスト49：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t49=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t50=window.__APP_BUILD__==='v43-20260819'&&/v43/.test($('buildMarker')?.textContent||'');
+    const t50=window.__APP_BUILD__==='v45-20260819'&&/v45/.test($('buildMarker')?.textContent||'');
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v43-20260819'&&/build v44/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v45-20260819'&&/build v45/.test($('buildMarker')?.textContent||'');
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト54：矢印なしの「Buy 0.01 + 数値」は約定済みポジションにしない。
     const t56=parseOCR('GOLD# buy 0.01\n2911.06\n').positions.length===0;
+    // 回帰テスト57：iPhone OCRが矢印を > に誤認しても約定済みポジションを保持する。
+    const t57=parseOCR('GOLD# buy 0.01\n4318.10 > 4369.48').positions.length===1 && Math.abs(parseOCR('GOLD# buy 0.01\n4318.10 > 4369.48').positions[0].price-4318.10)<0.0001;
+    // 回帰テスト58：iPhone OCRが矢印を単一ハイフンに誤認しても約定済みポジションを保持する。
+    const t58=parseOCR('GOLD# buy 0.01\n4367.37 - 4369.48').positions.length===1 && Math.abs(parseOCR('GOLD# buy 0.01\n4367.37 - 4369.48').positions[0].price-4367.37)<0.0001;
     // 回帰テスト52：内部回帰NG時はDEAD LINE計算を継続しない安全側仕様。
     const t52=typeof calc==='function'&&/内部検証NGのためDEAD LINE計算を停止/.test(calc.toString());
     // 回帰テスト53：動画フレームはMT5アンカーのないフレームを有効扱いしない。
     const t53=typeof isLikelyMT5FrameText==='function'&&isLikelyMT5FrameText('集中モード 再生停止中')===false&&isLikelyMT5FrameText('GOLD# buy 0.01 4318.10')===true;
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t40,t41,t42,t43,t44,t45,t46,t47,t48,t49,t50,t51,t52,t53];
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t40,t41,t42,t43,t44,t45,t46,t47,t48,t49,t50,t51,t52,t53,t55,t56,t57,t58];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;
@@ -1553,7 +1558,7 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v43-20260819';
+window.__APP_BUILD__='v45-20260819';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const e=$('ocrStatus'); if(e)e.innerHTML='<span class="err">✕ アプリ内部APIの初期化に失敗しました。古いページを実行している可能性があります。</span>';

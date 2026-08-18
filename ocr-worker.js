@@ -1,2 +1,2 @@
-/* xm-losscut v43 same-origin OCR worker bootstrap */
-importScripts('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js?v=43');
+/* v45 same-origin bootstrap for Tesseract.js on GitHub Pages / iPhone Safari. */
+importScripts('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js');

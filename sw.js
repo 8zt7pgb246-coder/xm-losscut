@@ -1,4 +1,4 @@
-/* xm-losscut v51: no application caching. Network-first and never stores HTML/JS. */
+/* xm-losscut v52: no application caching. */
 self.addEventListener('install', event => self.skipWaiting());
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', event => {

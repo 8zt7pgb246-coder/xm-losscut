@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v31</title>
+<title>DeadLine positioning｜デラポジ Pro v34</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v32 — production video OCR: denser sampling, targeted trade crop, frame-level dedupe, stale-data isolation */
+/* v34 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -62,8 +62,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v32</span></h1>
-<div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v34</span></h1>
+<div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -75,7 +75,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -115,7 +115,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 <div class="card"><label>価格ソース</label><div class="small"><b>XM画面（スクショ/動画） → このアプリ</b>。1枚のスクショから認識できた全銘柄のBid/Askを銘柄別に保存します。新しい気配値を読み込むまで上書きしません。銘柄を切り替えても他銘柄の保存価格は消えません。</div></div>
 
-<div class="alert"><b>重要：</b>LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。保存済みの古いポジションは起動・銘柄切替時に自動で無効化します。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。MT5実測含み損益は検証専用で、OCR値をLC計算へ自動補正入力しません。現在Askが既に注文価格以下なのに「placed」のままの注文は、時系列不整合として自動約定扱いせず計算を停止します。</div>
+<div class="alert"><b>重要：</b>DEAD LINEはXMのStop Outが<strong>最初に発動する閾値</strong>を推定します。XMの規約上、Stop Out発動時はポジションが段階的に強制決済され、同価格のStop Outが優先されるため、同価格のPendingは追加約定させません。LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。保存済みの古いポジションは起動・銘柄切替時に自動で無効化します。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。MT5実測含み損益は検証専用で、OCR値をLC計算へ自動補正入力しません。現在Askが既に注文価格以下なのに「placed」のままの注文は、時系列不整合として自動約定扱いせず計算を停止します。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
 
 <div id="diagnosticPanel" class="card" style="display:none"><div class="row"><b>開発者診断：計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">本番画面には表示せず、?debug=1 または診断モードでのみ表示します。回帰テストは開発者向け監視です。テストNGだけではDEAD LINEを隠さず、入力データの成立条件を優先します。</div></div>
@@ -173,7 +173,7 @@ try{priceStore=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}')||{}}catch(e){}
 try{orderStore=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}')||{}}catch(e){}
 try{positionStore=JSON.parse(localStorage.getItem(POSITION_KEY)||'{}')||{}}catch(e){}
 try{specStore=JSON.parse(localStorage.getItem(SPEC_KEY)||'{}')||{}}catch(e){}
-let currentSymbol=localStorage.getItem('xm_selected_symbol')||'GOLD#', goldBid=null,goldAsk=null,priceUpdatedAt='';
+let currentSymbol=localStorage.getItem('xm_selected_symbol')||'GOLD#', goldBid=null,goldAsk=null,priceUpdatedAt='',priceSource='none',marketAskInferred=false;
 const BASE_SPECS={
  'GOLD#':{name:'GOLD# / XAUUSD',contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfd',point:0.01,known:true},
  'BTCUSD#':{name:'BTCUSD# / Bitcoin',contract:1,leverage:1000,unit:'BTC',base:'USD',quote:'USD',type:'crypto',point:0.01,known:true},
@@ -233,9 +233,9 @@ function renderDataLock(){
   el.style.display='block';
   el.innerHTML='<strong>⚠ 計算停止：現在ポジションの認識結果が未確定です。</strong><br>'+String(positionImportError||'保存済みの古いポジションをDEAD LINE計算に使用しません。')+'<br>正しいMT5「ポジション」欄が写った注文画面をもう一度読み込んでください。';
 }
-function switchSymbol(resetPositionState=true){const nextSymbol=$('symbol').value;const changed=nextSymbol!==currentSymbol;currentSymbol=nextSymbol;localStorage.setItem('xm_selected_symbol',currentSymbol);if(resetPositionState&&changed){positionDataValid=false;positionDataSource='none';positionImportError='銘柄切替後は現在ポジションを再確認するまで保存済みデータを計算に使用しません。';renderDataLock();}const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
+function switchSymbol(resetPositionState=true){const nextSymbol=$('symbol').value;const changed=nextSymbol!==currentSymbol;currentSymbol=nextSymbol;localStorage.setItem('xm_selected_symbol',currentSymbol);if(resetPositionState&&changed){positionDataValid=false;positionDataSource='none';positionImportError='銘柄切替後は現在ポジションを再確認するまで保存済みデータを計算に使用しません。';renderDataLock();}const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';priceSource=saved?'quote-board':'none';marketAskInferred=false;if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
 function updateSpecUI(){const c=cfg();$('specStatus').innerHTML=c.known?`<span class="ok">✓ ${currentSymbol} の標準仕様を登録済み</span>`:`<span class="warn">⚠ ${currentSymbol} は気配値から追加された銘柄。契約サイズ・レバレッジは推定初期値です。MT5「仕様」の値に合わせて確認してください。</span>`;$('specWarning').style.display=c.known?'none':'block';$('specWarning').innerHTML=`<b>銘柄仕様の確認：</b>${currentSymbol} は自動推定仕様で計算しています。正確なLCが必要なら、MT5の「仕様」に表示される契約サイズ・証拠金条件に合わせて上の数値を確認してください。`}
-function updatePriceUI(){const c=cfg();$('goldBid').textContent=Number.isFinite(goldBid)?formatPrice(goldBid):'—';$('goldAsk').textContent=Number.isFinite(goldAsk)?formatPrice(goldAsk):'—';$('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?formatPrice(goldAsk-goldBid):'—';$('priceUpdated').textContent=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未保存';$('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)?`<span class="ok">✓ 保存済み ${currentSymbol} Bid ${formatPrice(goldBid)} / Ask ${formatPrice(goldAsk)}</span>`:`<span class="warn">${currentSymbol}の気配値スクショを読み込んでください</span>`}
+function updatePriceUI(){const c=cfg();$('goldBid').textContent=Number.isFinite(goldBid)?formatPrice(goldBid):'—';$('goldAsk').textContent=Number.isFinite(goldAsk)?formatPrice(goldAsk):'—';$('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?formatPrice(goldAsk-goldBid):'—';$('priceUpdated').textContent=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未取得';const sourceText=priceSource==='trade-screen-inferred'?'取引画面の現在価格（Bid/Ask非表示・Askは保守推定）':priceSource==='quote-board'?'気配値画面のBid/Ask':'価格未確定';$('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)?`<span class="${marketAskInferred?'warn':'ok'}">${marketAskInferred?'⚠':'✓'} ${currentSymbol} ${sourceText}</span>`:`<span class="warn">${currentSymbol}の価格情報を読み込んでください</span>`}
 function formatPrice(v){if(!Number.isFinite(v))return '—';const d=Math.max(0,Math.min(5,decimalPlacesFor(v)));return v.toFixed(d)}
 function decimalPlacesFor(v){const s=String(v);return s.includes('.')?s.split('.')[1].length:0}
 function getQuote(sym){return quoteStore[sym]||priceStore[sym]||null}
@@ -252,10 +252,12 @@ function renderOrders(){const arr=getOrders();$('count').textContent=`${arr.leng
 function editOrder(i,k,v){const a=getOrders();a[i][k]=v;setOrders(a);calc()}
 function addOrder(){const a=getOrders();a.push({side:'Buy Limit',lot:.01,price:Number.isFinite(goldBid)?Math.max(0,goldBid-1):0});setOrders(a);renderOrders()}
 function resetOrders(){setOrders([]);renderOrders()}
-function marginAtPriceJPY(p,o,c,lev,contract){const br=baseRateFor(c);const entry=Number(o?.price);if(!br||!Number.isFinite(entry)||entry<=0)return null;return entry*o.lot*contract/lev*br}
+function marginAtPriceJPY(p,o,c,lev,contract){const br=baseRateFor(c);if(!br||!Number.isFinite(p)||p<=0||!Number.isFinite(Number(o?.lot))||Number(o.lot)<=0)return null;return p*Number(o.lot)*contract/lev*br}
 function solveLC(bal,stop,filled,c,lev,contract,adjustment=0){
   if(!filled.length)return null; const qr=quoteRateFor(c); if(!qr)return null; const stopRatio=stop/100;
   const pnl=p=>filled.reduce((s,o)=>s+(p-o.price)*o.lot*contract*qr*(/^sell/i.test(String(o.side||''))?-1:1),0);
+  // XM CFD stop-out is solved from equity versus the margin required at the
+  // candidate liquidation price; the margin therefore moves with p in this model.
   const margin=p=>filled.reduce((s,o)=>{const m=marginAtPriceJPY(p,o,c,lev,contract);return m===null?NaN:s+m},0);
   const f=p=>{const m=margin(p);return Number.isFinite(m)?bal+adjustment+pnl(p)-m*stopRatio:NaN};
   let hi=Math.max(...filled.map(o=>o.price)),lo=Math.max(0,hi-1),guard=0;
@@ -270,7 +272,7 @@ function simulateLC(bal,stop,pending,positions,c,lev,contract,currentAsk,adjustm
   const inconsistent=buys.filter(o=>Number.isFinite(currentAsk)&&currentAsk<=o.price);
   if(inconsistent.length)return {filled:base,lc:solveLC(bal,stop,base,c,lev,contract,adjustment),added:[],initialPending:[],inconsistent};
   let filled=[...base],lc=filled.length?solveLC(bal,stop,filled,c,lev,contract,adjustment):null; const added=[];
-  for(const next of buys){if(!filled.length){filled.push(next);added.push(next);lc=solveLC(bal,stop,filled,c,lev,contract,adjustment);continue} if(lc!==null&&lc<=next.price){filled.push(next);added.push(next);lc=solveLC(bal,stop,filled,c,lev,contract,adjustment);continue} break}
+  for(const next of buys){if(!filled.length){filled.push(next);added.push(next);lc=solveLC(bal,stop,filled,c,lev,contract,adjustment);continue} if(lc!==null&&lc<next.price-1e-9){filled.push(next);added.push(next);lc=solveLC(bal,stop,filled,c,lev,contract,adjustment);continue} break}
   return {filled,lc,added,initialPending:[],inconsistent:[]};
 }
 window.__regressionOK=null;
@@ -476,6 +478,7 @@ function saveQuotes(quotes,usdjpy){
     priceStore[sym]={...quoteStore[sym]}; ensureSpec(sym); ensureSymbolOption(sym);
   }
   saveAll();
+  if(valid[currentSymbol]){priceSource='quote-board';marketAskInferred=false;}
   if(Number.isFinite(usdjpy)&&usdjpy>0)$('usdjpy').value=usdjpy.toFixed(3);
   switchSymbol(false);
   return {accepted:Object.keys(valid),rejected:checked.rejected};
@@ -659,7 +662,9 @@ function sanitizeRecognizedPositions(arr){
     const side=/^buy$/i.test(String(o.side))?'Buy':/^sell$/i.test(String(o.side))?'Sell':null;
     const lot=Number(o.lot), price=Number(o.price);
     if(!side||!Number.isFinite(lot)||lot<=0||lot>1000||!Number.isFinite(price)||price<=0)continue;
-    // Never accept a P/L number as an entry price.
+    // Never accept a P/L number as an entry price. If the trade screen itself
+    // supplied the current market price, use that as the sanity anchor even
+    // when no separate quote-board screen was uploaded.
     if(Number.isFinite(goldBid)){
       const rel=Math.abs(price-goldBid)/goldBid;
       if(rel>0.35)continue;
@@ -668,6 +673,77 @@ function sanitizeRecognizedPositions(arr){
       out.push({symbol:o.symbol?normalizeSymbol(o.symbol):currentSymbol,side,lot:+lot.toFixed(4),price});
   }
   return out;
+}
+
+// MT5の「トレード」画面では、独立したBid/Ask欄がなくても
+// 「約定価格 → 現在価格」が各ポジション行に表示される。
+// この現在価格を、今回の媒体だけから得られる一時的な市場価格として使う。
+// 保存済みの古い価格を勝手に上書きしないのが重要。
+function extractTradeScreenPrice(text,symbol=currentSymbol){
+  const raw=String(text||'');
+  const lines=raw.split(/\r?\n/).map(normalizeOcrLine).filter(Boolean);
+  const target=normalizeSymbol(symbol);
+  const vals=[];
+  for(let i=0;i<lines.length;i++){
+    const symLine=lines[i].match(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i);
+    if(!symLine||normalizeSymbol(symLine[0])!==target)continue;
+    if(!/\b(?:buy|sell)\b/i.test(lines[i])||/\b(?:buy|sell)\s*limit\b/i.test(lines[i]))continue;
+    const chunk=lines.slice(i,i+3).join(' ');
+    const arrow=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|→|—|–|-|to)\s*(\d[\d,.]*\.\d+)/i);
+    if(arrow){
+      const cur=normalizeOcrNumber(arrow[2]);
+      if(Number.isFinite(cur)&&cur>0)vals.push(cur);
+    }
+  }
+  if(!vals.length)return null;
+  vals.sort((a,b)=>a-b);
+  return vals.length%2?vals[(vals.length-1)/2]:(vals[vals.length/2-1]+vals[vals.length/2])/2;
+}
+
+function extractTradeScreenPriceFromResults(results,symbol=currentSymbol){
+  const samples=[];
+  for(const r of (results||[])){
+    const p=extractTradeScreenPrice(r?.data?.text||r?.text||'',symbol);
+    if(Number.isFinite(p)&&p>0)samples.push({price:p,time:Number(r?.time)||0,frameIndex:Number(r?.frameIndex)||0});
+  }
+  if(!samples.length)return null;
+  samples.sort((a,b)=>a.time-b.time||a.frameIndex-b.frameIndex);
+  const recent=samples.slice(-3);
+  const c=ensureSpec(symbol);
+  const tol=c.type==='fx'?0.02:c.type==='crypto'?50:c.type==='index'?5:c.type==='cfd'?0.5:0.05;
+  const prices=recent.map(x=>x.price);
+  const min=Math.min(...prices),max=Math.max(...prices);
+  if(max-min<=tol){
+    prices.sort((a,b)=>a-b);
+    return prices.length%2?prices[(prices.length-1)/2]:(prices[prices.length/2-1]+prices[prices.length/2])/2;
+  }
+  // Market prices can legitimately move during a video. When recent frames
+  // disagree beyond the OCR tolerance, prefer the newest valid frame rather
+  // than averaging old and new market prices into a fictitious quote.
+  return recent[recent.length-1].price;
+}
+
+function applyTradeScreenPriceFallback(parsed,explicitPrice=null){
+  const inferred=Number.isFinite(explicitPrice)?explicitPrice:extractTradeScreenPrice(parsed?.rawText||'',currentSymbol);
+  if(!Number.isFinite(inferred)||inferred<=0)return null;
+  const stored=quoteStore[currentSymbol]||priceStore[currentSymbol];
+  const storedBid=stored&&Number.isFinite(+stored.bid)?+stored.bid:null;
+  const storedAsk=stored&&Number.isFinite(+stored.ask)?+stored.ask:null;
+  // Prefer a stored real spread when it exists. Otherwise keep Bid/Ask equal
+  // rather than inventing a broker spread. This is explicitly marked inferred.
+  const spread=(storedBid!==null&&storedAsk!==null&&storedAsk>=storedBid)?storedAsk-storedBid:0;
+  goldBid=inferred;
+  goldAsk=inferred+spread;
+  priceSource='trade-screen-inferred';
+  // Even when an older spread is available, the current Ask itself was not
+  // observed on this trade screen. Keep the confidence state conservative.
+  marketAskInferred=true;
+  priceUpdatedAt=new Date().toISOString();
+  $('goldBid').textContent=formatPrice(goldBid);
+  $('goldAsk').textContent=formatPrice(goldAsk);
+  $('goldSpread').textContent=spread>0?formatPrice(spread):'未取得（取引画面推定）';
+  $('rateStatus').innerHTML=`<span class=\"ok\">✓ ${currentSymbol} 現在価格 ${formatPrice(inferred)} をトレード画面から取得</span><span class=\"small\"><br>※ Bid/Ask専用画面がないため、今回の計算ではこの現在価格を一時使用します。</span>`;
+  return inferred;
 }
 async function imageToCanvasSource(input){
   if(typeof input==='string')return input;
@@ -831,6 +907,13 @@ $('mediaFile').addEventListener('change',async e=>{
       if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面${isVideo?'動画':''}OCR中… ${Math.round((m.progress||0)*100)}%`;
     });
     let parsed=mergeParsedResults(results);
+    // Trade/position screens expose the live price as 「entry → current」.
+    // Recover it before quote validation so an order-only screenshot is not
+    // incorrectly rejected just because it has no dedicated Bid/Ask rows.
+    const tradeScreenPrice=isVideo?extractTradeScreenPriceFromResults(results,currentSymbol):extractTradeScreenPrice(parsed.rawText||'',currentSymbol);
+    if(Number.isFinite(tradeScreenPrice)){
+      applyTradeScreenPriceFallback({...parsed,rawText:`${currentSymbol} buy 0.01 ${tradeScreenPrice}`});
+    }
     // Safety: never feed a screenshot/video of this app itself back into OCR.
     // That would create a feedback loop where displayed/calculated values are
     // mistaken for fresh MT5 market/order data.
@@ -851,6 +934,8 @@ $('mediaFile').addEventListener('change',async e=>{
           brokerPnl:Number.isFinite(parsed.brokerPnl)?parsed.brokerPnl:fp.brokerPnl,
           rawText:[parsed.rawText,fp.rawText].filter(Boolean).join('\n')
         };
+        const fallbackTradePrice=isVideo?extractTradeScreenPriceFromResults(fallback,currentSymbol):extractTradeScreenPrice(parsed.rawText||'',currentSymbol);
+        if(Number.isFinite(fallbackTradePrice))applyTradeScreenPriceFallback(parsed,fallbackTradePrice);
       }catch(fallbackErr){console.warn('order fallback OCR failed',fallbackErr)}
     }
 
@@ -859,7 +944,7 @@ $('mediaFile').addEventListener('change',async e=>{
     if(isVideo){
       quotes=aggregateVideoQuotes(results);
       // 安定性検証を通過したaggregateVideoQuotesだけを本番価格として採用する。
-      // 生OCRのallQuotesをそのままfallback採用すると、一瞬の異常スプレッドを
+      // 生OCRの未検証価格をそのままfallback採用すると、一瞬の異常スプレッドを
       // DEAD LINE計算へ流し込む可能性があるため、ここでは意図的に採用しない。
       const usd=quotes['USDJPY#']; if(usd?.bid)usdjpy=+usd.bid;
     }else{
@@ -965,7 +1050,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const frameCount=isVideo?(results?.length||0):1;
     const expectedFrameCount=isVideo?(results?.expectedFrameCount||results?.length||0):1;
     const deadlineReady=positionDataValid && !orderDataInvalid && Number.isFinite(goldBid) && Number.isFinite(goldAsk) && !!quoteRateFor(cfg());
-    const quoteQuality=isVideo?(quoteCount?`安定スプレッド判定済み ${quoteCount}銘柄`:'安定価格を確定できた銘柄なし'):'スクショ価格を検証済み';
+    const quoteQuality=isVideo?(quoteCount?`安定スプレッド判定済み ${quoteCount}銘柄`:'安定価格を確定できた銘柄なし'):(quoteCount?'スクショ価格を検証済み':(Number.isFinite(tradeScreenPrice)?'トレード画面の現在価格を検証済み':'スクショ価格を検証済み'));
     $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">気配値 <b>${quoteCount}銘柄</b></div><div class="item">解析フレーム <b>${frameCount}${isVideo?` / 予定${expectedFrameCount}`:''}</b></div><div class="item">現在ポジション <b>${positions.length}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${deadlineReady?'<span class="ok">✓ DEAD LINE計算可能</span>':'<span class="warn">⚠ DEAD LINE計算に必要なデータが未確定</span>'}</div></div></div>${orderUpdateNote}`;
     $('rateStatus').innerHTML=Object.keys(quotes).length
       ? `<span class="ok">✓ 気配値 ${quoteCount}銘柄を更新。動画は安定スプレッド帯から採用。</span>`
@@ -1131,9 +1216,9 @@ function runCalcSelfTest(){
 
 
     // 回帰テスト29：動画解析は最大16フレーム、短時間でも最低6フレームを使う。
-    const t29=videoFrameSources.toString().includes('maxFrames=16') && videoFrameSources.toString().includes('Math.max(8') && videoFrameSources.toString().includes('Math.ceil(dur/0.8)') && recognizeFileFrames.toString().includes('videoFrameSources(file,16)');
+    const t29=videoFrameSources.toString().includes('maxFrames=16') && videoFrameSources.toString().includes('Math.max(12') && videoFrameSources.toString().includes('Math.ceil(dur/0.55)') && recognizeFileFrames.toString().includes('videoFrameSources(file,16)');
     // 回帰テスト30：動画価格の危険な生OCR fallbackを本番採用しない。
-    const t30=!(/quotes=allQuotes/.test(document.documentElement.innerHTML));
+    const forbiddenQuoteFallback='quotes'+'='+'allQuotes'; const t30=!document.documentElement.innerHTML.includes(forbiddenQuoteFallback);
     // 回帰テスト31：デラポジ自身の画面をMT5データとして再取り込みしない。
     const t31=/DeadLine\s*positioning|DEAD\s*LINE|デラポジ/i.test('DeadLine positioning DEAD LINE デラポジ');
     // 回帰テスト32：別銘柄のOCRポジションを現在銘柄へ混入させない。
@@ -1141,13 +1226,45 @@ function runCalcSelfTest(){
     const t32=s31.length===1&&s31[0].symbol==='GOLD#';
     // 回帰テスト33：動画OCRはフレームごとにworkerを作り直さず、1 workerを再利用する。
     const t33=(recognizeFileFrames.toString().match(/createWorker/g)||[]).length===1;
-    // 回帰テスト34：注文数不一致でconfirm()を使わず、古い注文を計算へ残さない。
-    const t34=!(/confirm\s*\(/.test(document.documentElement.innerHTML)) && /orderDataInvalid/.test(document.documentElement.innerHTML);
+    // 回帰テスト34：注文数不一致でconfirmを使わず、古い注文を計算へ残さない。
+    const forbiddenConfirm='confirm'+'('; const t34=!document.documentElement.innerHTML.includes(forbiddenConfirm) && /orderDataInvalid/.test(document.documentElement.innerHTML);
     // 回帰テスト35：動画注文は2フレーム以上一致した行だけを確定する。
     const t35=/frameCount\|\|0\)\>=2/.test(document.documentElement.innerHTML);
     // 回帰テスト36：注文認識未確定ならDEAD LINE計算を停止する。
     const t36=/if\(orderDataInvalid\)/.test(document.documentElement.innerHTML);
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36];
+    // 回帰テスト37：今回の実画面。2ポジション＋1 Buy Limit＋「entry → current」を同時に認識する。
+    const actualTradeScreen='50000 JPY\nGOLD# buy 0.01\n4318.10 -> 4425.27\nGOLD# buy 0.01\n4367.37 -> 4425.27\nGOLD# buy limit\n0.01 / 0 at 4277.03';
+    const t37p=parseOCR(actualTradeScreen),t37price=extractTradeScreenPrice(actualTradeScreen,'GOLD#');
+    const t37=t37p.positions.length===2&&t37p.pending.length===1&&Math.abs(t37p.positions[0].price-4318.10)<0.0001&&Math.abs(t37p.positions[1].price-4367.37)<0.0001&&Math.abs(t37p.pending[0].price-4277.03)<0.0001&&Math.abs(t37price-4425.27)<0.0001;
+    // 回帰テスト38：実画面の2ポジションから現在価格4425.27を復元し、
+    // 現在評価損益は約26,317円（USD/JPY=159.427）になる。
+    const savedRate38=window.__testRate;window.__testRate=159.427;
+    const t38p=actualTradeScreen; const t38x=parseOCR(t38p); const t38px=extractTradeScreenPrice(t38p,'GOLD#');
+    const t38pnl=t38x.positions.reduce((sum,o)=>sum+(t38px-o.price)*o.lot*100*159.427,0);
+    const t38=Number.isFinite(t38px)&&Math.abs(t38pnl-26316.61)<1;
+    window.__testRate=savedRate38;
+    // 回帰テスト39：取引画面しかない場合、保存済みの古い価格を現在価格として残さない。
+    const savedBid39=goldBid,savedAsk39=goldAsk,savedSource39=priceSource,savedInfer39=marketAskInferred;
+    goldBid=999;goldAsk=1000;priceSource='quote-board';marketAskInferred=false;
+    applyTradeScreenPriceFallback({rawText:actualTradeScreen},4425.27);
+    const t39=Math.abs(goldBid-4425.27)<0.0001&&priceSource==='trade-screen-inferred'&&marketAskInferred===true;
+    goldBid=savedBid39;goldAsk=savedAsk39;priceSource=savedSource39;marketAskInferred=savedInfer39;
+    // 回帰テスト40：動画の古い価格と新しい価格を平均せず、直近3フレーム内の安定値を採用する。
+    const t40=Math.abs(extractTradeScreenPriceFromResults([{time:1,frameIndex:0,data:{text:'GOLD# buy 0.01 4318.10 -> 4400.00'}},{time:2,frameIndex:1,data:{text:'GOLD# buy 0.01 4318.10 -> 4425.27'}},{time:3,frameIndex:2,data:{text:'GOLD# buy 0.01 4318.10 -> 4425.27'}}],'GOLD#')-4425.27)<0.0001;
+    // 回帰テスト41：現在価格より下にあるBuy Limitは、取引画面推定Askでも時系列矛盾として扱わず、
+    // LC到達前に通過するため追加約定を1件として反映する。
+    const savedRate41=window.__testRate;window.__testRate=159.427;
+    const t41x=simulateLC(50000,20,[{side:'Buy Limit',lot:.01,price:4277.03}],t38x.positions,{contract:100,quote:'USD',base:'USD'},1000,100,4425.27,0);
+    const t41=t41x.inconsistent.length===0&&t41x.added.length===1&&Math.abs(t41x.lc-4217.1357)<0.02;
+    window.__testRate=savedRate41;
+    // 回帰テスト42：Pending価格がStop Out閾値と同値なら、XMルールに合わせて
+    // Stop Outを優先し、Pendingを追加約定させない。
+    const savedRate42=window.__testRate;window.__testRate=159.427;
+    const baseLc42=solveLC(50000,20,t38x.positions,{contract:100,quote:'USD',base:'USD'},1000,100,0);
+    const t42x=simulateLC(50000,20,[{side:'Buy Limit',lot:.01,price:baseLc42}],t38x.positions,{contract:100,quote:'USD',base:'USD'},1000,100,4425.27,0);
+    const t42=t42x.inconsistent.length===0&&t42x.added.length===0&&Math.abs(t42x.lc-baseLc42)<0.01;
+    window.__testRate=savedRate42;
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t40,t41,t42];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;

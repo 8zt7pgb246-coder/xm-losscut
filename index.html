@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v41-20260819">
+<meta name="build-id" content="v42-20260819">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
@@ -66,7 +66,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <body>
 <div class="app">
 <h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v41</span></h1>
-<div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v42</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -171,7 +171,7 @@ async function ensureOCR(){
 function ocrWorkerOptions(logger,variant=0){
   // IMPORTANT: keep the Worker itself same-origin on GitHub Pages/iPhone Safari.
   // A CDN worker is wrapped by /ocr-worker.js, avoiding cross-origin Worker startup failures.
-  const localWorker=new URL('ocr-worker.js',document.baseURI).href;
+  const localWorker=new URL('ocr-worker.js?v=42',document.baseURI).href;
   const cdnWorkers=[
     'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/worker.min.js',
@@ -199,7 +199,7 @@ async function createOCRWorker(T,logger){
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
 // Expose the small public API explicitly on window so inline handlers and internal calls
 // resolve identically after a cold load or a cached-page refresh.
-window.__APP_BUILD__='v41-20260819';
+window.__APP_BUILD__='v42-20260819';
 const $=id=>document.getElementById(id);
 const PRICE_KEY='xm_saved_prices_multi_v6', ORDER_KEY='xm_orders_by_symbol_v6', POSITION_KEY='xm_positions_by_symbol_v3', SPEC_KEY='xm_specs_v6', QUOTE_KEY='xm_quote_snapshot_all_v3';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
@@ -569,7 +569,7 @@ function saveQuotes(quotes,usdjpy,meta=null){
   return {accepted:Object.keys(valid),rejected:checked.rejected};
 }
 
-/* v39 OCR/media pipeline
+/* v42 OCR/media pipeline
    - Restores the missing recognizeFileFrames / parse / merge pipeline.
    - One button accepts image or video.
    - Video uses real frames; no price averaging.
@@ -1087,9 +1087,9 @@ $('mediaFile').addEventListener('change',async e=>{
     }
 
     // 気配値は動画なら安定スプレッド帯から採用。スクショなら通常のBid/Ask検証。
-    let quotes={}, usdjpy=null, quoteMeta={};
+    let quotes={}, usdjpy=null; window.__quoteMeta={};
     if(isVideo){
-      quotes=aggregateVideoQuotes(results); quoteMeta=quotes.__meta||{};
+      quotes=aggregateVideoQuotes(results); window.__quoteMeta=quotes.__meta||{};
       // 安定性検証を通過したaggregateVideoQuotesだけを本番価格として採用する。
       // 生OCRの未検証価格をそのままfallback採用すると、一瞬の異常スプレッドを
       // DEAD LINE計算へ流し込む可能性があるため、ここでは意図的に採用しない。
@@ -1109,7 +1109,7 @@ $('mediaFile').addEventListener('change',async e=>{
     // 表示銘柄数やスクロール位置はMT5側で変動するため、部分認識だけで計算停止しない。
     $('specWarning').style.display='none';
     if(Object.keys(quotes).length){
-      const saved=saveQuotes(quotes,usdjpy,quoteMeta);
+      const saved=saveQuotes(quotes,usdjpy,window.__quoteMeta||{});
       quoteNote=`気配値${saved.accepted.length}銘柄`;
       if(saved.rejected.length)quoteNote+=` / 除外${saved.rejected.length}銘柄`;
       const savedCurrent=quoteStore[currentSymbol]||priceStore[currentSymbol];
@@ -1441,7 +1441,11 @@ function runCalcSelfTest(){
     const sb45=goldBid,sa45=goldAsk,ps45=priceSource,mf45=mediaPriceFresh;goldBid=4424.50;goldAsk=4424.75;priceSource='quote-board';mediaPriceFresh=true;const snap45=currentMediaPriceSnapshot();const t45=!!snap45&&snap45.bid===4424.50&&snap45.ask===4424.75;goldBid=sb45;goldAsk=sa45;priceSource=ps45;mediaPriceFresh=mf45;
     // 回帰テスト46：5分を超えた保存USD/JPYは現在動画の換算レートとして使用しない。
     const t46=(()=>{const old={updatedAt:new Date(Date.now()-6*60*1000).toISOString(),bid:159,ask:159.01};return !(old.updatedAt&&(Date.now()-Date.parse(old.updatedAt)<=5*60*1000));})();
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t40,t41,t42,t43,t44,t45,t46,t47,t48];
+    // 回帰テスト49：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
+    const t49=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
+    // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
+    const t50=window.__APP_BUILD__==='v42-20260819'&&/v42/.test($('buildMarker')?.textContent||'');
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t40,t41,t42,t43,t44,t45,t46,t47,t48,t49,t50];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;
@@ -1506,8 +1510,8 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v41-20260819';
-window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:true};
+window.__APP_BUILD__='v42-20260819';
+window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const e=$('ocrStatus'); if(e)e.innerHTML='<span class="err">✕ アプリ内部APIの初期化に失敗しました。古いページを実行している可能性があります。</span>';
   throw new Error('APP_API_INIT_FAILED');

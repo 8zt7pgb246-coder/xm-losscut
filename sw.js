@@ -1,4 +1,4 @@
-/* xm-losscut v42: intentionally no application caching. */
+/* xm-losscut v43: intentionally no application caching. */
 self.addEventListener('install', event => self.skipWaiting());
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', event => {

@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v42-20260819">
+<meta name="build-id" content="v43-20260819">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v41</title>
+<title>DeadLine positioning｜デラポジ Pro v43</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,8 +65,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v41</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v42</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v43</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v43</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v41</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v43</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -121,7 +121,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div class="alert"><b>重要：</b>DEAD LINEはXMのStop Outが<strong>最初に発動する閾値</strong>を推定します。XMの規約上、Stop Out発動時はポジションが段階的に強制決済され、同価格のStop Outが優先されるため、同価格のPendingは追加約定させません。LCは「現在価格から下落し、Buy Limitが順番に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。保存済みの古いポジションは起動・銘柄切替時に自動で無効化します。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。MT5実測含み損益は検証専用で、OCR値をLC計算へ自動補正入力しません。現在Askが既に注文価格以下なのに「placed」のままの注文は、時系列不整合として自動約定扱いせず計算を停止します。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
 
-<div id="diagnosticPanel" class="card" style="display:none"><div class="row"><b>開発者診断：計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">本番画面には表示せず、?debug=1 または診断モードでのみ表示します。回帰テストは開発者向け監視です。テストNGだけではDEAD LINEを隠さず、入力データの成立条件を優先します。</div></div>
+<div id="diagnosticPanel" class="card" style="display:none"><div class="row"><b>開発者診断：計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">本番画面には表示せず、?debug=1 または診断モードでのみ表示します。回帰テストは開発者向け監視です。NG時は安全側にDEAD LINE計算を停止します。</div></div>
 <div class="card footer"><b>計算モデル</b><br>口座残高はJPY。各注文の約定価格で必要証拠金を固定する近似モデルを使用し、Stop Out時のEquity＝Stop Out率×Used MarginとしてLC価格を解きます。Buy Limitの約定判定はAsk、ロングの含み損評価はBidを使います。Buy Limitの発動判定にスプレッドを二重適用しません。価格変動による損益は銘柄の決済通貨からJPYへ換算します。既存ポジション、スワップ、手数料、ヘッジ、段階式レバレッジ、銘柄固有の証拠金率等は別途反映が必要です。したがって結果は「推定」です。</div>
 </div>
 
@@ -171,7 +171,7 @@ async function ensureOCR(){
 function ocrWorkerOptions(logger,variant=0){
   // IMPORTANT: keep the Worker itself same-origin on GitHub Pages/iPhone Safari.
   // A CDN worker is wrapped by /ocr-worker.js, avoiding cross-origin Worker startup failures.
-  const localWorker=new URL('ocr-worker.js?v=42',document.baseURI).href;
+  const localWorker=new URL('ocr-worker.js',document.baseURI).href;
   const cdnWorkers=[
     'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/worker.min.js',
@@ -199,7 +199,7 @@ async function createOCRWorker(T,logger){
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
 // Expose the small public API explicitly on window so inline handlers and internal calls
 // resolve identically after a cold load or a cached-page refresh.
-window.__APP_BUILD__='v42-20260819';
+window.__APP_BUILD__='v43-20260819';
 const $=id=>document.getElementById(id);
 const PRICE_KEY='xm_saved_prices_multi_v6', ORDER_KEY='xm_orders_by_symbol_v6', POSITION_KEY='xm_positions_by_symbol_v3', SPEC_KEY='xm_specs_v6', QUOTE_KEY='xm_quote_snapshot_all_v3';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
@@ -341,10 +341,14 @@ function diagnosticsEnabled(){return /(?:^|\?)debug=1(?:&|$)/.test(location.sear
 function setDiagnosticVisible(){const p=$('diagnosticPanel');if(p)p.style.display=diagnosticsEnabled()?'block':'none'}
 
 function calc(){
-  // 回帰テストは開発者向けの検査。テストNGだけを理由に本番のDEAD LINEを隠さない。
-  // 本番計算は「現在ポジション・現在価格・換算レート・銘柄仕様」が揃っているかで判定する。
-  if(window.__regressionOK===false && $('rateStatus')){
-    $('rateStatus').innerHTML='<span class="warn">⚠ 内部回帰テストに警告があります。入力データが揃っているためDEAD LINE計算は継続しています。</span>';
+  // SAFETY: regression failure is a development/build integrity failure.
+  // Never present a calculated DEAD LINE when the app's own safety tests fail.
+  if(window.__regressionOK===false){
+    ['result','avg','lots','lcAvg','lcLots','currentPnl','lcLoss','qty','lcTotalPositions'].forEach(id=>{if($(id))$(id).textContent='—'});
+    if($('distance'))$('distance').textContent='内部検証NGのためDEAD LINE計算を停止';
+    if($('count'))$('count').textContent='—';
+    if($('rateStatus') && diagnosticsEnabled()) $('rateStatus').innerHTML='<span class="warn">⚠ 開発者診断：内部回帰テストNG。計算停止。</span>';
+    return;
   }
   const bal=+$('balance').value||0,stop=+$('stopout').value||20,c=cfg(),lev=+$('symbolLeverage').value||0,contract=+$('contractSize').value||0;
   const pending=getOrders().filter(o=>/buy\s*limit/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
@@ -569,7 +573,7 @@ function saveQuotes(quotes,usdjpy,meta=null){
   return {accepted:Object.keys(valid),rejected:checked.rejected};
 }
 
-/* v42 OCR/media pipeline
+/* v43 OCR/media pipeline
    - Restores the missing recognizeFileFrames / parse / merge pipeline.
    - One button accepts image or video.
    - Video uses real frames; no price averaging.
@@ -689,24 +693,38 @@ function parseOCR(text){
 function isControlCenterFrameText(text){
   const raw=String(text||'');
   if(!raw.trim())return false;
-  // iOS Control Center signatures. These must never contribute OCR data because
-  // its large media/network controls can be mistaken for MT5 prices or labels.
   const hits=[
-    /再生停止中|再生中|再生|一時停止/.test(raw),
-    /集中モード/.test(raw),
+    /再生停止中|再生中|一時停止|再生/.test(raw),
+    /集中モード|おやすみモード/.test(raw),
     /画面収録|スクリーン収録|画面録画/.test(raw),
     /AirPlay|AirDrop/.test(raw),
     /機内モード/.test(raw),
     /明るさ|音量/.test(raw),
-    /Wi[-]*Fi|Bluetooth/.test(raw),
-    /懐中電灯|計算機|カメラ/.test(raw)
+    /Wi\s*Fi|Bluetooth/.test(raw),
+    /懐中電灯|計算機|カメラ|QR/.test(raw)
   ].filter(Boolean).length;
-  // Two independent Control Center signatures are enough to quarantine a frame.
-  return hits>=2;
+  // A strong media-control signature, or multiple independent signatures.
+  return hits>=2 || /再生停止中|集中モード|おやすみモード/.test(raw);
 }
-
+function isLikelyMT5FrameText(text){
+  const raw=String(text||'');
+  if(!raw.trim())return false;
+  if(isControlCenterFrameText(raw))return false;
+  const anchors=[
+    /GOLD#|XAUUSD|USDJPY|EURUSD|GBPUSD|BTCUSD/i.test(raw),
+    /ポジション|オーダー|注文|トレード|建玉/i.test(raw),
+    /気配値|Bid|Ask|売値|買値/i.test(raw),
+    /\b(?:buy|sell|limit|stop)\b/i.test(raw)
+  ].filter(Boolean).length;
+  // A frame is considered MT5 only when it has at least one market/order anchor.
+  return anchors>=1;
+}
 function filterUsableOCRResults(results){
-  return (results||[]).filter(r=>!isControlCenterFrameText(r?.data?.text||r?.text||''));
+  return (results||[]).filter(r=>{
+    const text=r?.data?.text||r?.text||'';
+    if(isControlCenterFrameText(text))return false;
+    return true;
+  });
 }
 
 function mergeParsedResults(results){
@@ -1049,9 +1067,15 @@ $('mediaFile').addEventListener('change',async e=>{
     });
     const rawResultCount=results.length;
     const expectedFrames=Number(results?.expectedFrameCount||rawResultCount||0);
-    results=filterUsableOCRResults(results);
-    mediaQuality={total:rawResultCount,usable:results.length,excluded:Math.max(0,rawResultCount-results.length),expected:expectedFrames};
-    if(isVideo && rawResultCount && !results.length) throw new Error('VIDEO_CONTROL_CENTER_ONLY');
+    const filteredResults=filterUsableOCRResults(results);
+    const mt5FrameCount=isVideo ? filteredResults.filter(r=>isLikelyMT5FrameText(r?.data?.text||r?.text||'')).length : filteredResults.length;
+    mediaQuality={total:rawResultCount,usable:mt5FrameCount,ocrUsable:filteredResults.length,excluded:Math.max(0,rawResultCount-mt5FrameCount),expected:expectedFrames};
+    results=filteredResults;
+    if(isVideo && rawResultCount && !mt5FrameCount) throw new Error('VIDEO_NO_VALID_MT5_FRAME');
+    // Safety: for video, do not call a frame "usable" unless MT5 anchors are present.
+    if(isVideo && mt5FrameCount < Math.max(2, Math.ceil(expectedFrames*0.25))){
+      throw new Error(`VIDEO_TOO_FEW_VALID_MT5_FRAMES:${mt5FrameCount}/${expectedFrames}`);
+    }
     let parsed=mergeParsedResults(results);
     // Trade/position screens expose the live price as 「entry → current」.
     // Recover it before quote validation so an order-only screenshot is not
@@ -1444,8 +1468,14 @@ function runCalcSelfTest(){
     // 回帰テスト49：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t49=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t50=window.__APP_BUILD__==='v42-20260819'&&/v42/.test($('buildMarker')?.textContent||'');
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t40,t41,t42,t43,t44,t45,t46,t47,t48,t49,t50];
+    const t50=window.__APP_BUILD__==='v43-20260819'&&/v43/.test($('buildMarker')?.textContent||'');
+    // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
+    const t51=window.__APP_BUILD__==='v43-20260819'&&/build v43/.test($('buildMarker')?.textContent||'');
+    // 回帰テスト52：内部回帰NG時はDEAD LINE計算を継続しない安全側仕様。
+    const t52=typeof calc==='function'&&/内部検証NGのためDEAD LINE計算を停止/.test(calc.toString());
+    // 回帰テスト53：動画フレームはMT5アンカーのないフレームを有効扱いしない。
+    const t53=typeof isLikelyMT5FrameText==='function'&&isLikelyMT5FrameText('集中モード 再生停止中')===false&&isLikelyMT5FrameText('GOLD# buy 0.01 4318.10')===true;
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t40,t41,t42,t43,t44,t45,t46,t47,t48,t49,t50,t51,t52,t53];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;
@@ -1510,7 +1540,7 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v42-20260819';
+window.__APP_BUILD__='v43-20260819';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const e=$('ocrStatus'); if(e)e.innerHTML='<span class="err">✕ アプリ内部APIの初期化に失敗しました。古いページを実行している可能性があります。</span>';

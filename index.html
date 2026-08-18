@@ -199,7 +199,7 @@ async function createOCRWorker(T,logger){
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
 // Expose the small public API explicitly on window so inline handlers and internal calls
 // resolve identically after a cold load or a cached-page refresh.
-window.__APP_BUILD__='v37-20260818';
+window.__APP_BUILD__='v38-20260818';
 const $=id=>document.getElementById(id);
 const PRICE_KEY='xm_saved_prices_multi_v6', ORDER_KEY='xm_orders_by_symbol_v6', POSITION_KEY='xm_positions_by_symbol_v3', SPEC_KEY='xm_specs_v6', QUOTE_KEY='xm_quote_snapshot_all_v3';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
@@ -209,7 +209,7 @@ try{priceStore=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}')||{}}catch(e){}
 try{orderStore=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}')||{}}catch(e){}
 try{positionStore=JSON.parse(localStorage.getItem(POSITION_KEY)||'{}')||{}}catch(e){}
 try{specStore=JSON.parse(localStorage.getItem(SPEC_KEY)||'{}')||{}}catch(e){}
-let currentSymbol=localStorage.getItem('xm_selected_symbol')||'GOLD#', goldBid=null,goldAsk=null,priceUpdatedAt='',priceSource='none',marketAskInferred=false;
+let currentSymbol=localStorage.getItem('xm_selected_symbol')||'GOLD#', goldBid=null,goldAsk=null,priceUpdatedAt='',priceSource='none',marketAskInferred=false,mediaPriceFresh=false,mediaUsdJpyFresh=false;
 const BASE_SPECS={
  'GOLD#':{name:'GOLD# / XAUUSD',contract:100,leverage:1000,unit:'oz',base:'USD',quote:'USD',type:'cfd',point:0.01,known:true},
  'BTCUSD#':{name:'BTCUSD# / Bitcoin',contract:1,leverage:1000,unit:'BTC',base:'USD',quote:'USD',type:'crypto',point:0.01,known:true},
@@ -281,7 +281,7 @@ function renderDataLock(){
   el.style.display='block';
   el.innerHTML='<strong>⚠ 計算停止：現在ポジションの認識結果が未確定です。</strong><br>'+String(positionImportError||'保存済みの古いポジションをDEAD LINE計算に使用しません。')+'<br>正しいMT5「ポジション」欄が写った注文画面をもう一度読み込んでください。';
 }
-function switchSymbol(resetPositionState=true){const nextSymbol=$('symbol').value;const changed=nextSymbol!==currentSymbol;currentSymbol=nextSymbol;localStorage.setItem('xm_selected_symbol',currentSymbol);if(resetPositionState&&changed){positionDataValid=false;positionDataSource='none';positionImportError='銘柄切替後は現在ポジションを再確認するまで保存済みデータを計算に使用しません。';renderDataLock();}const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';priceSource=saved?'quote-board':'none';marketAskInferred=false;if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
+function switchSymbol(resetPositionState=true){const nextSymbol=$('symbol').value;const changed=nextSymbol!==currentSymbol;currentSymbol=nextSymbol;localStorage.setItem('xm_selected_symbol',currentSymbol);if(resetPositionState&&changed){positionDataValid=false;positionDataSource='none';positionImportError='銘柄切替後は現在ポジションを再確認するまで保存済みデータを計算に使用しません。';mediaPriceFresh=false;mediaUsdJpyFresh=false;renderDataLock();}const c=cfg();$('heroSymbol').textContent=c.name;$('priceLabel').textContent=`XM ${currentSymbol} 気配値`;$('bidLabel').textContent=`XM ${currentSymbol} Bid`;$('askLabel').textContent=`XM ${currentSymbol} Ask`;$('contractSize').value=c.contract;$('symbolLeverage').value=c.leverage;const saved=priceStore[currentSymbol]||quoteStore[currentSymbol];goldBid=saved&&Number.isFinite(+saved.bid)?+saved.bid:null;goldAsk=saved&&Number.isFinite(+saved.ask)?+saved.ask:null;priceUpdatedAt=saved?.updatedAt||'';priceSource=saved?'quote-board':'none';marketAskInferred=false;if(saved?.usdjpy)$('usdjpy').value=(+saved.usdjpy).toFixed(3);renderPositions();renderOrders();updateSpecUI();updatePriceUI();updatePipValue();calc()}
 function updateSpecUI(){const c=cfg();$('specStatus').innerHTML=c.known?`<span class="ok">✓ ${currentSymbol} の標準仕様を登録済み</span>`:`<span class="warn">⚠ ${currentSymbol} は気配値から追加された銘柄。契約サイズ・レバレッジは推定初期値です。MT5「仕様」の値に合わせて確認してください。</span>`;$('specWarning').style.display=c.known?'none':'block';$('specWarning').innerHTML=`<b>銘柄仕様の確認：</b>${currentSymbol} は自動推定仕様で計算しています。正確なLCが必要なら、MT5の「仕様」に表示される契約サイズ・証拠金条件に合わせて上の数値を確認してください。`}
 function updatePriceUI(){const c=cfg();$('goldBid').textContent=Number.isFinite(goldBid)?formatPrice(goldBid):'—';$('goldAsk').textContent=Number.isFinite(goldAsk)?formatPrice(goldAsk):'—';$('goldSpread').textContent=(Number.isFinite(goldBid)&&Number.isFinite(goldAsk))?formatPrice(goldAsk-goldBid):'—';$('priceUpdated').textContent=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未取得';const sourceText=priceSource==='trade-screen-inferred'?'取引画面の現在価格（Bid/Ask非表示・Askは保守推定）':priceSource==='quote-board'?'気配値画面のBid/Ask':'価格未確定';$('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)?`<span class="${marketAskInferred?'warn':'ok'}">${marketAskInferred?'⚠':'✓'} ${currentSymbol} ${sourceText}</span>`:`<span class="warn">${currentSymbol}の価格情報を読み込んでください</span>`}
 function formatPrice(v){if(!Number.isFinite(v))return '—';const d=Math.max(0,Math.min(5,decimalPlacesFor(v)));return v.toFixed(d)}
@@ -526,7 +526,7 @@ function saveQuotes(quotes,usdjpy){
     priceStore[sym]={...quoteStore[sym]}; ensureSpec(sym); ensureSymbolOption(sym);
   }
   saveAll();
-  if(valid[currentSymbol]){priceSource='quote-board';marketAskInferred=false;}
+  if(valid[currentSymbol]){priceSource='quote-board';marketAskInferred=false;mediaPriceFresh=true;}
   if(Number.isFinite(usdjpy)&&usdjpy>0)$('usdjpy').value=usdjpy.toFixed(3);
   switchSymbol(false);
   return {accepted:Object.keys(valid),rejected:checked.rejected};
@@ -649,9 +649,32 @@ function parseOCR(text){
 
   return {positions,pending,brokerPnl,rawText:raw};
 }
+function isControlCenterFrameText(text){
+  const raw=String(text||'');
+  if(!raw.trim())return false;
+  // iOS Control Center signatures. These must never contribute OCR data because
+  // its large media/network controls can be mistaken for MT5 prices or labels.
+  const hits=[
+    /再生停止中|再生中|再生|一時停止/.test(raw),
+    /集中モード/.test(raw),
+    /画面収録|スクリーン収録|画面録画/.test(raw),
+    /AirPlay|AirDrop/.test(raw),
+    /機内モード/.test(raw),
+    /明るさ|音量/.test(raw),
+    /Wi[-]*Fi|Bluetooth/.test(raw),
+    /懐中電灯|計算機|カメラ/.test(raw)
+  ].filter(Boolean).length;
+  // Two independent Control Center signatures are enough to quarantine a frame.
+  return hits>=2;
+}
+
+function filterUsableOCRResults(results){
+  return (results||[]).filter(r=>!isControlCenterFrameText(r?.data?.text||r?.text||''));
+}
+
 function mergeParsedResults(results){
   const out={positions:[],pending:[],brokerPnl:null,rawText:''};
-  for(const r of (results||[])){
+  for(const r of filterUsableOCRResults(results)){
     const text=r?.data?.text||r?.text||'';
     out.rawText += (out.rawText?'\n':'') + text;
     const p=parseOCR(text);
@@ -771,6 +794,12 @@ function extractTradeScreenPriceFromResults(results,symbol=currentSymbol){
   return recent[recent.length-1].price;
 }
 
+function currentMediaPriceSnapshot(){
+  if(priceSource==='quote-board'&&mediaPriceFresh&&Number.isFinite(goldBid)&&Number.isFinite(goldAsk))return {bid:goldBid,ask:goldAsk,source:'quote-board'};
+  if(priceSource==='trade-screen-inferred'&&mediaPriceFresh&&Number.isFinite(goldBid)&&Number.isFinite(goldAsk))return {bid:goldBid,ask:goldAsk,source:'trade-screen-inferred'};
+  return null;
+}
+
 function applyTradeScreenPriceFallback(parsed,explicitPrice=null){
   const inferred=Number.isFinite(explicitPrice)?explicitPrice:extractTradeScreenPrice(parsed?.rawText||'',currentSymbol);
   if(!Number.isFinite(inferred)||inferred<=0)return null;
@@ -783,6 +812,7 @@ function applyTradeScreenPriceFallback(parsed,explicitPrice=null){
   goldBid=inferred;
   goldAsk=inferred+spread;
   priceSource='trade-screen-inferred';
+  mediaPriceFresh=true;
   // Even when an older spread is available, the current Ask itself was not
   // observed on this trade screen. Keep the confidence state conservative.
   marketAskInferred=true;
@@ -901,7 +931,7 @@ function makeTradeFocusCanvas(source){
 
 function aggregateVideoQuotes(results){
   const by={};
-  for(const r of (results||[])){
+  for(const r of filterUsableOCRResults(results)){
     const q1=extractQuotesFromWords(r.data?.words||[]);
     const q2=extractAllQuotesText(r.data?.text||'');
     const merged={...q2,...q1};
@@ -969,6 +999,7 @@ $('mediaFile').addEventListener('change',async e=>{
     }
     $('preview').src=URL.createObjectURL(f); $('preview').style.display='block';
   }
+  mediaPriceFresh=false;mediaUsdJpyFresh=false;
   $('ocrStatus').textContent=`XM画面${isVideo?'動画':'スクショ'}を自動判定中…`;
   $('rateStatus').textContent='気配値・注文・ポジションを解析しています…';
   try{
@@ -977,6 +1008,9 @@ $('mediaFile').addEventListener('change',async e=>{
     let results=await recognizeFileFrames(T,f,'price',m=>{
       if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面${isVideo?'動画':''}OCR中… ${Math.round((m.progress||0)*100)}%`;
     });
+    const rawResultCount=results.length;
+    results=filterUsableOCRResults(results);
+    if(isVideo && rawResultCount && !results.length) throw new Error('VIDEO_CONTROL_CENTER_ONLY');
     let parsed=mergeParsedResults(results);
     // Trade/position screens expose the live price as 「entry → current」.
     // Recover it before quote validation so an order-only screenshot is not
@@ -995,9 +1029,10 @@ $('mediaFile').addEventListener('change',async e=>{
     // 通常ケースではOCR回数を増やさず、動画も軽くする。
     if(!parsed.pending.length||!parsed.positions.length){
       try{
-        const fallback=await recognizeFileFrames(T,f,'order',m=>{
+        let fallback=await recognizeFileFrames(T,f,'order',m=>{
           if(m.status==='recognizing text')$('ocrStatus').textContent=`注文${isVideo?'動画':''}専用解析中… ${Math.round((m.progress||0)*100)}%`;
         });
+        fallback=filterUsableOCRResults(fallback);
         const fp=mergeParsedResults(fallback);
         parsed={
           pending:parsed.pending.length?parsed.pending:fp.pending,
@@ -1017,12 +1052,12 @@ $('mediaFile').addEventListener('change',async e=>{
       // 安定性検証を通過したaggregateVideoQuotesだけを本番価格として採用する。
       // 生OCRの未検証価格をそのままfallback採用すると、一瞬の異常スプレッドを
       // DEAD LINE計算へ流し込む可能性があるため、ここでは意図的に採用しない。
-      const usd=quotes['USDJPY#']; if(usd?.bid)usdjpy=+usd.bid;
+      const usd=quotes['USDJPY#']; if(usd?.bid){usdjpy=+usd.bid;mediaUsdJpyFresh=true;}
     }else{
       for(const r of results){
         const q=extractQuotesFromWords(r.data?.words||{}); const tq=extractAllQuotesText(r.data?.text||'');
         for(const [sym,val] of Object.entries(tq))if(!q[sym])q[sym]=val;
-        const u=getDetectedUsdJpy(q,r.data?.text||''); if(u)usdjpy=u;
+        const u=getDetectedUsdJpy(q,r.data?.text||''); if(u){usdjpy=u;mediaUsdJpyFresh=true;}
         if(Object.keys(q).length)quotes={...quotes,...q};
       }
     }
@@ -1055,13 +1090,15 @@ $('mediaFile').addEventListener('change',async e=>{
       return;
     }
     // 安全停止は「気配値の銘柄数不足」ではなく、現在銘柄に必要な価格/換算レート不足だけ。
-    const requiredQuote=quoteStore[currentSymbol]||priceStore[currentSymbol];
-    const requiredBid=requiredQuote&&Number.isFinite(+requiredQuote.bid)?+requiredQuote.bid:goldBid;
-    const requiredAsk=requiredQuote&&Number.isFinite(+requiredQuote.ask)?+requiredQuote.ask:goldAsk;
-    const requiredRate=quoteRateFor(cfg());
+    const mediaQuote=currentMediaPriceSnapshot();
+    const requiredBid=mediaQuote?mediaQuote.bid:null;
+    const requiredAsk=mediaQuote?mediaQuote.ask:null;
+    const savedUsd=quoteStore['USDJPY#']||priceStore['USDJPY#'];
+    const savedUsdFresh=!!(savedUsd?.updatedAt && (Date.now()-Date.parse(savedUsd.updatedAt)<=5*60*1000));
+    const requiredRate=(cfg().quote==='JPY')?1:(cfg().quote==='USD'?(mediaUsdJpyFresh?Number($('usdjpy').value):savedUsdFresh?Number(savedUsd.bid):NaN):quoteRateFor(cfg()));
     if(!(requiredBid>0 && requiredAsk>0 && requiredRate>0)){
       $('specWarning').style.display='block';
-      $('specWarning').textContent=`⚠ ${currentSymbol} の計算に必要な価格またはJPY換算レートが未確定です。気配値画面を再読み込みしてください。`;
+      $('specWarning').textContent=`⚠ ${currentSymbol} の今回の価格またはUSD/JPY換算レートが未確定です。古い価格は自動で穴埋めせず、必要な気配値を読み込んでください。`;
       $('result').textContent='—';$('distance').textContent='必要価格未確定のため計算停止';
       $('rateStatus').innerHTML='<span class="err">✕ 計算に必要な価格が未確定です。</span>';
       return;
@@ -1125,7 +1162,7 @@ $('mediaFile').addEventListener('change',async e=>{
     $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">気配値 <b>${quoteCount}銘柄</b></div><div class="item">解析フレーム <b>${frameCount}${isVideo?` / 予定${expectedFrameCount}`:''}</b></div><div class="item">現在ポジション <b>${positions.length}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${deadlineReady?'<span class="ok">✓ DEAD LINE計算可能</span>':'<span class="warn">⚠ DEAD LINE計算に必要なデータが未確定</span>'}</div></div></div>${orderUpdateNote}`;
     $('rateStatus').innerHTML=Object.keys(quotes).length
       ? `<span class="ok">✓ 気配値 ${quoteCount}銘柄を更新。動画は安定スプレッド帯から採用。</span>`
-      : `<span class="small">気配値は今回の媒体から検出されませんでした。保存済み価格を維持しています。</span>`;
+      : `<span class="warn">今回の媒体から現在のBid/Askを確定できませんでした。古い価格は計算に使用しません。</span>`;
     renderPositions(); renderOrders(); calc();
   }catch(err){
     console.error(err);
@@ -1135,7 +1172,9 @@ $('mediaFile').addEventListener('change',async e=>{
         ? '<span class="warn">⚠ デラポジ自身の画面を検出しました。MT5の気配値・注文/ポジション画面を読み込んでください。</span>'
         : err.message==='OCR_WORKER_UNAVAILABLE'
         ? '<span class="err">✕ OCR Workerを起動できませんでした。CDN/通信を確認してください。</span>'
-        : err.message.startsWith('VIDEO_')
+        : err.message==='VIDEO_CONTROL_CENTER_ONLY'
+          ? '<span class="warn">⚠ 動画内でiPhoneのコントロールセンターだけが検出されました。MT5画面が表示されている動画を読み込んでください。</span>'
+          : err.message.startsWith('VIDEO_')
           ? `<span class="err">✕ 動画フレーム取得に失敗しました：${String(err.message).replace(/</g,'&lt;')}</span>`
           : `<span class="warn">XM画面を解析できませんでした。原因：${String(err.message||err).replace(/</g,'&lt;')}</span>`;
     e.target.value='';
@@ -1339,7 +1378,19 @@ function runCalcSelfTest(){
     const t42x=simulateLC(50000,20,[{side:'Buy Limit',lot:.01,price:baseLc42}],t38x.positions,{contract:100,quote:'USD',base:'USD'},1000,100,4425.27,0);
     const t42=t42x.inconsistent.length===0&&t42x.added.length===0&&Math.abs(t42x.lc-baseLc42)<0.01;
     window.__testRate=savedRate42;
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t40,t41,t42];
+    // 回帰テスト43：iPhoneコントロールセンターのOCRをMT5データとして採用しない。
+    const t43=isControlCenterFrameText('再生停止中 集中モード 明るさ 音量') && !isControlCenterFrameText('GOLD# buy 0.01 4367.37 -> 4425.27');
+    // 回帰テスト44：取引画面の現在価格がある場合、古い保存Bid/Askを今回価格の代わりに使わない。
+    const sb44=goldBid,sa44=goldAsk,ps44=priceSource,mf44=mediaPriceFresh;
+    goldBid=4425.27;goldAsk=4425.27;priceSource='trade-screen-inferred';mediaPriceFresh=true;
+    const req44=priceSource==='trade-screen-inferred'&&mediaPriceFresh?goldBid:null;
+    const t44=req44===4425.27;
+    goldBid=sb44;goldAsk=sa44;priceSource=ps44;mediaPriceFresh=mf44;
+    // 回帰テスト45：同一フレームのBid/Askは必ず同じサンプルとして保持される。
+    const sb45=goldBid,sa45=goldAsk,ps45=priceSource,mf45=mediaPriceFresh;goldBid=4424.50;goldAsk=4424.75;priceSource='quote-board';mediaPriceFresh=true;const snap45=currentMediaPriceSnapshot();const t45=!!snap45&&snap45.bid===4424.50&&snap45.ask===4424.75;goldBid=sb45;goldAsk=sa45;priceSource=ps45;mediaPriceFresh=mf45;
+    // 回帰テスト46：5分を超えた保存USD/JPYは現在動画の換算レートとして使用しない。
+    const t46=(()=>{const old={updatedAt:new Date(Date.now()-6*60*1000).toISOString(),bid:159,ask:159.01};return !(old.updatedAt&&(Date.now()-Date.parse(old.updatedAt)<=5*60*1000));})();
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t40,t41,t42,t43,t44,t45,t46];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;
@@ -1404,7 +1455,7 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v37-20260818';
+window.__APP_BUILD__='v38-20260818';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const e=$('ocrStatus'); if(e)e.innerHTML='<span class="err">✕ アプリ内部APIの初期化に失敗しました。古いページを実行している可能性があります。</span>';

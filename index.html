@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v37-20260818">
+<meta name="build-id" content="v41-20260819">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v37</title>
+<title>DeadLine positioning｜デラポジ Pro v41</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,7 +65,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v37</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v41</span></h1>
 <div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v39</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v41</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -199,7 +199,7 @@ async function createOCRWorker(T,logger){
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
 // Expose the small public API explicitly on window so inline handlers and internal calls
 // resolve identically after a cold load or a cached-page refresh.
-window.__APP_BUILD__='v39-20260818';
+window.__APP_BUILD__='v41-20260819';
 const $=id=>document.getElementById(id);
 const PRICE_KEY='xm_saved_prices_multi_v6', ORDER_KEY='xm_orders_by_symbol_v6', POSITION_KEY='xm_positions_by_symbol_v3', SPEC_KEY='xm_specs_v6', QUOTE_KEY='xm_quote_snapshot_all_v3';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
@@ -453,6 +453,21 @@ function extractAllQuotesText(text){
     // Common Tesseract character confusion seen on MT5's blue BTC row.
     if(String(sm[1]).toUpperCase()==='BICUSD#')sym='BTCUSD#';
     if(!sym)continue;
+
+    // Some MT5 OCR frames put the live Bid/Ask pair on the SAME line as the
+    // symbol. Accept that layout, but never interpret a trade/order row as a
+    // quote row (buy/sell, limit, or entry->current patterns are excluded).
+    const sameLine=lines[i];
+    if(!/\b(?:buy|sell)\b|\b(?:limit|stop)\b|(?:->|→|—|–)/i.test(sameLine)){
+      const tail=sameLine.slice((sm.index||0)+sm[0].length);
+      const sameNums=(tail.match(/\d[\d,]*(?:\.\d+)?/g)||[]).map(normalizeOcrNumber).filter(looksLikePrice);
+      if(sameNums.length>=2){
+        const bid=Math.min(sameNums[0],sameNums[1]),ask=Math.max(sameNums[0],sameNums[1]);
+        if(ask>bid && (ask-bid)/bid<0.20)out[sym]={bid,ask};
+        if(out[sym])continue;
+      }
+    }
+
     const nums=[];
     for(let j=i+1;j<Math.min(lines.length,i+8);j++){
       if(symbolRe.test(lines[j]))break;
@@ -461,6 +476,7 @@ function extractAllQuotesText(text){
       // prices immediately after the symbol are the live Bid/Ask pair.
       if(/^L\s*[:：]|^H\s*[:：]/i.test(line))continue;
       if(/\d{1,2}:\d{2}:\d{2}/.test(line))continue;
+      if(/\b(?:buy|sell)\b|\b(?:limit|stop)\b|(?:->|→|—|–)/i.test(line))continue;
       const vals=(line.match(/\d[\d,]*(?:\.\d+)?/g)||[]).map(normalizeOcrNumber).filter(looksLikePrice);
       for(const v of vals){
         if(nums.length<2)nums.push(v);
@@ -1071,9 +1087,9 @@ $('mediaFile').addEventListener('change',async e=>{
     }
 
     // 気配値は動画なら安定スプレッド帯から採用。スクショなら通常のBid/Ask検証。
-    let quotes={}, usdjpy=null;
+    let quotes={}, usdjpy=null, quoteMeta={};
     if(isVideo){
-      quotes=aggregateVideoQuotes(results); const quoteMeta=quotes.__meta||{};
+      quotes=aggregateVideoQuotes(results); quoteMeta=quotes.__meta||{};
       // 安定性検証を通過したaggregateVideoQuotesだけを本番価格として採用する。
       // 生OCRの未検証価格をそのままfallback採用すると、一瞬の異常スプレッドを
       // DEAD LINE計算へ流し込む可能性があるため、ここでは意図的に採用しない。
@@ -1490,8 +1506,8 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v39-20260818';
-window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function'};
+window.__APP_BUILD__='v41-20260819';
+window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:true};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const e=$('ocrStatus'); if(e)e.innerHTML='<span class="err">✕ アプリ内部APIの初期化に失敗しました。古いページを実行している可能性があります。</span>';
   throw new Error('APP_API_INIT_FAILED');

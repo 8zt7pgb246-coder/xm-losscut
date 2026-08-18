@@ -66,7 +66,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <body>
 <div class="app">
 <h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v43</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v43</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v44</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v43</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v44</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -644,7 +644,11 @@ function parseOCR(text){
     const lot=lotMatch?Number(lotMatch[1]):null;
     if(!Number.isFinite(lot)||lot<=0||lot>1000) continue;
 
-    const arrow=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|to)\s*(\d[\d,.]*\.\d+)/i);
+    const arrow=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|→|to)\s*(\d[\d,.]*\.\d+)/i);
+    // MT5の約定済みポジションは「約定価格 → 現在価格」の行を伴う。
+    // 口座残高・証拠金率・P/Lなどの数値を約定価格として誤認しないため、
+    // ポジションはこの矢印付きパターンを必須条件にする。
+    if(!isPending && !arrow) continue;
     const nums=(chunk.match(/\d[\d,.]*\.\d+/g)||[])
       .map(normalizeOcrNumber).filter(Number.isFinite)
       .filter(n=>n>0);
@@ -663,7 +667,7 @@ function parseOCR(text){
     if(!Number.isFinite(price)||price<=0) continue;
     const obj={symbol:sym,side:sideRaw.replace(/\s+/g,' '),lot:+lot.toFixed(4),price};
     if(isPending) pending.push(obj);
-    else positions.push({symbol:sym,side:/^buy/i.test(sideRaw)?'Buy':'Sell',lot:+lot.toFixed(4),price});
+    else positions.push({symbol:sym,side:/^buy/i.test(sideRaw)?'Buy':'Sell',lot:+lot.toFixed(4),price,positionPattern:'entry-current-arrow'});
   }
 
   // Compact/split-line fallback: only run when a 3-line primary pattern
@@ -676,6 +680,8 @@ function parseOCR(text){
     const sym=symbolFromText(sm[1]); if(!sym) continue;
     const sideM=chunk.match(/\b(buy\s*limit|sell\s*limit|buy|sell)\b/i); if(!sideM) continue;
     const sideRaw=sideM[1].replace(/\s+/g,' ');
+    // 約定済みポジションのフォールバックでも、entry → current の矢印を必須にする。
+    if(!/limit$/i.test(sideRaw) && !/(?:->|→|to)/i.test(chunk)) continue;
     let lm=chunk.match(/(?:buy\s*limit|sell\s*limit|buy|sell)\s+(\d+(?:\.\d+)?)/i);
     if(!lm) lm=chunk.match(/\b(\d+(?:\.\d+)?)\s*\/\s*0\b/i);
     const lot=lm?Number(lm[1]):null;
@@ -683,7 +689,7 @@ function parseOCR(text){
     const nums=(chunk.match(/\d[\d,.]*\.\d+/g)||[]).map(normalizeOcrNumber).filter(Number.isFinite);
     const price=nums.find(n=>Math.abs(n-lot)>1e-8&&n>0);
     if(!Number.isFinite(price)||price<=0) continue;
-    const obj={symbol:sym,side:/limit$/i.test(sideRaw)?sideRaw:(/^buy/i.test(sideRaw)?'Buy':'Sell'),lot:+lot.toFixed(4),price};
+    const obj={symbol:sym,side:/limit$/i.test(sideRaw)?sideRaw:(/^buy/i.test(sideRaw)?'Buy':'Sell'),lot:+lot.toFixed(4),price,positionPattern:/limit$/i.test(sideRaw)?'pending-price':'entry-current-arrow'};
     const arr=/limit$/i.test(sideRaw)?pending:positions;
     if(!arr.some(o=>String(o.side).toLowerCase()===String(obj.side).toLowerCase()&&Math.abs(o.price-obj.price)<1e-5&&Math.abs(o.lot-obj.lot)<1e-6))arr.push(obj);
   }
@@ -788,6 +794,9 @@ function sanitizeRecognizedPositions(arr){
     const side=/^buy$/i.test(String(o.side))?'Buy':/^sell$/i.test(String(o.side))?'Sell':null;
     const lot=Number(o.lot), price=Number(o.price);
     if(!side||!Number.isFinite(lot)||lot<=0||lot>1000||!Number.isFinite(price)||price<=0)continue;
+    // OCRで新規確定するポジションはMT5の「約定価格 → 現在価格」
+    // パターンを必須にし、証拠金率や残高等の数値をentry priceにしない。
+    if(o.positionPattern && o.positionPattern!=='entry-current-arrow')continue;
     // Never accept a P/L number as an entry price. If the trade screen itself
     // supplied the current market price, use that as the sanity anchor even
     // when no separate quote-board screen was uploaded.
@@ -1470,7 +1479,11 @@ function runCalcSelfTest(){
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
     const t50=window.__APP_BUILD__==='v43-20260819'&&/v43/.test($('buildMarker')?.textContent||'');
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v43-20260819'&&/build v43/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v43-20260819'&&/build v44/.test($('buildMarker')?.textContent||'');
+    // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
+    const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
+    // 回帰テスト54：矢印なしの「Buy 0.01 + 数値」は約定済みポジションにしない。
+    const t56=parseOCR('GOLD# buy 0.01\n2911.06\n').positions.length===0;
     // 回帰テスト52：内部回帰NG時はDEAD LINE計算を継続しない安全側仕様。
     const t52=typeof calc==='function'&&/内部検証NGのためDEAD LINE計算を停止/.test(calc.toString());
     // 回帰テスト53：動画フレームはMT5アンカーのないフレームを有効扱いしない。

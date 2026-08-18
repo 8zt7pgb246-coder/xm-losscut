@@ -95,8 +95,10 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div class="row"><span id="bidLabel">XM Bid</span><b id="goldBid">—</b></div>
 <div class="row"><span id="askLabel">XM Ask</span><b id="goldAsk">—</b></div>
 <div class="row"><span>XM Spread</span><b id="goldSpread">—</b></div>
-<div class="row"><span>平均約定価格</span><b id="avg">—</b></div>
-<div class="row"><span>合計Lot</span><b id="lots">—</b></div>
+<div class="row"><span>現在平均約定価格</span><b id="avg">—</b></div>
+<div class="row"><span>現在保有Lot</span><b id="lots">—</b></div>
+<div class="row"><span>LC時想定平均価格</span><b id="lcAvg">—</b></div>
+<div class="row"><span>LC時想定Lot</span><b id="lcLots">—</b></div>
 <div class="row"><span>現在含み損益 合計</span><b id="currentPnl">—</b></div>
 <div class="row"><span>LC時想定含み損 合計</span><b id="lcLoss">—</b></div>
 <div class="row"><span>合計数量</span><b id="qty">—</b></div>
@@ -273,14 +275,14 @@ function calc(){
   const qr=quoteRateFor(c);
   renderDataLock();
   if(!positionDataValid){
-    $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';
+    $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcAvg').textContent='—';$('lcLots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';
     $('distance').textContent='ポジション認識未確定のため計算停止';
     $('count').textContent=`${pending.length}件 / LC時想定追加約定 —`;
     renderOrderStatus([],pending,null);
     return;
   }
   if((!pending.length&&!positions.length)||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!baseRateFor(c)||!lev||!contract){
-    $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=(pending.length||positions.length)?'換算レートまたは気配値が不足しています':'注文・ポジションを読み込んでください';renderOrderStatus([],pending,null);return}
+    $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcAvg').textContent='—';$('lcLots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=(pending.length||positions.length)?'換算レートまたは気配値が不足しています':'注文・ポジションを読み込んでください';renderOrderStatus([],pending,null);return}
   const modelCurrentPnl=positions.reduce((s,o)=>s+(lossAtLCJPY(o,goldBid,c)||0),0);
   const brokerRaw=$('brokerPnl').value.trim(); const brokerPnl=brokerRaw===''?NaN:Number(brokerRaw); const hasBrokerPnl=Number.isFinite(brokerPnl);
   // SAFETY: broker OCR is verification-only. Never feed an OCR P/L number back into the LC equation.
@@ -294,9 +296,11 @@ function calc(){
   }else $('pnlAdjustStatus').textContent='MT5実測なし / 自動補正なし';
   const sim=simulateLC(bal,stop,pending,positions,c,lev,contract,goldAsk,0);const filled=sim.filled,lc=sim.lc,added=sim.added;
   if(sim.inconsistent?.length){$('result').textContent='—';$('distance').textContent='⚠ 現在Askが未約定Buy Limit価格を下回っています。スクショの時系列を再確認してください。';$('currentPnl').textContent=formatJPYLoss(currentPnl);$('lcLoss').textContent='—';$('lcTotalPositions').textContent='—';$('count').textContent=`${pending.length}件 / LC時想定追加約定 —`;renderOrderStatus([],pending,null);return;}
+  const currentLots=positions.reduce((s,o)=>s+Number(o.lot),0),currentQty=currentLots*contract,currentEntry=positions.reduce((s,o)=>s+Number(o.price)*Number(o.lot)*contract,0);
   const lots=filled.reduce((s,o)=>s+o.lot,0),qty=lots*contract,entry=filled.reduce((s,o)=>s+o.price*o.lot*contract,0);
   const totalLcLoss=lc!==null?filled.reduce((s,o)=>s+(lossAtLCJPY(o,lc,c)||0),0):null;
-  $('lots').textContent=lots.toFixed(2);$('currentPnl').textContent=Number.isFinite(currentPnl)?formatJPYLoss(currentPnl):'—';$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=qty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('lcTotalPositions').textContent=filled.length+'件';$('avg').textContent=qty?(entry/qty).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid)))):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
+  const dp=Math.min(5,Math.max(2,decimalPlacesFor(goldBid)));
+  $('lots').textContent=currentLots.toFixed(2);$('currentPnl').textContent=Number.isFinite(currentPnl)?formatJPYLoss(currentPnl):'—';$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=currentQty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('lcTotalPositions').textContent=filled.length+'件';$('avg').textContent=currentQty?(currentEntry/currentQty).toFixed(dp):'—';$('lcLots').textContent=lots.toFixed(2);$('lcAvg').textContent=qty?(entry/qty).toFixed(dp):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
   if(lc!==null){$('result').textContent=lc.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid))));const d=goldBid-lc;$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → LC ${formatPrice(lc)} / 現在${positions.length}ポジション・LC時想定追加約定 ${added.length}/${pending.length}件`}
   else{$('result').textContent='—';$('distance').textContent='銘柄仕様・換算レート・注文を確認してください'}
   $('count').textContent=`${pending.length}件 / LC時想定追加約定 ${added.length}件`;renderOrderStatus(added,pending,lc);renderPositions(lc,c)

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v35</title>
+<title>DeadLine positioning｜デラポジ Pro v36</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v34 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
+/* v36 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -62,7 +62,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v34</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v36</span></h1>
 <div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
@@ -146,31 +146,47 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </div>
 
 <script>
-// OCR engine: primary CDN + fallback CDN. The app itself remains usable if OCR is temporarily unavailable.
+// OCR engine: iPhone/GitHub Pages向けの堅牢ロード。外部CDNを複数用意し、Worker/Core/言語データのどこで失敗したかを切り分ける。
 window.__ocrReady = false;
 window.__ocrPromise = null;
-function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc)})}
+function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.crossOrigin='anonymous';sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function ensureOCR(){
   if(window.Tesseract){window.__ocrReady=true;return window.Tesseract}
   if(window.__ocrPromise)return window.__ocrPromise;
   window.__ocrPromise=(async()=>{
-    try{await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js')}catch(e){
-      try{await loadScript('https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js')}catch(e2){throw new Error('OCR_ENGINE_UNAVAILABLE')}
-    }
-    if(!window.Tesseract)throw new Error('OCR_ENGINE_UNAVAILABLE');
-    window.__ocrReady=true; return window.Tesseract;
+    const urls=[
+      'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js',
+      'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js',
+      'https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js'
+    ];
+    let last=null;
+    for(const u of urls){try{await loadScript(u);if(window.Tesseract){window.__ocrReady=true;return window.Tesseract}}catch(e){last=e}}
+    const err=new Error('OCR_ENGINE_UNAVAILABLE'); err.cause=last; throw err;
   })();
   return window.__ocrPromise;
 }
-function ocrWorkerOptions(logger){
+function ocrWorkerOptions(logger,variant=0){
+  const workers=[
+    'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/worker.min.js',
+    'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+    'https://unpkg.com/tesseract.js@5.1.1/dist/worker.min.js'
+  ];
+  const workerPath=workers[Math.min(variant,workers.length-1)];
   return {
     logger:logger||(()=>{}),
-    workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+    workerPath,
     corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
     langPath:'https://tessdata.projectnaptha.com/4.0.0',
-    workerBlobURL:false,
-    cacheMethod:'write'
+    workerBlobURL:false
   };
+}
+async function createOCRWorker(T,logger){
+  let last=null;
+  for(let i=0;i<3;i++){
+    try{return await T.createWorker('eng',1,ocrWorkerOptions(logger,i))}
+    catch(e){last=e}
+  }
+  const err=new Error('OCR_WORKER_UNAVAILABLE'); err.cause=last; throw err;
 }
 </script>
 <script>
@@ -769,38 +785,46 @@ async function imageToCanvasSource(input){
 }
 async function videoFrameSources(file,maxFrames=16){
   const url=URL.createObjectURL(file);
+  const v=document.createElement('video');
+  v.preload='auto'; v.muted=true; v.defaultMuted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline',''); v.autoplay=true; v.src=url;
+  v.style.cssText='position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:-10px;top:-10px;';
+  document.body.appendChild(v);
+  const waitEvent=(name,timeout=12000)=>new Promise((res,rej)=>{let done=false;const t=setTimeout(()=>{if(done)return;done=true;cleanup();rej(new Error('VIDEO_'+name.toUpperCase()+'_TIMEOUT'))},timeout);const fn=()=>{if(done)return;done=true;clearTimeout(t);cleanup();res()};const cleanup=()=>v.removeEventListener(name,fn);v.addEventListener(name,fn,{once:true})});
   try{
-    const v=document.createElement('video');
-    v.preload='metadata'; v.muted=true; v.playsInline=true; v.src=url;
-    await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=rej});
-    const dur=Number(v.duration);
+    const meta=v.readyState>=1?v:await (async()=>{await waitEvent('loadedmetadata');return v})();
+    const dur=Number(meta.duration);
     if(!Number.isFinite(dur)||dur<=0)throw new Error('VIDEO_DURATION_INVALID');
-    // 動画は注文行の取りこぼしを減らすため、8〜16フレームを0.8秒前後の間隔で採取する。
-    // 先頭/末尾の画面切替中フレームは避け、各フレームは同一workerでOCRする。
+    // 再生ボタンは不要。muted + playsinline で内部再生を自動開始し、seek→canvas化する。
+    try{await v.play()}catch(e){/* iOSの自動再生制限時もseek経路を継続 */}
+    if(v.readyState<2){try{await waitEvent('loadeddata',10000)}catch(e){}}
     const count=Math.min(maxFrames,Math.max(12,Math.ceil(dur/0.55)));
     const edge=Math.min(0.20,Math.max(0.05,dur*0.02));
     const span=Math.max(0.1,dur-edge*2);
-    const times=[];
-    for(let i=0;i<count;i++) times.push(edge + (span*(i+0.5))/count);
+    const times=[]; for(let i=0;i<count;i++)times.push(edge+(span*(i+0.5))/count);
     const frames=[];
     for(const t of times){
-      await new Promise((res,rej)=>{v.onseeked=res;v.onerror=rej;v.currentTime=t});
+      await new Promise((res,rej)=>{
+        let done=false; const cleanup=()=>{v.removeEventListener('seeked',ok);v.removeEventListener('error',bad);clearTimeout(timer)};
+        const ok=()=>{if(done)return;done=true;cleanup();res()};
+        const bad=()=>{if(done)return;done=true;cleanup();rej(new Error('VIDEO_SEEK_FAILED'))};
+        const timer=setTimeout(()=>{if(done)return;done=true;cleanup();rej(new Error('VIDEO_SEEK_TIMEOUT'))},8000);
+        v.addEventListener('seeked',ok,{once:true}); v.addEventListener('error',bad,{once:true});
+        try{v.currentTime=Math.min(Math.max(0,t),Math.max(0,dur-0.01))}catch(e){bad()}
+      });
       const scale=Math.min(2,2200/v.videoWidth);
       const c=document.createElement('canvas');
       c.width=Math.max(1,Math.floor(v.videoWidth*scale)); c.height=Math.max(1,Math.floor(v.videoHeight*scale));
       c.getContext('2d',{willReadFrequently:true}).drawImage(v,0,0,c.width,c.height);
       frames.push({canvas:c,time:t});
     }
-    // Keep the planned count with the extracted frames so the UI reports the
-    // same value the sampler actually used. Do not recompute it later from a
-    // possibly-unavailable file duration.
-    frames.expectedFrameCount=count;
-    frames.videoDuration=dur;
-    return frames;
-  }finally{URL.revokeObjectURL(url)}
+    frames.expectedFrameCount=count; frames.videoDuration=dur; return frames;
+  }finally{
+    try{v.pause()}catch(e){}
+    v.remove(); URL.revokeObjectURL(url);
+  }
 }
 async function recognizeOne(TesseractNS,source,psm,logger){
-  const worker=await TesseractNS.createWorker('eng',1,ocrWorkerOptions(logger));
+  const worker=await createOCRWorker(TesseractNS,logger);
   try{
     await worker.setParameters({tessedit_pageseg_mode:String(psm||6),preserve_interword_spaces:'1'});
     const r=await worker.recognize(source);
@@ -812,9 +836,9 @@ async function recognizeFileFrames(T,file,mode,onProgress){
   const sources=isVideo?await videoFrameSources(file,16):[{canvas:await imageToCanvasSource(file),time:0}];
   const results=[];
   let currentFrame=0;
-  const worker=await T.createWorker('eng',1,ocrWorkerOptions(m=>{
+  const worker=await createOCRWorker(T,m=>{
     if(onProgress)onProgress({...m,frame:currentFrame,total:sources.length});
-  }));
+  });
   try{
     const psm=mode==='order'?6:11;
     await worker.setParameters({tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'});
@@ -910,10 +934,11 @@ $('mediaFile').addEventListener('change',async e=>{
   const preview=$('preview');
   if(isVideo){
     const v=document.createElement('video');
-    v.id='previewVideo'; v.controls=true; v.playsInline=true; v.muted=true;
+    v.id='previewVideo'; v.controls=false; v.autoplay=true; v.playsInline=true; v.muted=true; v.defaultMuted=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
     v.style.cssText='display:block;width:100%;max-height:520px;object-fit:contain;border-radius:12px;margin-top:10px';
     v.src=URL.createObjectURL(f);
     preview.replaceWith(v);
+    v.play().catch(()=>{});
   }else{
     const current=$('previewVideo');
     if(current){
@@ -1086,7 +1111,11 @@ $('mediaFile').addEventListener('change',async e=>{
       ? '<span class="warn">OCRエンジンを読み込めませんでした。通信を確認して再度お試しください。</span>'
       : err.message==='SELF_APP_SCREEN'
         ? '<span class="warn">⚠ デラポジ自身の画面を検出しました。MT5の気配値・注文/ポジション画面を読み込んでください。</span>'
-        : '<span class="warn">XMの気配値・注文・ポジションを認識できませんでした。画像/動画を確認してください。</span>';
+        : err.message==='OCR_WORKER_UNAVAILABLE'
+        ? '<span class="err">✕ OCR Workerを起動できませんでした。CDN/通信を確認してください。</span>'
+        : err.message.startsWith('VIDEO_')
+          ? `<span class="err">✕ 動画フレーム取得に失敗しました：${String(err.message).replace(/</g,'&lt;')}</span>`
+          : `<span class="warn">XM画面を解析できませんでした。原因：${String(err.message||err).replace(/</g,'&lt;')}</span>`;
     e.target.value='';
     calc();
   }

@@ -2,6 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<meta name="build-id" content="v37-20260818">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
 <title>DeadLine positioning｜デラポジ Pro v37</title>
 <style>
@@ -237,14 +240,25 @@ function ensureSpec(sym){if(!specStore[sym])specStore[sym]=inferSpec(sym);return
 function cfg(){return ensureSpec(currentSymbol)}
 function ensureSymbolOption(sym){if(!sym)return;const sel=$('symbol');if(![...sel.options].some(o=>o.value===sym)){const o=document.createElement('option');o.value=sym;o.textContent=ensureSpec(sym).name;sel.appendChild(o)}}
 function populateSymbols(){Object.keys(BASE_SPECS).forEach(ensureSymbolOption);Object.keys(quoteStore).forEach(ensureSymbolOption);Object.keys(specStore).forEach(ensureSymbolOption)}
-window.getOrders=function(){return orderStore[currentSymbol]||[]}
-window.getPositions=function(){return positionStore[currentSymbol]||[]}
-const getOrders=window.getOrders; const getPositions=window.getPositions
+// Public API is deliberately attached to window before any UI calculation or inline handler can run.
+// This avoids Safari's global-scope resolution differences and eliminates the previous getPositions crash.
+window.getOrders=function(){return Array.isArray(orderStore[currentSymbol])?orderStore[currentSymbol]:[]}
+window.getPositions=function(){return Array.isArray(positionStore[currentSymbol])?positionStore[currentSymbol]:[]}
 window.setOrders=function(v){
   orderStore[currentSymbol]=Array.isArray(v)?v:[];
   orderDataInvalid=false; orderImportError='';
   saveAll(); renderOrderDataLock();
 }
+window.setPositions=function(v){
+  positionStore[currentSymbol]=Array.isArray(v)?v:[];
+  saveAll();
+  positionDataValid=Array.isArray(v)&&v.length>0;
+  positionDataSource='manual';
+  positionImportError=positionDataValid?'':'現在ポジションが0件です。';
+  renderDataLock();
+}
+const getOrders=()=>window.getOrders();
+const getPositions=()=>window.getPositions();
 function invalidateOrderData(reason){
   orderDataInvalid=true;
   orderImportError=reason||'今回の注文画面を安定して認識できないため、保存済みの古い注文をDEAD LINE計算には使用しません。';
@@ -256,7 +270,6 @@ function renderOrderDataLock(){
   el.style.display='block';
   el.innerHTML='<strong>⚠ 計算停止：注文認識が未確定です。</strong><br>'+String(orderImportError)+'<br>保存済みの古い注文は今回の注文として扱いません。MT5の「オーダー」欄が十分に写った動画をもう一度読み込んでください。';
 }
-window.setPositions=function(v){positionStore[currentSymbol]=v;saveAll();positionDataValid=Array.isArray(v)&&v.length>0;positionDataSource='manual';positionImportError=positionDataValid?'':'現在ポジションが0件です。';renderDataLock()}
 function invalidatePositionData(reason){
   positionDataValid=false;positionDataSource='ocr';positionImportError=reason||'現在ポジションを確認できませんでした。';
   renderDataLock();
@@ -1390,6 +1403,15 @@ function switchPage(which){
 $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
+// Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
+window.__APP_BUILD__='v37-20260818';
+window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function'};
+if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
+  const e=$('ocrStatus'); if(e)e.innerHTML='<span class="err">✕ アプリ内部APIの初期化に失敗しました。古いページを実行している可能性があります。</span>';
+  throw new Error('APP_API_INIT_FAILED');
+}
+if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister()))).catch(()=>{});}
+if(window.caches&&caches.keys){caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});}
 setDiagnosticVisible();renderOrderDataLock();populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();renderDataLock();const __startupRegressionOK=runCalcSelfTest();if(!__startupRegressionOK)calc();
 </script>
 </body>

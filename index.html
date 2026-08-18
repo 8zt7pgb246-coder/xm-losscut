@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v45-20260819">
+<meta name="build-id" content="v46-20260819">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v45</title>
+<title>DeadLine positioning｜デラポジ Pro v46</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,8 +65,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v45</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v45</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v46</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v46</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v45</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v46</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は12〜16フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -112,6 +112,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 <div class="card"><div class="row"><b>1 pip / 1 point の変動額</b><span>0.01 lot基準</span></div><div class="row"><span id="pipLabel">現在の銘柄</span><b id="pipValue">—</b></div><div class="small" id="pipNote">—</div><div class="small" style="margin-top:6px">※「LC時想定含み損」は、推定LC価格まで到達した時点の各注文の評価損を概算したものです。実際の損益は約定・スプレッド・スワップ等で変わります。</div></div>
 
+<div class="card" id="calcBasisCard"><div class="row"><b>DEAD LINE計算根拠</b><span id="basisStatus" class="small">現在の入力状態</span></div><div id="calcBasis" class="small">現在ポジション・注文・換算レートが確定すると、DEAD LINEの根拠をここに表示します。</div></div>
 <div class="card"><div class="row"><b>現在ポジション</b><span id="positionCount">0件</span></div><div id="positions"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addPosition()">＋ ポジション追加</button><button class="secondary" onclick="resetPositions()">ポジションリセット</button></div></div>
 
 <div class="card"><div class="row"><b>認識した注文 / DEAD LINEシナリオ</b><span id="count">0件 / LC時想定追加約定 0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">注文リセット</button></div></div>
@@ -199,7 +200,7 @@ async function createOCRWorker(T,logger){
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
 // Expose the small public API explicitly on window so inline handlers and internal calls
 // resolve identically after a cold load or a cached-page refresh.
-window.__APP_BUILD__='v45-20260819';
+window.__APP_BUILD__='v46-20260819';
 const $=id=>document.getElementById(id);
 const PRICE_KEY='xm_saved_prices_multi_v6', ORDER_KEY='xm_orders_by_symbol_v6', POSITION_KEY='xm_positions_by_symbol_v3', SPEC_KEY='xm_specs_v6', QUOTE_KEY='xm_quote_snapshot_all_v3';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
@@ -340,6 +341,27 @@ window.__regressionOK=null;
 function diagnosticsEnabled(){return /(?:^|\?)debug=1(?:&|$)/.test(location.search)||localStorage.getItem('delapoji_debug')==='1'}
 function setDiagnosticVisible(){const p=$('diagnosticPanel');if(p)p.style.display=diagnosticsEnabled()?'block':'none'}
 
+function renderCalcBasis(currentPositions,pending,filled,lc,c){
+  const el=$('calcBasis'), st=$('basisStatus'); if(!el||!st)return;
+  const pos=currentPositions.map(o=>`${String(o.side).toUpperCase()} ${Number(o.lot).toFixed(2)} @ ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}`).join(' / ')||'なし';
+  const pend=pending.map(o=>`${String(o.side).toUpperCase()} ${Number(o.lot).toFixed(2)} @ ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}`).join(' / ')||'なし';
+  const fill=filled.map(o=>`${String(o.side).toUpperCase()} ${Number(o.lot).toFixed(2)} @ ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}`).join(' / ')||'なし';
+  let prev=null; try{prev=JSON.parse(sessionStorage.getItem('delapoji_last_calc_v46')||'null')}catch(e){}
+  const current={symbol:currentSymbol,positions:currentPositions.map(o=>[String(o.side),Number(o.lot),Number(o.price)]),pending:pending.map(o=>[String(o.side),Number(o.lot),Number(o.price)]),bid:Number(goldBid),ask:Number(goldAsk),rate:Number($('usdjpy').value||0),lc:lc===null?null:Number(lc)};
+  let delta='今回がこのセッションの最初の確定計算です。';
+  if(prev&&prev.symbol===current.symbol){
+    const pdelta=current.positions.length-prev.positions.length, odelta=current.pending.length-prev.pending.length;
+    const changes=[];
+    if(pdelta)changes.push(`現在ポジション ${pdelta>0?'+':''}${pdelta}件`);
+    if(odelta)changes.push(`注文 ${odelta>0?'+':''}${odelta}件`);
+    if(Number.isFinite(prev.lc)&&Number.isFinite(current.lc)){const d=current.lc-prev.lc;if(Math.abs(d)>1e-8)changes.push(`DEAD LINE ${d>0?'+':''}${d.toFixed(2)}`)}
+    delta=changes.length?`前回確定計算との差：${changes.join(' / ')}`:'前回確定計算から入力構成の変更はありません。';
+  }
+  st.textContent=`現在 ${currentPositions.length}ポジション / 注文 ${pending.length}件`;
+  el.innerHTML=`<div><b>現在ポジション：</b>${pos}</div><div style="margin-top:4px"><b>未約定注文：</b>${pend}</div><div style="margin-top:4px"><b>LC時に成立する想定：</b>${fill}</div><div style="margin-top:4px"><b>現在Bid / Ask：</b>${Number.isFinite(goldBid)?formatPrice(goldBid):'—'} / ${Number.isFinite(goldAsk)?formatPrice(goldAsk):'—'}　<b>USD/JPY：</b>${Number($('usdjpy').value||0).toFixed(3)}</div><div style="margin-top:6px"><b>変動理由：</b>${delta}</div>`;
+  try{sessionStorage.setItem('delapoji_last_calc_v46',JSON.stringify(current))}catch(e){}
+}
+
 function calc(){
   // SAFETY: regression failure is a development/build integrity failure.
   // Never present a calculated DEAD LINE when the app's own safety tests fail.
@@ -383,7 +405,7 @@ function calc(){
     const tolerance=Math.max(300,Math.abs(modelCurrentPnl)*0.25);
     $('pnlAdjustStatus').textContent=`自動補正なし / MT5 OCR ${formatJPYLoss(brokerPnl)} / モデル ${formatJPYLoss(modelCurrentPnl)}${Math.abs(diff)>tolerance?' / ⚠ 差異あり':''}`;
   }else $('pnlAdjustStatus').textContent='MT5実測なし / 自動補正なし';
-  const sim=simulateLC(bal,stop,pending,positions,c,lev,contract,goldAsk,0);const filled=sim.filled,lc=sim.lc,added=sim.added;
+  const sim=simulateLC(bal,stop,pending,positions,c,lev,contract,goldAsk,0);const filled=sim.filled,lc=sim.lc,added=sim.added; renderCalcBasis(positions,pending,filled,lc,c);
   if(sim.inconsistent?.length){$('result').textContent='—';$('distance').textContent='⚠ 現在Askが未約定Buy Limit価格を下回っています。スクショの時系列を再確認してください。';$('currentPnl').textContent=formatJPYLoss(currentPnl);$('lcLoss').textContent='—';$('lcTotalPositions').textContent='—';$('count').textContent=`${pending.length}件 / LC時想定追加約定 —`;renderOrderStatus([],pending,null);return;}
   const currentLots=positions.reduce((s,o)=>s+Number(o.lot),0),currentQty=currentLots*contract,currentEntry=positions.reduce((s,o)=>s+Number(o.price)*Number(o.lot)*contract,0);
   const lots=filled.reduce((s,o)=>s+o.lot,0),qty=lots*contract,entry=filled.reduce((s,o)=>s+o.price*o.lot*contract,0);
@@ -573,7 +595,7 @@ function saveQuotes(quotes,usdjpy,meta=null){
   return {accepted:Object.keys(valid),rejected:checked.rejected};
 }
 
-/* v45 OCR/media pipeline
+/* v46 OCR/media pipeline
    - Restores the missing recognizeFileFrames / parse / merge pipeline.
    - One button accepts image or video.
    - Video uses real frames; no price averaging.
@@ -1478,9 +1500,9 @@ function runCalcSelfTest(){
     // 回帰テスト49：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t49=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t50=window.__APP_BUILD__==='v45-20260819'&&/v45/.test($('buildMarker')?.textContent||'');
+    const t50=window.__APP_BUILD__==='v46-20260819'&&/v46/.test($('buildMarker')?.textContent||'');
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v45-20260819'&&/build v45/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v46-20260819'&&/build v46/.test($('buildMarker')?.textContent||'');
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト54：矢印なしの「Buy 0.01 + 数値」は約定済みポジションにしない。
@@ -1558,7 +1580,7 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v45-20260819';
+window.__APP_BUILD__='v46-20260819';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const e=$('ocrStatus'); if(e)e.innerHTML='<span class="err">✕ アプリ内部APIの初期化に失敗しました。古いページを実行している可能性があります。</span>';

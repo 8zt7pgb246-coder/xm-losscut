@@ -166,18 +166,21 @@ async function ensureOCR(){
   return window.__ocrPromise;
 }
 function ocrWorkerOptions(logger,variant=0){
-  const workers=[
-    'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/worker.min.js',
+  // IMPORTANT: keep the Worker itself same-origin on GitHub Pages/iPhone Safari.
+  // A CDN worker is wrapped by /ocr-worker.js, avoiding cross-origin Worker startup failures.
+  const localWorker=new URL('ocr-worker.js',document.baseURI).href;
+  const cdnWorkers=[
     'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/worker.min.js',
     'https://unpkg.com/tesseract.js@5.1.1/dist/worker.min.js'
   ];
-  const workerPath=workers[Math.min(variant,workers.length-1)];
   return {
     logger:logger||(()=>{}),
-    workerPath,
+    workerPath: variant===0 ? localWorker : cdnWorkers[Math.min(variant-1,cdnWorkers.length-1)],
     corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
     langPath:'https://tessdata.projectnaptha.com/4.0.0',
-    workerBlobURL:false
+    // Local worker is same-origin. CDN fallbacks use BlobURL.
+    workerBlobURL: variant!==0
   };
 }
 async function createOCRWorker(T,logger){

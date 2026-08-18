@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v34</title>
+<title>DeadLine positioning｜デラポジ Pro v35</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -154,13 +154,23 @@ async function ensureOCR(){
   if(window.Tesseract){window.__ocrReady=true;return window.Tesseract}
   if(window.__ocrPromise)return window.__ocrPromise;
   window.__ocrPromise=(async()=>{
-    try{await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js')}catch(e){
-      try{await loadScript('https://unpkg.com/tesseract.js@5/dist/tesseract.min.js')}catch(e2){throw new Error('OCR_ENGINE_UNAVAILABLE')}
+    try{await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js')}catch(e){
+      try{await loadScript('https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js')}catch(e2){throw new Error('OCR_ENGINE_UNAVAILABLE')}
     }
     if(!window.Tesseract)throw new Error('OCR_ENGINE_UNAVAILABLE');
     window.__ocrReady=true; return window.Tesseract;
   })();
   return window.__ocrPromise;
+}
+function ocrWorkerOptions(logger){
+  return {
+    logger:logger||(()=>{}),
+    workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+    corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
+    langPath:'https://tessdata.projectnaptha.com/4.0.0',
+    workerBlobURL:false,
+    cacheMethod:'write'
+  };
 }
 </script>
 <script>
@@ -790,7 +800,7 @@ async function videoFrameSources(file,maxFrames=16){
   }finally{URL.revokeObjectURL(url)}
 }
 async function recognizeOne(TesseractNS,source,psm,logger){
-  const worker=await TesseractNS.createWorker('eng',1,{logger});
+  const worker=await TesseractNS.createWorker('eng',1,ocrWorkerOptions(logger));
   try{
     await worker.setParameters({tessedit_pageseg_mode:String(psm||6),preserve_interword_spaces:'1'});
     const r=await worker.recognize(source);
@@ -802,9 +812,9 @@ async function recognizeFileFrames(T,file,mode,onProgress){
   const sources=isVideo?await videoFrameSources(file,16):[{canvas:await imageToCanvasSource(file),time:0}];
   const results=[];
   let currentFrame=0;
-  const worker=await T.createWorker('eng',1,{logger:m=>{
+  const worker=await T.createWorker('eng',1,ocrWorkerOptions(m=>{
     if(onProgress)onProgress({...m,frame:currentFrame,total:sources.length});
-  }});
+  }));
   try{
     const psm=mode==='order'?6:11;
     await worker.setParameters({tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'});
@@ -897,7 +907,21 @@ $('mediaFile').addEventListener('change',async e=>{
   const f=e.target.files&&e.target.files[0]; if(!f)return;
   e.target.value='';
   const isVideo=f.type.startsWith('video/');
-  $('preview').src=URL.createObjectURL(f); $('preview').style.display='block';
+  const preview=$('preview');
+  if(isVideo){
+    const v=document.createElement('video');
+    v.id='previewVideo'; v.controls=true; v.playsInline=true; v.muted=true;
+    v.style.cssText='display:block;width:100%;max-height:520px;object-fit:contain;border-radius:12px;margin-top:10px';
+    v.src=URL.createObjectURL(f);
+    preview.replaceWith(v);
+  }else{
+    const current=$('previewVideo');
+    if(current){
+      const img=document.createElement('img'); img.id='preview'; img.alt='XM画面プレビュー';
+      current.replaceWith(img);
+    }
+    $('preview').src=URL.createObjectURL(f); $('preview').style.display='block';
+  }
   $('ocrStatus').textContent=`XM画面${isVideo?'動画':'スクショ'}を自動判定中…`;
   $('rateStatus').textContent='気配値・注文・ポジションを解析しています…';
   try{

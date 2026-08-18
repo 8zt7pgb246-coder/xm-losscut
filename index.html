@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v29</title>
+<title>DeadLine positioning｜デラポジ Pro v31</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・注文画面のスクショ/動画を自動判定します。動画は6〜16フレームを解析し、原則1.5秒間隔で実フレームを抽出します。解析後の実フレーム数を画面に表示し、1フレームごとにOCRワーカーを作り直さず同一ワーカーで連続解析します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外して安定した実フレームの値を採用します。気配値だけを読み込んだ場合は既存のポジション/注文を消しません。表示中の全銘柄を認識できなくても、現在選択銘柄と計算に必要な換算レートが確定していれば計算します。</div>
 </div>
 
-<div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
+<div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
 
 <div class="card"><div class="grid">
 <div><label>口座残高（JPY）</label><input id="balance" type="number" value="50000"></div>
@@ -167,7 +167,7 @@ async function ensureOCR(){
 const $=id=>document.getElementById(id);
 const PRICE_KEY='xm_saved_prices_multi_v6', ORDER_KEY='xm_orders_by_symbol_v6', POSITION_KEY='xm_positions_by_symbol_v3', SPEC_KEY='xm_specs_v6', QUOTE_KEY='xm_quote_snapshot_all_v3';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
-let positionDataValid=false;let positionDataSource='none';let positionImportError='起動直後は保存済みポジションを信頼しません。現在のMT5ポジション画面を再読込してください。';
+let positionDataValid=false;let positionDataSource='none';let positionImportError='起動直後は保存済みポジションを信頼しません。現在のMT5ポジション画面を再読込してください。'; let orderDataInvalid=false;let orderImportError='';
 try{quoteStore=JSON.parse(localStorage.getItem(QUOTE_KEY)||'{}')||{}}catch(e){}
 try{priceStore=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}')||{}}catch(e){}
 try{orderStore=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}')||{}}catch(e){}
@@ -205,8 +205,22 @@ function cfg(){return ensureSpec(currentSymbol)}
 function ensureSymbolOption(sym){if(!sym)return;const sel=$('symbol');if(![...sel.options].some(o=>o.value===sym)){const o=document.createElement('option');o.value=sym;o.textContent=ensureSpec(sym).name;sel.appendChild(o)}}
 function populateSymbols(){Object.keys(BASE_SPECS).forEach(ensureSymbolOption);Object.keys(quoteStore).forEach(ensureSymbolOption);Object.keys(specStore).forEach(ensureSymbolOption)}
 function getOrders(){return orderStore[currentSymbol]||[]}
-function setOrders(v){orderStore[currentSymbol]=v;saveAll()}
-function getPositions(){return positionStore[currentSymbol]||[]}
+function setOrders(v){
+  orderStore[currentSymbol]=Array.isArray(v)?v:[];
+  orderDataInvalid=false; orderImportError='';
+  saveAll(); renderOrderDataLock();
+}
+function invalidateOrderData(reason){
+  orderDataInvalid=true;
+  orderImportError=reason||'今回の注文画面を安定して認識できないため、保存済みの古い注文をDEAD LINE計算には使用しません。';
+  renderOrderDataLock();
+}
+function renderOrderDataLock(){
+  const el=$('orderDataLock'); if(!el)return;
+  if(!orderDataInvalid){el.style.display='none';el.textContent='';return}
+  el.style.display='block';
+  el.innerHTML='<strong>⚠ 計算停止：注文認識が未確定です。</strong><br>'+String(orderImportError)+'<br>保存済みの古い注文は今回の注文として扱いません。MT5の「オーダー」欄が十分に写った動画をもう一度読み込んでください。';
+}
 function setPositions(v){positionStore[currentSymbol]=v;saveAll();positionDataValid=Array.isArray(v)&&v.length>0;positionDataSource='manual';positionImportError=positionDataValid?'':'現在ポジションが0件です。';renderDataLock()}
 function invalidatePositionData(reason){
   positionDataValid=false;positionDataSource='ocr';positionImportError=reason||'現在ポジションを確認できませんでした。';
@@ -279,6 +293,14 @@ function calc(){
     $('distance').textContent='ポジション認識未確定のため計算停止';
     $('count').textContent=`${pending.length}件 / LC時想定追加約定 —`;
     renderOrderStatus([],pending,null);
+    return;
+  }
+  if(orderDataInvalid){
+    $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcAvg').textContent='—';$('lcLots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';
+    $('distance').textContent='注文認識未確定のため計算停止';
+    $('count').textContent=`${pending.length}件 / LC時想定追加約定 —`;
+    renderOrderStatus([],pending,null);
+    renderOrderDataLock();
     return;
   }
   if((!pending.length&&!positions.length)||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!baseRateFor(c)||!lev||!contract){
@@ -650,9 +672,9 @@ async function videoFrameSources(file,maxFrames=16){
     await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=rej});
     const dur=Number(v.duration);
     if(!Number.isFinite(dur)||dur<=0)throw new Error('VIDEO_DURATION_INVALID');
-    // 動画は短時間でも取りこぼしを減らす。最大16フレーム、原則1.5秒間隔。
+    // 動画は注文行の取りこぼしを減らすため、8〜16フレームを0.8秒前後の間隔で採取する。
     // 先頭/末尾の画面切替中フレームは避け、各フレームは同一workerでOCRする。
-    const count=Math.min(maxFrames,Math.max(6,Math.ceil(dur/1.5)));
+    const count=Math.min(maxFrames,Math.max(8,Math.ceil(dur/0.8)));
     const edge=Math.min(0.20,Math.max(0.05,dur*0.02));
     const span=Math.max(0.1,dur-edge*2);
     const times=[];
@@ -691,7 +713,7 @@ async function recognizeFileFrames(T,file,mode,onProgress){
     if(onProgress)onProgress({...m,frame:currentFrame,total:sources.length});
   }});
   try{
-    const psm=6;
+    const psm=mode==='price'?11:6;
     await worker.setParameters({tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'});
     for(let i=0;i<sources.length;i++){
       currentFrame=i+1;
@@ -834,28 +856,40 @@ $('mediaFile').addEventListener('change',async e=>{
       return;
     }
 
-    const found=parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
-    const positions=sanitizeRecognizedPositions(parsed.positions);
+    // 注文は今回の注文画面を最優先。保存済み注文を認識漏れの穴埋めには使わない。
+    // 動画は同じ注文行が2フレーム以上で一致したものだけを確定する。
+    const rawFound=parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
+    const found=isVideo ? rawFound.filter(o=>Number(o.frameCount||0)>=2) : rawFound;
+    const orderEvidence=rawFound.length>0 || /(?:ポジション|position|order|注文|オーダー|buy\s*limit|sell\s*limit)/i.test(parsed.rawText||'');
+    const positionsRaw=parsed.positions.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
+    const positions=sanitizeRecognizedPositions(isVideo ? positionsRaw.filter(o=>Number(o.frameCount||0)>=2) : positionsRaw);
     if(Number.isFinite(parsed.brokerPnl))$('brokerPnl').value=Math.round(parsed.brokerPnl);
+
     const existing=getOrders();
     let orderUpdateNote='';
-    if(found.length){
-      let replace=true;
-      if(existing.length&&found.length<existing.length){
-        const msg=buildOrderMismatchMessage(existing.length,found.length);
-        replace=confirm(msg);
-        orderUpdateNote=replace
-          ? `<br><span class="warn">⚠ 保存済み注文を${found.length}件に更新しました。</span>`
-          : `<br><span class="ok">✓ 保存済み注文${existing.length}件を維持しました。</span>`;
+    if(orderEvidence){
+      if(isVideo){
+        if(found.length===0){
+          invalidateOrderData('動画内の「オーダー」画面は検出しましたが、注文行を2フレーム以上で一致確認できませんでした。保存済み注文を使わず計算を停止します。');
+          orderUpdateNote=`<br><span class="err">✕ 注文を確定できませんでした。保存済み${existing.length}件は今回の注文として使用しません。</span>`;
+        }else{
+          setOrders(found);
+          orderUpdateNote=existing.length&&existing.length!==found.length
+            ? `<br><span class="ok">✓ 動画で注文を再確定：${existing.length}件 → ${found.length}件（2フレーム以上で一致）</span>`
+            : `<br><span class="ok">✓ 動画で注文を確定：${found.length}件（2フレーム以上で一致）</span>`;
+        }
+      }else if(existing.length && found.length!==existing.length){
+        invalidateOrderData(buildOrderMismatchMessage(existing.length,found.length)+' オーダー欄全体が写ったスクショを読み直してください。');
+        orderUpdateNote=`<br><span class="err">✕ 保存済み${existing.length}件と今回${found.length}件が不一致。古い注文は計算に使用しません。</span>`;
+      }else{
+        setOrders(found);
+        orderUpdateNote=`<br><span class="ok">✓ スクショの注文 ${found.length}件を確定しました。</span>`;
       }
-      if(replace)setOrders(found);
-    }else if(existing.length){
-      orderUpdateNote=`<br><span class="ok">✓ 今回は注文を検出しなかったため、保存済み${existing.length}件を維持しました。</span>`;
     }
+    // 気配値だけの読み込みなら既存注文を消さない。ただし orderDataInvalid が
+    // 残っている場合は、注文画面が再確定するまでDEAD LINEを再開しない。
 
-    // 統合ボタンでは「気配値だけ」の読み込みが普通に起こるため、
-    // ポジションを検出できなかっただけで古いポジションを無効化しない。
-    const looksLikeOrderScreen = found.length>0 || /(?:ポジション|position|order|注文)/i.test(parsed.rawText||'');
+    const looksLikeOrderScreen = orderEvidence || found.length>0;
     if(positions.length){
       setPositions(positions); positionDataValid=true; positionDataSource='ocr'; positionImportError='';
     }else if(looksLikeOrderScreen){
@@ -875,7 +909,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const quoteCount=Object.keys(quotes).length;
     const frameCount=isVideo?(results?.length||0):1;
     const expectedFrameCount=isVideo?(results?.expectedFrameCount||results?.length||0):1;
-    const deadlineReady=positionDataValid && Number.isFinite(goldBid) && Number.isFinite(goldAsk) && !!quoteRateFor(cfg());
+    const deadlineReady=positionDataValid && !orderDataInvalid && Number.isFinite(goldBid) && Number.isFinite(goldAsk) && !!quoteRateFor(cfg());
     const quoteQuality=isVideo?(quoteCount?`安定スプレッド判定済み ${quoteCount}銘柄`:'安定価格を確定できた銘柄なし'):'スクショ価格を検証済み';
     $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">気配値 <b>${quoteCount}銘柄</b></div><div class="item">解析フレーム <b>${frameCount}${isVideo?` / 予定${expectedFrameCount}`:''}</b></div><div class="item">現在ポジション <b>${positions.length}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${deadlineReady?'<span class="ok">✓ DEAD LINE計算可能</span>':'<span class="warn">⚠ DEAD LINE計算に必要なデータが未確定</span>'}</div></div></div>${orderUpdateNote}`;
     $('rateStatus').innerHTML=Object.keys(quotes).length
@@ -896,7 +930,7 @@ $('mediaFile').addEventListener('change',async e=>{
 });
 
 function buildOrderMismatchMessage(existingCount,foundCount){
-  return `現在${existingCount}件の注文が保存されています。今回のOCRは${foundCount}件でした。\n\n認識漏れの可能性があるため、保存済み注文を${foundCount}件に置き換えますか？\n\n「キャンセル」なら既存注文をそのまま保持します。`;
+  return `保存済み注文 ${existingCount}件 / 今回の認識 ${foundCount}件。認識数が一致しないため、保存済みの古い注文を計算には使用しません。`;
 }
 
 // Regression: frame-aware position clustering must preserve same-frame close-price positions.
@@ -994,7 +1028,7 @@ function runCalcSelfTest(){
 
     // 回帰テスト18：注文件数確認ダイアログで「\n」が文字として表示されない。
     const mismatchMsg=buildOrderMismatchMessage(4,3);
-    const t18=mismatchMsg.includes('\n\n') && !mismatchMsg.includes('\\n');
+    const t18=!mismatchMsg.includes('キャンセル') && mismatchMsg.includes('保存済み注文') && !mismatchMsg.includes('\\n');
 
     // 回帰テスト19：OCRが0件でも保存済み注文を自動削除しない。
     const t19=(()=>{const existingCount=4,foundCount=0;return existingCount>0&&foundCount===0;})();
@@ -1043,7 +1077,7 @@ function runCalcSelfTest(){
 
 
     // 回帰テスト29：動画解析は最大16フレーム、短時間でも最低6フレームを使う。
-    const t29=videoFrameSources.toString().includes('maxFrames=16') && videoFrameSources.toString().includes('Math.max(6') && recognizeFileFrames.toString().includes('videoFrameSources(file,16)');
+    const t29=videoFrameSources.toString().includes('maxFrames=16') && videoFrameSources.toString().includes('Math.max(8') && videoFrameSources.toString().includes('Math.ceil(dur/0.8)') && recognizeFileFrames.toString().includes('videoFrameSources(file,16)');
     // 回帰テスト30：動画価格の危険な生OCR fallbackを本番採用しない。
     const t30=!(/quotes=allQuotes/.test(document.documentElement.innerHTML));
     // 回帰テスト31：デラポジ自身の画面をMT5データとして再取り込みしない。
@@ -1053,7 +1087,13 @@ function runCalcSelfTest(){
     const t32=s31.length===1&&s31[0].symbol==='GOLD#';
     // 回帰テスト33：動画OCRはフレームごとにworkerを作り直さず、1 workerを再利用する。
     const t33=(recognizeFileFrames.toString().match(/createWorker/g)||[]).length===1;
-    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33];
+    // 回帰テスト34：注文数不一致でconfirm()を使わず、古い注文を計算へ残さない。
+    const t34=!(/confirm\s*\(/.test(document.documentElement.innerHTML)) && /orderDataInvalid/.test(document.documentElement.innerHTML);
+    // 回帰テスト35：動画注文は2フレーム以上一致した行だけを確定する。
+    const t35=/frameCount\|\|0\)\>=2/.test(document.documentElement.innerHTML);
+    // 回帰テスト36：注文認識未確定ならDEAD LINE計算を停止する。
+    const t36=/if\(orderDataInvalid\)/.test(document.documentElement.innerHTML);
+    const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
     const ok=passed===tests.length;
@@ -1117,7 +1157,7 @@ function switchPage(which){
 $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
-setDiagnosticVisible();populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();renderDataLock();const __startupRegressionOK=runCalcSelfTest();if(!__startupRegressionOK)calc();
+setDiagnosticVisible();renderOrderDataLock();populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();renderDataLock();const __startupRegressionOK=runCalcSelfTest();if(!__startupRegressionOK)calc();
 </script>
 </body>
 </html>

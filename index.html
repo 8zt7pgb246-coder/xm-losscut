@@ -234,6 +234,7 @@ function cfg(){return ensureSpec(currentSymbol)}
 function ensureSymbolOption(sym){if(!sym)return;const sel=$('symbol');if(![...sel.options].some(o=>o.value===sym)){const o=document.createElement('option');o.value=sym;o.textContent=ensureSpec(sym).name;sel.appendChild(o)}}
 function populateSymbols(){Object.keys(BASE_SPECS).forEach(ensureSymbolOption);Object.keys(quoteStore).forEach(ensureSymbolOption);Object.keys(specStore).forEach(ensureSymbolOption)}
 function getOrders(){return orderStore[currentSymbol]||[]}
+function getPositions(){return positionStore[currentSymbol]||[]}
 function setOrders(v){
   orderStore[currentSymbol]=Array.isArray(v)?v:[];
   orderDataInvalid=false; orderImportError='';
@@ -1281,7 +1282,7 @@ function runCalcSelfTest(){
     const oldSymbol=currentSymbol;currentSymbol='GOLD#';const s31=sanitizeRecognizedPositions([{symbol:'USDJPY#',side:'Buy',lot:.01,price:159.4},{symbol:'GOLD#',side:'Buy',lot:.01,price:4367.37}]);currentSymbol=oldSymbol;
     const t32=s31.length===1&&s31[0].symbol==='GOLD#';
     // 回帰テスト33：動画OCRはフレームごとにworkerを作り直さず、1 workerを再利用する。
-    const t33=(recognizeFileFrames.toString().match(/createWorker/g)||[]).length===1;
+    const t33=(recognizeFileFrames.toString().match(/createOCRWorker/g)||[]).length===1;
     // 回帰テスト34：注文数不一致でconfirmを使わず、古い注文を計算へ残さない。
     const forbiddenConfirm='confirm'+'('; const t34=!document.documentElement.innerHTML.includes(forbiddenConfirm) && /orderDataInvalid/.test(document.documentElement.innerHTML);
     // 回帰テスト35：動画注文は2フレーム以上一致した行だけを確定する。

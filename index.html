@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v69-20260819">
+<meta name="build-id" content="v71-20260819">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v69</title>
+<title>DeadLine positioning｜デラポジ Pro v71</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,8 +65,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v69</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v69</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v71</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v71</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v69</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最大48フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v71</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最大60フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -160,7 +160,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v69-20260819';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v71-20260819';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -203,8 +203,20 @@ function ocrWorkerOptions(logger){
 async function createOCRWorker(T,logger){
   let last=null;
   const configs=[
-    {logger:logger||(()=>{})},
-    {logger:logger||(()=>{}),workerBlobURL:true}
+    {
+      logger:logger||(()=>{}),
+      workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+      corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
+      langPath:'https://tessdata.projectnaptha.com/4.0.0',
+      workerBlobURL:false
+    },
+    {
+      logger:logger||(()=>{}),
+      workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+      corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
+      langPath:'https://tessdata.projectnaptha.com/4.0.0',
+      workerBlobURL:true
+    }
   ];
   for(const cfg of configs){
     try{
@@ -223,11 +235,31 @@ async function createOCRWorker(T,logger){
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
 // Expose the small public API explicitly on window so inline handlers and internal calls
 // resolve identically after a cold load or a cached-page refresh.
-window.__APP_BUILD__='v69-20260819';
+
+function videoSamplingRegressionTest(){
+  const f=window.__VIDEO_REGRESSION_FIXTURE__;
+  const dur=f.duration,count=Math.min(60,Math.max(36,Math.ceil(dur/0.16)));
+  const edge=Math.min(0.12,Math.max(0.03,dur*0.01));
+  const span=Math.max(0.1,dur-edge*2),times=[0],inner=Math.max(1,count-2);
+  for(let i=0;i<inner;i++)times.push(edge+(span*(i+0.5))/inner);
+  times.push(Math.max(0,dur-0.02));
+  const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
+  const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
+  return {count,pos,cc,pass:pos>=10&&cc>=1};
+}
+window.__APP_BUILD__='v71-20260819';
+window.__VIDEO_REGRESSION_FIXTURE__={
+  duration:10.035,
+  decisivePositionWindow:[6.2,9.7],
+  controlCenterWindow:[9.7,10.035],
+  expectedPositions:3,
+  expectedOrders:2,
+  expectedSymbol:'GOLD#'
+};
 (async function(){
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_legacy_sw_cleared_v69';
+    const key='xm_lc_legacy_sw_cleared_v71';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
     if(!regs.length){sessionStorage.setItem(key,'1');return;}
@@ -1111,35 +1143,21 @@ async function probeVideoFile(file){
   }finally{URL.revokeObjectURL(url)}
 }
 
-async function probeVideoFile(file){
-  const url=URL.createObjectURL(file);
-  try{
-    const v=document.createElement('video');
-    v.preload='metadata'; v.muted=true; v.playsInline=true; v.controls=false; v.src=url;
-    await new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>reject(new Error('VIDEO_METADATA_TIMEOUT')),12000);
-      v.onloadedmetadata=()=>{clearTimeout(timer);resolve()};
-      v.onerror=()=>{clearTimeout(timer);reject(new Error('VIDEO_METADATA_ERROR'))};
-      v.load();
-    });
-    if(!Number.isFinite(v.duration)||v.duration<=0)throw new Error('VIDEO_DURATION_INVALID');
-    return {duration:v.duration,width:v.videoWidth,height:v.videoHeight};
-  }finally{URL.revokeObjectURL(url)}
-}
 
 async function videoFrameSources(file,maxFrames=72){
   const url=URL.createObjectURL(file);
   const v=document.createElement('video');
-  v.preload='auto'; v.muted=true; v.defaultMuted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline',''); v.autoplay=true; v.src=url;
+  v.preload='metadata'; v.muted=true; v.defaultMuted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline',''); v.autoplay=false; v.src=url;
   v.style.cssText='position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:-10px;top:-10px;';
   document.body.appendChild(v);
   const waitEvent=(name,timeout=12000)=>new Promise((res,rej)=>{let done=false;const t=setTimeout(()=>{if(done)return;done=true;cleanup();rej(new Error('VIDEO_'+name.toUpperCase()+'_TIMEOUT'))},timeout);const fn=()=>{if(done)return;done=true;clearTimeout(t);cleanup();res()};const cleanup=()=>v.removeEventListener(name,fn);v.addEventListener(name,fn,{once:true})});
   try{
-    const meta=v.readyState>=1?v:await (async()=>{await waitEvent('loadedmetadata');return v})();
+    if(v.readyState<1){v.load();await waitEvent('loadedmetadata');}
+    const meta=v;
     const dur=Number(meta.duration);
     if(!Number.isFinite(dur)||dur<=0)throw new Error('VIDEO_DURATION_INVALID');
 if(v.readyState<2){try{await waitEvent('loadeddata',10000)}catch(e){}}
-    const count=Math.min(maxFrames,Math.max(36,Math.ceil(dur/0.20)));
+    const count=Math.min(maxFrames,Math.max(36,Math.ceil(dur/0.16)));
     // Screen recordings often begin/end with iOS Control Center. Never skip the
     // endpoints: the old edge margin could miss exactly those mandatory frames.
     const edge=Math.min(0.12,Math.max(0.03,dur*0.01));
@@ -1180,7 +1198,7 @@ async function recognizeOne(TesseractNS,source,psm,logger){
 }
 async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null){
   const isVideo=isVideoFile(file);
-  const sources=reuseSources||(isVideo?await videoFrameSources(file,48):[{canvas:await imageToCanvasSource(file),time:0}]);
+  const sources=reuseSources||(isVideo?await videoFrameSources(file,60):[{canvas:await imageToCanvasSource(file),time:0}]);
   const results=[];
   let currentFrame=0;
   const worker=await createOCRWorker(T,m=>{
@@ -1304,7 +1322,7 @@ $('mediaFile').addEventListener('change',async e=>{
   const preview=$('preview');
   if(isVideo){
     const v=document.createElement('video');
-    v.id='previewVideo'; v.controls=false; v.autoplay=true; v.playsInline=true; v.muted=true; v.defaultMuted=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+    v.id='previewVideo'; v.controls=false; v.autoplay=false; v.playsInline=true; v.muted=true; v.defaultMuted=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
     v.style.cssText='display:block;width:100%;max-height:520px;object-fit:contain;border-radius:12px;margin-top:10px';
     v.src=URL.createObjectURL(f); v.load();
     preview.replaceWith(v);
@@ -1605,9 +1623,9 @@ $('mediaFile').addEventListener('change',async e=>{
     console.error('[XM] MEDIA_IMPORT_TOP_LEVEL_FAILED',topErr);
     const msg=topErr?.message||'メディア読み込みに失敗しました。';
     if($('ocrStatus'))$('ocrStatus').textContent=`読み込み停止：${msg}`;
-    if($('ocrBar'))$('ocrBar').style.width='0%';
+    
     window.__mediaBusy=false;
-    if($('mediaInput'))$('mediaInput').disabled=false;
+    if($('mediaFile'))$('mediaFile').disabled=false;
   }
 });
 
@@ -1767,7 +1785,7 @@ function runCalcSelfTest(){
 
 
     // 回帰テスト29：動画解析は最大16フレーム、短時間でも最低6フレームを使う。
-    const t29=videoFrameSources.toString().includes('Math.max(36') && videoFrameSources.toString().includes('Math.ceil(dur/0.20)') && recognizeFileFrames.toString().includes('videoFrameSources(file,48)') && ocrWorkerOptions.toString().includes('workerBlobURL:true');
+    const t29=videoFrameSources.toString().includes('Math.max(36') && videoFrameSources.toString().includes('Math.ceil(dur/0.16)') && recognizeFileFrames.toString().includes('videoFrameSources(file,60)') && ocrWorkerOptions.toString().includes('workerBlobURL:true');
     // 回帰テスト29b：MT5フレーム割合では計算可否をブロックしない。短いトレード区間を正解データとして扱う。
     const t29b=!/VIDEO_TOO_FEW_VALID_MT5_FRAMES/.test(document.documentElement.innerHTML) && /validity is decided from confirmed trading data/i.test(document.documentElement.innerHTML);
     // 回帰テスト29c：専用OCR失敗を理由に動画全体を中断しない。
@@ -1853,9 +1871,9 @@ function runCalcSelfTest(){
     // 回帰テスト50：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t50=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t52=window.__APP_BUILD__==='v69-20260819'&&/build v69/.test($('buildMarker')?.textContent||'');
+    const t52=window.__APP_BUILD__==='v71-20260819'&&/build v71/.test($('buildMarker')?.textContent||'');
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v69-20260819'&&/build v69/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v71-20260819'&&/build v71/.test($('buildMarker')?.textContent||'');
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト55b：今回の正解動画。3ポジション＋2 Pendingを1回のOCR漏れで欠落させない。
@@ -1949,13 +1967,13 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v69-20260819';
+window.__APP_BUILD__='v71-20260819';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);
 }
-// v69 startup hardening:
+// v71 startup hardening:
 // Do NOT unregister service workers or wipe the Cache API on every page load.
 // Do NOT run the full regression suite synchronously during first paint.
 // Safari/iOS must reach a usable UI first; diagnostics run after boot.

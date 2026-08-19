@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v67-20260819">
+<meta name="build-id" content="v68-20260819">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v67</title>
+<title>DeadLine positioning｜デラポジ Pro v68</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,8 +65,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v67</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v67</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v68</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v68</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v67</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最大48フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v68</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最大48フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -160,7 +160,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v67-20260819';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v68-20260819';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function ensureOCR(){
   if(window.Tesseract){window.__ocrReady=true;return window.Tesseract}
@@ -203,11 +203,11 @@ async function createOCRWorker(T,logger){
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
 // Expose the small public API explicitly on window so inline handlers and internal calls
 // resolve identically after a cold load or a cached-page refresh.
-window.__APP_BUILD__='v67-20260819';
+window.__APP_BUILD__='v68-20260819';
 (async function(){
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_legacy_sw_cleared_v67';
+    const key='xm_lc_legacy_sw_cleared_v68';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
     if(!regs.length){sessionStorage.setItem(key,'1');return;}
@@ -1063,7 +1063,7 @@ async function imageToCanvasSource(input){
   }finally{URL.revokeObjectURL(url)}
 }
 async function verifySelectedBlob(file){
-  if(!file || !Number.isFinite(file.size) || file.size<=0)throw new Error('EMPTY_MEDIA_FILE');
+  if(!(file instanceof Blob)||!Number.isFinite(file.size)||file.size<=0)throw new Error('EMPTY_MEDIA_FILE');
   const sample=await file.slice(0,Math.min(256,file.size)).arrayBuffer();
   if(!sample || sample.byteLength<=0)throw new Error('MEDIA_READ_FAILED');
   return sample.byteLength;
@@ -1262,16 +1262,15 @@ function aggregateVideoQuotes(results){
 $('symbol').addEventListener('change',switchSymbol);$('symbolLeverage').addEventListener('input',()=>{const c=cfg();c.leverage=+$('symbolLeverage').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});$('contractSize').addEventListener('input',()=>{const c=cfg();c.contract=+$('contractSize').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});['balance','stopout','usdjpy','brokerPnl'].forEach(id=>$(id).addEventListener('input',()=>calc()));
 $('mediaChoose').addEventListener('click',()=>$('mediaFile').click());
 $('mediaFile').addEventListener('change',async e=>{
+  try{
   const selected=e.target.files&&e.target.files[0];
   if(!selected)return;
-  const f=selected.slice(0,selected.size,selected.type||'application/octet-stream');
-  try{Object.defineProperty(f,'name',{value:selected.name,configurable:true});}catch(_){}
-  console.info('[XM] FILE_CAPTURED',selected.name,selected.type||'(empty MIME)',selected.size);
-  console.info('[XM] FILE_CAPTURED',f.name,f.type||'(empty MIME)',f.size);
+  const f=selected;
+  console.info('[XM] FILE_CAPTURED',f.name||'(unnamed)',f.type||'(empty MIME)',f.size);
   if(!(f instanceof Blob)){
     throw new Error('ファイル取得に失敗しました。iPhoneからもう一度動画を選択してください。');
   }
-  if(!f.size){
+  if(!Number.isFinite(f.size)||f.size<=0){
     throw new Error('選択した動画のサイズを取得できませんでした。');
   }
   setImportStage('1/8',`ファイル取得完了：${f.name}`);
@@ -1585,6 +1584,14 @@ $('mediaFile').addEventListener('change',async e=>{
     e.target.value='';
     calc();
   }
+  }catch(topErr){
+    console.error('[XM] MEDIA_IMPORT_TOP_LEVEL_FAILED',topErr);
+    const msg=topErr?.message||'メディア読み込みに失敗しました。';
+    if($('ocrStatus'))$('ocrStatus').textContent=`読み込み停止：${msg}`;
+    if($('ocrBar'))$('ocrBar').style.width='0%';
+    window.__mediaBusy=false;
+    if($('mediaInput'))$('mediaInput').disabled=false;
+  }
 });
 
 function buildOrderMismatchMessage(existingCount,foundCount){
@@ -1829,9 +1836,9 @@ function runCalcSelfTest(){
     // 回帰テスト50：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t50=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t52=window.__APP_BUILD__==='v67-20260819'&&/build v67/.test($('buildMarker')?.textContent||'');
+    const t52=window.__APP_BUILD__==='v68-20260819'&&/build v68/.test($('buildMarker')?.textContent||'');
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v67-20260819'&&/build v67/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v68-20260819'&&/build v68/.test($('buildMarker')?.textContent||'');
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト55b：今回の正解動画。3ポジション＋2 Pendingを1回のOCR漏れで欠落させない。
@@ -1925,13 +1932,13 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v67-20260819';
+window.__APP_BUILD__='v68-20260819';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);
 }
-// v67 startup hardening:
+// v68 startup hardening:
 // Do NOT unregister service workers or wipe the Cache API on every page load.
 // Do NOT run the full regression suite synchronously during first paint.
 // Safari/iOS must reach a usable UI first; diagnostics run after boot.

@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v73-20260819">
+<meta name="build-id" content="v78-20260819">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v73</title>
+<title>DeadLine positioning｜デラポジ Pro v78</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,8 +65,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v73</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v73</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v78</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v78</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v73</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最大60フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v78</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最大60フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -160,7 +160,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v73-20260819';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v78-20260819';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -203,20 +203,8 @@ function ocrWorkerOptions(logger){
 async function createOCRWorker(T,logger){
   let last=null;
   const configs=[
-    {
-      logger:logger||(()=>{}),
-      workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
-      corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
-      langPath:'https://tessdata.projectnaptha.com/4.0.0',
-      workerBlobURL:false
-    },
-    {
-      logger:logger||(()=>{}),
-      workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
-      corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
-      langPath:'https://tessdata.projectnaptha.com/4.0.0',
-      workerBlobURL:true
-    }
+    {logger:logger||(()=>{}),workerBlobURL:true},
+    {logger:logger||(()=>{}),workerBlobURL:false}
   ];
   for(const cfg of configs){
     try{
@@ -247,7 +235,37 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__APP_BUILD__='v73-20260819';
+window.__DEPLOYMENT_STATE__={build:'v78-20260819',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v78-20260819';
+(async function hardResetAppCache(){
+  try{
+    const key='xm_lc_hard_reset_v78';
+    if(sessionStorage.getItem(key))return;
+    let changed=false;
+    if('serviceWorker' in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const r of regs){
+        if(location.origin===new URL(r.scope).origin &&
+           new URL(r.scope).pathname.startsWith('/xm-losscut/')){
+          changed=(await r.unregister())||changed;
+        }
+      }
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      for(const k of keys){
+        if(/xm|losscut/i.test(k)){await caches.delete(k);changed=true;}
+      }
+    }
+    sessionStorage.setItem(key,'1');
+    if(changed && !location.search.includes('appreset=76')){
+      const u=new URL(location.href);
+      u.searchParams.set('appreset','76');
+      u.searchParams.set('t',Date.now().toString());
+      location.replace(u.href);
+    }
+  }catch(e){console.warn('[XM] HARD_RESET_SKIPPED',e)}
+})();
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
   decisivePositionWindow:[6.2,9.7],
@@ -257,25 +275,32 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   expectedSymbol:'GOLD#'
 };
 (async function(){
+  // An active legacy service worker can keep controlling the current page even
+  // after unregister(). Unregister + reload is required to actually execute
+  // the newly uploaded index.html.
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_legacy_sw_cleared_v73';
+    const key='xm_lc_sw_reset_v78_done';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
-    if(!regs.length){sessionStorage.setItem(key,'1');return;}
     let changed=false;
     for(const r of regs){
-      if((r.scope||'').includes('/xm-losscut/')){
-        const ok=await r.unregister();
-        changed=changed||ok;
+      const scope=String(r.scope||'');
+      if(scope.includes('/xm-losscut/') || scope===location.origin+'/'){
+        changed=(await r.unregister())||changed;
       }
     }
     sessionStorage.setItem(key,'1');
-    if(changed){
-      console.info('LEGACY_SW_REMOVED; continuing without forced reload');
+    if(changed || navigator.serviceWorker.controller){
+      const u=new URL(location.href);
+      u.searchParams.set('appbuild','v78');
+      u.searchParams.set('fresh',String(Date.now()));
+      console.info('LEGACY_SW_RESET_RELOAD',u.href);
+      location.replace(u.href);
+      return;
     }
   }catch(e){console.warn('LEGACY_SW_CLEANUP_SKIPPED',e)}
-})();
+})();;
 // Runtime API baseline: quote metadata must exist before startup self-test.
 window.__quoteMeta={};
 const $=id=>document.getElementById(id);
@@ -1131,15 +1156,28 @@ async function probeVideoFile(file){
   const url=URL.createObjectURL(file);
   try{
     const v=document.createElement('video');
-    v.preload='metadata'; v.muted=true; v.playsInline=true; v.controls=false; v.src=url;
-    await new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>reject(new Error('VIDEO_METADATA_TIMEOUT')),12000);
-      v.onloadedmetadata=()=>{clearTimeout(timer);resolve()};
-      v.onerror=()=>{clearTimeout(timer);reject(new Error('VIDEO_METADATA_ERROR'))};
+    v.preload='metadata'; v.muted=true; v.playsInline=true; v.controls=false;
+    const metadata=await new Promise((resolve,reject)=>{
+      let done=false;
+      const timer=setTimeout(()=>finishReject(new Error('VIDEO_METADATA_TIMEOUT')),12000);
+      const cleanup=()=>{
+        clearTimeout(timer);
+        v.removeEventListener('loadedmetadata',onMeta);
+        v.removeEventListener('error',onError);
+      };
+      const finishResolve=()=>{if(done)return;done=true;cleanup();resolve({duration:v.duration,width:v.videoWidth,height:v.videoHeight});};
+      const finishReject=(err)=>{if(done)return;done=true;cleanup();reject(err);};
+      const onMeta=()=>finishResolve();
+      const onError=()=>finishReject(new Error('VIDEO_METADATA_ERROR'));
+      v.addEventListener('loadedmetadata',onMeta,{once:true});
+      v.addEventListener('error',onError,{once:true});
+      // IMPORTANT: src is assigned only after listeners are installed.
+      v.src=url;
       v.load();
     });
-    if(!Number.isFinite(v.duration)||v.duration<=0)throw new Error('VIDEO_DURATION_INVALID');
-    return {duration:v.duration,width:v.videoWidth,height:v.videoHeight};
+    if(!Number.isFinite(metadata.duration)||metadata.duration<=0)throw new Error('VIDEO_DURATION_INVALID');
+    if(!Number.isFinite(metadata.width)||metadata.width<=0||metadata.height<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
+    return metadata;
   }finally{URL.revokeObjectURL(url)}
 }
 
@@ -1147,75 +1185,74 @@ async function probeVideoFile(file){
 async function videoFrameSources(file,maxFrames=72){
   const url=URL.createObjectURL(file);
   const v=document.createElement('video');
-  v.preload='metadata'; v.muted=true; v.defaultMuted=true; v.playsInline=true;
+  v.preload='auto'; v.muted=true; v.defaultMuted=true; v.playsInline=true;
   v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
-  v.autoplay=false; v.src=url;
+  v.autoplay=false; v.controls=false;
   v.style.cssText='position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:-10px;top:-10px;';
   document.body.appendChild(v);
 
-  const waitForEvent=(name,timeout=12000)=>new Promise((res,rej)=>{
+  const waitForEvent=(name,timeout=12000)=>new Promise((resolve,reject)=>{
     let done=false;
-    const cleanup=()=>{v.removeEventListener(name,on);v.removeEventListener('error',onError);clearTimeout(timer)};
-    const on=()=>{if(done)return;done=true;cleanup();res()};
-    const onError=()=>{if(done)return;done=true;cleanup();rej(new Error('VIDEO_'+name.toUpperCase()+'_FAILED'))};
-    const timer=setTimeout(()=>{if(done)return;done=true;cleanup();rej(new Error('VIDEO_'+name.toUpperCase()+'_TIMEOUT'))},timeout);
-    v.addEventListener(name,on,{once:true});
+    const timer=setTimeout(()=>finishReject(new Error('VIDEO_'+name.toUpperCase()+'_TIMEOUT')),timeout);
+    const cleanup=()=>{clearTimeout(timer);v.removeEventListener(name,onEvent);v.removeEventListener('error',onError)};
+    const finishResolve=()=>{if(done)return;done=true;cleanup();resolve()};
+    const finishReject=(e)=>{if(done)return;done=true;cleanup();reject(e)};
+    const onEvent=()=>finishResolve();
+    const onError=()=>finishReject(new Error('VIDEO_'+name.toUpperCase()+'_FAILED'));
+    v.addEventListener(name,onEvent,{once:true});
     v.addEventListener('error',onError,{once:true});
   });
-
-  try{
-    // IMPORTANT: register the listener BEFORE calling load().
-    // The old code called load() first and then attached the loadedmetadata
-    // listener. On a local Blob/iOS Safari the event can fire in that gap,
-    // producing a false VIDEO_LOADEDMETADATA_TIMEOUT every time.
-    if(v.readyState<1){
-      const metadataPromise=waitForEvent('loadedmetadata',12000);
-      v.load();
-      await metadataPromise;
+  const waitReadyState=async(minState=2,timeout=12000)=>{
+    const deadline=performance.now()+timeout;
+    while(v.readyState<minState){
+      if(performance.now()>deadline)throw new Error('VIDEO_READY_TIMEOUT');
+      await new Promise(r=>setTimeout(r,40));
     }
+  };
+  try{
+    // IMPORTANT: install metadata listeners BEFORE assigning src. This prevents
+    // an iOS Safari early-event race.
+    const metadataPromise=waitForEvent('loadedmetadata',12000);
+    v.src=url;
+    v.load();
+    await metadataPromise;
     const dur=Number(v.duration);
     if(!Number.isFinite(dur)||dur<=0)throw new Error('VIDEO_DURATION_INVALID');
     if(!Number.isFinite(v.videoWidth)||v.videoWidth<=0||v.videoHeight<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
-
-    if(v.readyState<2){
-      const dataPromise=waitForEvent('loadeddata',10000).catch(()=>null);
-      v.load();
-      await dataPromise;
-    }
+    await waitReadyState(2,12000);
 
     const count=Math.min(maxFrames,Math.max(36,Math.ceil(dur/0.16)));
     const edge=Math.min(0.12,Math.max(0.03,dur*0.01));
     const span=Math.max(0.1,dur-edge*2);
-    const times=[0];
-    const innerCount=Math.max(1,count-2);
+    const times=[0],innerCount=Math.max(1,count-2);
     for(let i=0;i<innerCount;i++)times.push(edge+(span*(i+0.5))/innerCount);
     times.push(Math.max(0,dur-0.02));
 
     const frames=[];
     for(const t of times){
       const target=Math.min(Math.max(0,t),Math.max(0,dur-0.01));
-      // At t=0 (or when the decoder is already on the target frame), there is
-      // no reliable seeked event to wait for. Draw immediately when ready;
-      // otherwise attach seeked BEFORE changing currentTime.
-      if(Math.abs(v.currentTime-target)<0.0005 && v.readyState>=2){
-        // no seek needed
-      }else{
-        await new Promise((res,rej)=>{
+      if(Math.abs(v.currentTime-target)>=0.0005){
+        await new Promise((resolve,reject)=>{
           let done=false;
-          const cleanup=()=>{v.removeEventListener('seeked',ok);v.removeEventListener('error',bad);clearTimeout(timer)};
-          const ok=()=>{if(done)return;done=true;cleanup();res()};
-          const bad=()=>{if(done)return;done=true;cleanup();rej(new Error('VIDEO_SEEK_FAILED'))};
-          const timer=setTimeout(()=>{if(done)return;done=true;cleanup();rej(new Error('VIDEO_SEEK_TIMEOUT'))},8000);
-          v.addEventListener('seeked',ok,{once:true});
-          v.addEventListener('error',bad,{once:true});
-          try{v.currentTime=target}catch(e){bad()}
+          const timer=setTimeout(()=>finishReject(new Error('VIDEO_SEEK_TIMEOUT')),8000);
+          const cleanup=()=>{clearTimeout(timer);v.removeEventListener('seeked',onSeeked);v.removeEventListener('error',onError)};
+          const finishResolve=()=>{if(done)return;done=true;cleanup();resolve()};
+          const finishReject=(e)=>{if(done)return;done=true;cleanup();reject(e)};
+          const onSeeked=()=>finishResolve();
+          const onError=()=>finishReject(new Error('VIDEO_SEEK_FAILED'));
+          // Listener BEFORE currentTime is assigned.
+          v.addEventListener('seeked',onSeeked,{once:true});
+          v.addEventListener('error',onError,{once:true});
+          try{v.currentTime=target}catch(e){finishReject(e)}
         });
       }
+      await waitReadyState(2,5000);
       const scale=Math.min(2,2200/v.videoWidth);
       const c=document.createElement('canvas');
       c.width=Math.max(1,Math.floor(v.videoWidth*scale));
       c.height=Math.max(1,Math.floor(v.videoHeight*scale));
       const ctx=c.getContext('2d',{willReadFrequently:true});
+      if(!ctx)throw new Error('VIDEO_CANVAS_CONTEXT_FAILED');
       ctx.drawImage(v,0,0,c.width,c.height);
       frames.push({canvas:c,time:t,isControlCenter:looksLikeIOSControlCenterCanvas(c)});
     }
@@ -1223,7 +1260,8 @@ async function videoFrameSources(file,maxFrames=72){
     frames.videoDuration=dur;
     return frames;
   }finally{
-    try{v.pause()}catch(e){}
+    v.removeAttribute('src');
+    v.load();
     v.remove();
     URL.revokeObjectURL(url);
   }
@@ -1238,6 +1276,10 @@ async function recognizeOne(TesseractNS,source,psm,logger){
 }
 async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null){
   const isVideo=isVideoFile(file);
+  if(window.__activeMediaFile && file!==window.__activeMediaFile){
+    console.warn('[XM] STALE_MEDIA_OBJECT_REJECTED');
+    throw new Error('STALE_MEDIA_OBJECT');
+  }
   const sources=reuseSources||(isVideo?await videoFrameSources(file,60):[{canvas:await imageToCanvasSource(file),time:0}]);
   const results=[];
   let currentFrame=0;
@@ -1345,15 +1387,23 @@ $('mediaChoose').addEventListener('click',()=>{
   $('mediaFile').click();
 });
 $('mediaFile').addEventListener('click',()=>{
-  // Clear before the iOS picker opens so selecting the same recording always
-  // produces a fresh `change` event.
   resetMediaPicker();
 });
+let mediaSelectionWatchdog=null;
+$('mediaFile').addEventListener('click',()=>{
+  clearTimeout(mediaSelectionWatchdog);
+  mediaSelectionWatchdog=setTimeout(()=>{
+    console.info('[XM] MEDIA_SELECTION_WATCHDOG');
+  },15000);
+});
+
 $('mediaFile').addEventListener('change',async e=>{
   try{
+  clearTimeout(mediaSelectionWatchdog);
   const selected=e.target.files&&e.target.files[0];
   if(!selected)return;
   const f=selected;
+  window.__activeMediaFile=f;
   console.info('[XM] FILE_CAPTURED',f.name||'(unnamed)',f.type||'(empty MIME)',f.size);
   if(!(f instanceof Blob)){
     throw new Error('ファイル取得に失敗しました。iPhoneからもう一度動画を選択してください。');
@@ -1373,18 +1423,22 @@ $('mediaFile').addEventListener('change',async e=>{
 
   const preview=$('preview');
   if(isVideo){
-    const v=document.createElement('video');
-    v.id='previewVideo'; v.controls=false; v.autoplay=false; v.playsInline=true; v.muted=true; v.defaultMuted=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
-    v.style.cssText='display:block;width:100%;max-height:520px;object-fit:contain;border-radius:12px;margin-top:10px';
-    v.src=URL.createObjectURL(f); v.load();
-    preview.replaceWith(v);
+    const current=$('previewVideo');
+    if(current){
+      const img=document.createElement('img'); img.id='preview'; img.alt='XM画面プレビュー';
+      current.replaceWith(img);
+    }
+    $('preview').removeAttribute('src');
+    $('preview').style.display='none';
   }else{
     const current=$('previewVideo');
     if(current){
       const img=document.createElement('img'); img.id='preview'; img.alt='XM画面プレビュー';
       current.replaceWith(img);
     }
-    $('preview').src=URL.createObjectURL(f); $('preview').style.display='block';
+    const imageUrl=URL.createObjectURL(f);
+    $('preview').src=imageUrl; $('preview').style.display='block';
+    $('preview').onload=()=>URL.revokeObjectURL(imageUrl);
   }
   mediaPriceFresh=false;mediaUsdJpyFresh=false;mediaPriceEvidence=null;mediaQuality={total:0,usable:0,excluded:0,expected:0};
   // Every new upload starts a fresh evidence transaction. Never silently reuse
@@ -1397,18 +1451,29 @@ $('mediaFile').addEventListener('change',async e=>{
   $('ocrStatus').textContent=`1/8 ${isVideo?'動画':'画像'}ファイルを取得しました。自動判定中…`;
   $('rateStatus').textContent='気配値・注文・ポジションを解析しています…';
   try{
+    let videoSourcesForReuse=null;
+    if(isVideo){
+      $('ocrStatus').textContent='2/8 動画デコーダーを確認中…';
+      videoSourcesForReuse=await videoFrameSources(f,60);
+      if(videoSourcesForReuse[0]?.canvas){
+        const pv=$('preview');
+        if(pv){pv.src=videoSourcesForReuse[0].canvas.toDataURL('image/jpeg',0.82);pv.style.display='block';}
+      }
+      $('ocrStatus').textContent=`3/8 動画読み込み完了（${videoSourcesForReuse.length}フレーム）。OCRエンジンを起動中…`;
+    }else{
+      $('ocrStatus').textContent='2/8 画像データを確認中…';
+    }
     $('ocrStatus').textContent='4/8 OCRエンジンを起動中…';
     const T=await Promise.race([
       ensureOCR(),
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('TESSERACT_SCRIPT_TIMEOUT')),30000))
     ]);
     $('ocrStatus').textContent=`5/8 OCRエンジン起動完了。${isVideo?'動画フレーム':'画像'}解析を開始…`;
-    // まず価格向けPSMで全体を解析。気配値と注文の両方を同じフレーム群から拾う。
     $('ocrStatus').textContent='6/8 フレームOCRを開始…';
     let results=await recognizeFileFrames(T,f,'price',m=>{
       if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面${isVideo?'動画':''}OCR中… ${Math.round((m.progress||0)*100)}%`;
     });
-    const videoSourcesForReuse=results.__sources||null;
+    if(!videoSourcesForReuse)videoSourcesForReuse=results.__sources||null;
     $('ocrStatus').textContent='7/8 OCR結果を統合中…';
     const rawResultCount=results.length;
     const expectedFrames=Number(results?.expectedFrameCount||rawResultCount||0);
@@ -1688,15 +1753,38 @@ function buildOrderMismatchMessage(existingCount,foundCount){
 
 // Regression: frame-aware position clustering must preserve same-frame close-price positions.
   /* frame-aware position clustering */
+function runVideoEventOrderSelfTest(){
+  const fn=videoFrameSources.toString();
+  const meta=fn.indexOf("waitForEvent('loadedmetadata'");
+  const src=fn.indexOf('v.src=url');
+  const load=fn.indexOf('v.load()');
+  const seekListener=fn.indexOf("v.addEventListener('seeked',onSeeked");
+  const seekSet=fn.indexOf('v.currentTime=target');
+  return meta>=0 && src>meta && load>src && seekListener>=0 && seekSet>seekListener && !/v\.play\s*\(/.test(fn);
+}
+
+function runVideoBeforeOCRSelfTest(){
+  const src=document.documentElement.innerHTML;
+  const start=src.indexOf("$('mediaFile').addEventListener('change'");
+  const end=src.indexOf("\n});",start);
+  if(start<0||end<0)return false;
+  const h=src.slice(start,end);
+  const v=h.indexOf("videoFrameSources(f,60)");
+  const o=h.indexOf("ensureOCR()");
+  return v>=0 && o>v;
+}
+
 function runVideoLoadOrderSelfTest(){
   const fn=videoFrameSources.toString();
+  const waitPos=fn.indexOf("waitEvent('loadedmetadata'");
   const loadPos=fn.indexOf('v.load()');
-  const waitPos=fn.indexOf("waitForEvent('loadedmetadata'");
-  const seekListenerPos=fn.indexOf("v.addEventListener('seeked',ok");
+  const readyFn=fn.indexOf('const waitReadyState');
+  const firstFrameGuard=fn.indexOf('Math.abs(v.currentTime-target)<0.0005');
+  const seekListenerPos=fn.indexOf("v.addEventListener('seeked',onSeeked");
   const currentTimePos=fn.indexOf('v.currentTime=target');
-  return waitPos>=0 && loadPos>waitPos &&
-    seekListenerPos>=0 && currentTimePos>seekListenerPos &&
-    !/v\.load\(\);\s*await waitForEvent\('loadedmetadata'\)/.test(fn);
+  return waitPos>=0 && loadPos>waitPos && readyFn>=0 &&
+    firstFrameGuard>=0 && seekListenerPos>=0 && currentTimePos>seekListenerPos &&
+    !/v\.load\(\);\s*await waitEvent\('loadeddata'/.test(fn);
 }
 
 function runMediaPickerSelfTest(){
@@ -1946,9 +2034,9 @@ function runCalcSelfTest(){
     // 回帰テスト50：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t50=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t52=window.__APP_BUILD__==='v73-20260819'&&/build v73/.test($('buildMarker')?.textContent||'');
+    const t52=window.__APP_BUILD__==='v78-20260819'&&/build v78/.test($('buildMarker')?.textContent||'');
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v73-20260819'&&/build v73/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v78-20260819'&&/build v78/.test($('buildMarker')?.textContent||'');
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト55b：今回の正解動画。3ポジション＋2 Pendingを1回のOCR漏れで欠落させない。
@@ -2042,13 +2130,13 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v73-20260819';
+window.__APP_BUILD__='v78-20260819';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);
 }
-// v73 startup hardening:
+// v78 startup hardening:
 // Do NOT unregister service workers or wipe the Cache API on every page load.
 // Do NOT run the full regression suite synchronously during first paint.
 // Safari/iOS must reach a usable UI first; diagnostics run after boot.

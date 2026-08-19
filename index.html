@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v56-20260819">
+<meta name="build-id" content="v57-20260819">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>DeadLine positioning｜デラポジ Pro v56</title>
+<title>DeadLine positioning｜デラポジ Pro v57</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,8 +65,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v56</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v56</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v57</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v57</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v56</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最大72フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v57</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最大72フレームを解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -172,7 +172,7 @@ async function ensureOCR(){
 function ocrWorkerOptions(logger,variant=0){
   // IMPORTANT: keep the Worker itself same-origin on GitHub Pages/iPhone Safari.
   // A CDN worker is wrapped by /ocr-worker.js, avoiding cross-origin Worker startup failures.
-  const localWorker=new URL('ocr-worker.js?v=v56',document.baseURI).href;
+  const localWorker=new URL('ocr-worker.js?v=v57',document.baseURI).href;
   const cdnWorkers=[
     'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/worker.min.js',
@@ -200,7 +200,7 @@ async function createOCRWorker(T,logger){
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
 // Expose the small public API explicitly on window so inline handlers and internal calls
 // resolve identically after a cold load or a cached-page refresh.
-window.__APP_BUILD__='v56-20260819';
+window.__APP_BUILD__='v57-20260819';
 // Runtime API baseline: quote metadata must exist before startup self-test.
 window.__quoteMeta={};
 const $=id=>document.getElementById(id);
@@ -1730,9 +1730,9 @@ function runCalcSelfTest(){
     // 回帰テスト50：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t50=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t52=window.__APP_BUILD__==='v56-20260819'&&/build v56/.test($('buildMarker')?.textContent||'');
+    const t52=window.__APP_BUILD__==='v57-20260819'&&/build v57/.test($('buildMarker')?.textContent||'');
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v56-20260819'&&/build v56/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v57-20260819'&&/build v57/.test($('buildMarker')?.textContent||'');
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト55b：今回の正解動画。3ポジション＋2 Pendingを1回のOCR漏れで欠落させない。
@@ -1826,7 +1826,7 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v56-20260819';
+window.__APP_BUILD__='v57-20260819';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
@@ -1834,9 +1834,49 @@ if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   if(e)e.innerHTML='<span class="err">✕ アプリ内部APIを初期化できませんでした。未初期化: '+missing.join(', ')+'。ページを再読み込みしてください。</span>';
   console.error('APP_API_INIT_FAILED',missing);
 }
-if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister()))).catch(()=>{});}
-if(window.caches&&caches.keys){caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});}
-setDiagnosticVisible();renderOrderDataLock();populateSymbols();populatePnlSymbols();if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);$('symbol').value=currentSymbol;switchSymbol();renderDataLock();const __startupRegressionOK=runCalcSelfTest();if(!__startupRegressionOK)calc();
+// v57 startup hardening:
+// Do NOT unregister service workers or wipe the Cache API on every page load.
+// Do NOT run the full regression suite synchronously during first paint.
+// Safari/iOS must reach a usable UI first; diagnostics run after boot.
+setDiagnosticVisible();
+renderOrderDataLock();
+populateSymbols();
+populatePnlSymbols();
+if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);
+$('symbol').value=currentSymbol;
+switchSymbol();
+renderDataLock();
+window.__regressionOK=true;
+window.__bootReady=true;
+document.documentElement.dataset.boot='ready';
+
+// Run diagnostics after the first UI paint. A diagnostic failure must never
+// prevent the application from rendering or make Safari retry the page.
+setTimeout(()=>{
+  try{
+    const ok=runCalcSelfTest();
+    window.__regressionOK=!!ok;
+    if(!ok){
+      console.error('REGRESSION_TEST_FAILED');
+      if($('rateStatus') && diagnosticsEnabled()){
+        $('rateStatus').innerHTML='<span class="warn">⚠ 開発者診断：内部回帰テストNG。DEAD LINE計算を停止しています。</span>';
+      }
+    }
+  }catch(e){
+    window.__regressionOK=false;
+    console.error('REGRESSION_TEST_EXCEPTION',e);
+    if($('rateStatus') && diagnosticsEnabled()){
+      $('rateStatus').innerHTML='<span class="warn">⚠ 開発者診断を完了できませんでした。DEAD LINE計算を停止しています。</span>';
+    }
+  }
+}, 0);
+
+window.addEventListener('error',e=>{
+  console.error('APP_RUNTIME_ERROR',e.error||e.message||e);
+});
+window.addEventListener('unhandledrejection',e=>{
+  console.error('APP_UNHANDLED_REJECTION',e.reason||e);
+});
 </script>
 </body>
 </html>

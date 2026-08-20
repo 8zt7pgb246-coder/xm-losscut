@@ -77,7 +77,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <body>
 <div class="app">
 <h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v97</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v97</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v98</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -89,7 +89,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v97</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、ポジション/注文が未確定なら未解析の中央フレームを追加OCRする最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v98</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、必要な場合だけ中央フレームを1枚追加する最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -1683,7 +1683,11 @@ $('mediaFile').addEventListener('change',async e=>{
     // 動画は同じ注文行が2フレーム以上で一致したものだけを確定する。
     const rawFound=parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
     const pendingEvidenceCount=new Set(rawFound.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
-    const completeOrderBasket=isVideo && pendingEvidenceCount>=2;
+    // A clear MT5 Order pane can contain only one pending row. Do not require
+    // two distinct orders or two-frame persistence just to accept a single
+    // fully structured order. When the same video also contains a complete
+    // position basket, one valid pending row is sufficient.
+    const completeOrderBasket=isVideo && (pendingEvidenceCount>=2 || (pendingEvidenceCount>=1 && positionsRaw?.length>=3));
     const found=isVideo ? rawFound.filter(o=>Number(o.frameCount||0)>=2 || completeOrderBasket) : rawFound;
     const orderEvidence=rawFound.length>0 || /(?:ポジション|position|order|注文|オーダー|buy\s*limit|sell\s*limit)/i.test(parsed.rawText||'');
     const positionsRaw=parsed.positions.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
@@ -1697,13 +1701,15 @@ $('mediaFile').addEventListener('change',async e=>{
     // makes the app stop at exactly the point where the Trade screen was found.
     const positionEvidenceCount=new Set(positionsRaw.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
     const completePositionBasket=isVideo && positionEvidenceCount>=3;
+    // If one clear MT5 Trade frame contains the complete position basket,
+    // accept it even when individual rows were only visible in one sampled
+    // frame. Requiring every row to appear twice was causing valid 4-position
+    // screens to be rejected.
     const weakPositionRows=isVideo&&!completePositionBasket?positionsRaw.filter(o=>Number(o.frameCount||0)<2):[];
-    // A complete MT5 position basket can legitimately exist in one clear frame.
-    // Requiring two frames for every row is unnecessary and breaks short videos.
-    const positions=(isVideo && weakPositionRows.length)?[]:positionsCandidate;
+    const positions=completePositionBasket ? positionsCandidate : (weakPositionRows.length?[]:positionsCandidate);
     if(isVideo && weakPositionRows.length){
       console.warn('Incomplete position basket; calculation blocked',weakPositionRows);
-      invalidatePositionData(`現在ポジション${positionEvidenceCount}件のうち、全件を2フレーム以上で確定できていません。部分的なポジションでDEAD LINEを計算しません。`);
+      invalidatePositionData(`現在ポジション${positionEvidenceCount}件しか確定できていません。MT5のポジション欄が十分に写ったフレームを確認できるまでDEAD LINEを計算しません。`);
     }
     if(Number.isFinite(parsed.brokerPnl))$('brokerPnl').value=Math.round(parsed.brokerPnl);
 
@@ -1716,9 +1722,10 @@ $('mediaFile').addEventListener('change',async e=>{
           orderUpdateNote=`<br><span class="err">✕ 注文を確定できませんでした。保存済み${existing.length}件は今回の注文として使用しません。</span>`;
         }else{
           setOrders(found);
+          const orderBasis=completeOrderBasket&&pendingEvidenceCount===1?'1件の完全な注文行＋完全なポジション画面':'複数フレーム/複数注文の一致';
           orderUpdateNote=existing.length&&existing.length!==found.length
-            ? `<br><span class="ok">✓ 動画で注文を再確定：${existing.length}件 → ${found.length}件（2フレーム以上で一致）</span>`
-            : `<br><span class="ok">✓ 動画で注文を確定：${found.length}件（2フレーム以上で一致）</span>`;
+            ? `<br><span class="ok">✓ 動画で注文を再確定：${existing.length}件 → ${found.length}件（${orderBasis}）</span>`
+            : `<br><span class="ok">✓ 動画で注文を確定：${found.length}件（${orderBasis}）</span>`;
         }
       }else if(existing.length && found.length!==existing.length){
         invalidateOrderData(buildOrderMismatchMessage(existing.length,found.length)+' オーダー欄全体が写ったスクショを読み直してください。');

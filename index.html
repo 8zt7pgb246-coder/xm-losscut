@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v116-20260821">
+<meta name="build-id" content="v117-20260821">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v116</title>
+<title>Stop Out positioning｜デラポジ Pro v117</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -19,7 +19,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v116 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
+/* v117 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -88,7 +88,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v116</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v117</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
@@ -206,7 +206,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v116-20260821';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v117-20260821';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -289,8 +289,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v116-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v116-20260821';
+window.__DEPLOYMENT_STATE__={build:'v117-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v117-20260821';
 window.__XM_CACHE_RESET_V81=true;
 (async()=>{
   try{
@@ -318,7 +318,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // the newly uploaded index.html.
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_sw_reset_v116_done';
+    const key='xm_lc_sw_reset_v117_done';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
     let changed=false;
@@ -331,7 +331,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
     sessionStorage.setItem(key,'1');
     if(changed || navigator.serviceWorker.controller){
       const u=new URL(location.href);
-      u.searchParams.set('appbuild','v116');
+      u.searchParams.set('appbuild','v117');
       u.searchParams.set('fresh',String(Date.now()));
       console.info('LEGACY_SW_RESET_RELOAD',u.href);
       location.replace(u.href);
@@ -590,7 +590,7 @@ function lossAtLCJPY(o,lc,c){if(!Number.isFinite(lc)||!o||!Number.isFinite(+o.pr
 function formatJPYLoss(v){if(!Number.isFinite(v))return '—';const sign=v<0?'−':'+';return `${sign}${Math.round(Math.abs(v)).toLocaleString('ja-JP')} 円`}
 function renderOrderStatus(added,all,lc){const keys=new Set(added.map(o=>o.price+'|'+o.lot+'|'+o.side));const c=cfg();$('orders').innerHTML=all.map(o=>{const f=keys.has(o.price+'|'+o.lot+'|'+o.side);const loss=f?lossAtLCJPY(o,lc,c):null;const lossHtml=f?`<div class="small" style="margin-top:3px;color:#b42318">LC時想定含み損：<b>${formatJPYLoss(loss)}</b>（${Number(o.lot).toFixed(2)} lot）</div>`:`<div class="small" style="margin-top:3px">LC到達前のため想定含み損：—</div>`;return `<div style="padding:10px 0;border-top:1px solid #eef1f4"><div class="row" style="margin:0"><span>${o.side} ${Number(o.lot).toFixed(2)} / ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}</span><b class="${f?'ok':'warn'}">${f?'✓ LC時想定追加約定':'○ LC時想定未約定'}</b></div>${lossHtml}</div>`}).join('')}
 function pointStepFor(sym,c){if(c.type==='fx')return /JPY#$/.test(sym)?0.01:0.0001;return Number.isFinite(+c.point)&&+c.point>0?+c.point:(c.type==='index'?1:0.01)}
-function updatePipValue(){const c=cfg(),lots=.01,step=pointStepFor(currentSymbol,c),label=c.type==='fx'?'1 pip':'1 point';const qr=quoteRateFor(c),value=qr?step*lots*c.contract*qr:null;$('pipLabel').textContent=`${currentSymbol} ${label} / 0.01 lot`;$('pipValue').textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';$('pipNote').textContent=c.type==='fx'?`${step} ${label} × 0.01 lot（${(lots*c.contract).toLocaleString()} ${c.unit}）をJPY換算`:`${step} ${label} × 0.01 lot（契約サイズ ${c.contract} ${c.unit} / lot）をJPY換算`}
+function updatePipValue(){const c=cfg(),lots=.01,step=pointStepFor(currentSymbol,c),label=c.type==='fx'?'1 pip':'1 point';const qr=quoteRateFor(c),value=qr?step*lots*c.contract*qr:null;const pipLabel=$('pipLabel'),pipValue=$('pipValue'),pipNote=$('pipNote');if(pipLabel)pipLabel.textContent=`${currentSymbol} ${label} / 0.01 lot`;if(pipValue)pipValue.textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';if(pipNote)pipNote.textContent=c.type==='fx'?`${step} ${label} × 0.01 lot（${(lots*c.contract).toLocaleString()} ${c.unit}）をJPY換算`:`${step} ${label} × 0.01 lot（契約サイズ ${c.contract} ${c.unit} / lot）をJPY換算`}
 function normalizeOcrNumber(s){if(s==null)return null;let x=String(s).trim().replace(/[,$]/g,'').replace(/[Oo]/g,'0').replace(/[Il|]/g,'1').replace(/[^0-9.]/g,'');if((x.match(/\./g)||[]).length>1){const parts=x.split('.');x=parts.shift()+'.'+parts.join('')}const n=Number(x);return Number.isFinite(n)?n:null}
 function symbolFromText(s){const raw=String(s||'').toUpperCase().replace(/\s+/g,'');const aliases={'GOLD':'GOLD#','XAUUSD':'GOLD#','XAUUSD#':'GOLD#','BTCUSD':'BTCUSD#','BTCUSD#':'BTCUSD#','OILCASH':'OILCash#','OILCASH#':'OILCash#','JP225CASH':'JP225Cash#','JP225CASH#':'JP225Cash#'};if(aliases[raw])return aliases[raw];const m=raw.match(/^([A-Z0-9]+(?:CASH)?#)$/);return m?m[1]:null}
 function normalizeSymbol(s){let x=String(s).toUpperCase().replace(/\s+/g,'');const aliases={'GOLD':'GOLD#','XAUUSD':'GOLD#','XAUUSD#':'GOLD#','BTCUSD':'BTCUSD#','BTCUSD#':'BTCUSD#','OILCASH':'OILCash#','OILCASH#':'OILCash#','JP225CASH':'JP225Cash#','JP225CASH#':'JP225Cash#'};if(aliases[x])return aliases[x];x=x.replace(/CASH#/,'Cash#');if(x==='GOLD#')return'GOLD#';return x}
@@ -1292,17 +1292,19 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     if(width<=0||height<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
     if(v.readyState<2)await waitEvent('loadeddata',10000);
 
-    // v116 PRO-QUALITY VIDEO SAMPLING:
+    // v117 PRO-QUALITY VIDEO SAMPLING:
     // The previous build used 5 temporal anchors and only OCR'd 3 initially.
     // That was fast, but a short MT5 Trade pane could sit between anchors.
     // For a professional risk calculator, missing one decisive Trade frame is
-    // more dangerous than spending another few OCR passes. Sample 12 anchors
+    // more dangerous than spending another few OCR passes. Sample 7 anchors
     // across the full duration, then run a second PSM-6 pass only on the
     // highest-scoring Trade/Order frames. The same canvas objects are reused,
     // so decoding is still done only once.
-    const requested=Math.max(2,Math.min(12,Number(maxFrames)||12));
-    const count=Math.min(requested,12);
-    const fractions=[0.04,0.12,0.20,0.28,0.36,0.48,0.60,0.70,0.80,0.88,0.94,0.98].slice(0,count);
+    const requested=Math.max(2,Math.min(7,Number(maxFrames)||7));
+    const count=Math.min(requested,7);
+    // Seven anchors cover short iPhone recordings while keeping OCR latency bounded.
+    // The last two anchors deliberately cover the common late Trade-screen window.
+    const fractions=[0.06,0.20,0.36,0.52,0.68,0.84,0.97].slice(0,count);
     const endTime=Math.max(0,duration-0.05);
     const times=fractions.map(f=>Math.min(endTime,Math.max(0.02,endTime*f)));
     const scale=Math.min(1,1280/Math.max(width,height));
@@ -1397,7 +1399,7 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
       currentFrame=i+1;
       let source=sources[i].canvas;
       const isControlCenter=!!sources[i].isControlCenter;
-      // v116: Trade/position OCR intentionally uses the full frame. The focused grayscale crop
+      // v117: Trade/position OCR intentionally uses the full frame. The focused grayscale crop
       // drops MT5's small price digits on iPhone recordings, while full-frame PSM 6 preserves them.
       const r=await worker.recognize(source);
       results.push({data:r.data,time:sources[i].time,frameIndex:i,isControlCenter,ocrMode:mode});
@@ -1557,7 +1559,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const ocrEnginePromise=ensureOCR();
     if(isVideo){
       $('ocrStatus').textContent='2/8 動画デコーダーとOCRエンジンを並列準備中…';
-      videoSourcesForReuse=await videoFrameSources(f,12,(done,total)=>setImportStage('3/8',`動画フレーム読込 ${done}/${total}`));
+      videoSourcesForReuse=await videoFrameSources(f,7,(done,total)=>setImportStage('3/8',`動画フレーム読込 ${done}/${total}`));
       if(videoSourcesForReuse[0]?.canvas){
         const pv=$('preview');
         if(pv){pv.src=videoSourcesForReuse[0].canvas.toDataURL('image/jpeg',0.82);pv.style.display='block';}
@@ -1566,7 +1568,7 @@ $('mediaFile').addEventListener('change',async e=>{
     }else{
       $('ocrStatus').textContent='2/8 画像データを確認中…';
     }
-    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…（高精度12フレーム＋重点Trade解析）';
+    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…（高精度7フレーム＋重点Trade解析）';
     const T=await Promise.race([
       ocrEnginePromise,
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('TESSERACT_SCRIPT_TIMEOUT')),12000))
@@ -1582,7 +1584,7 @@ $('mediaFile').addEventListener('change',async e=>{
         if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面動画OCR中… ${Math.round((m.progress||0)*100)}%`;
       });
     }
-    // v116 PRO-QUALITY: OCR every sampled video anchor once in the broad pass.
+    // v117 PRO-QUALITY: OCR every sampled video anchor once in the broad pass.
     // Then reuse the same worker for a focused PSM-6 pass over the best Trade/Order
     // frames. This removes the old "first/last + one middle frame" blind spot.
     const initialVideoSources = isVideo ? videoSourcesForReuse : null;
@@ -1591,8 +1593,9 @@ $('mediaFile').addEventListener('change',async e=>{
     },initialVideoSources,sharedVideoWorker);
     if(!videoSourcesForReuse)videoSourcesForReuse=results.__sources||null;
 
+    let focusedTradePassCompleted=false;
     if(isVideo && videoSourcesForReuse?.length){
-      const focusedSources=selectFocusedVideoSources(videoSourcesForReuse,results,6);
+      const focusedSources=selectFocusedVideoSources(videoSourcesForReuse,results,2);
       if(focusedSources.length){
         try{
           let focused=await recognizeFileFrames(T,f,'order',m=>{
@@ -1600,6 +1603,7 @@ $('mediaFile').addEventListener('change',async e=>{
           },focusedSources,sharedVideoWorker);
           focused=filterUsableOCRResults(focused);
           results=mergeOCRResultObjects(results,focused);
+          focusedTradePassCompleted=true;
         }catch(focusedErr){
           console.warn('focused Trade/Order OCR failed; continuing with broad OCR',focusedErr);
           $('ocrStatus').textContent='重点Trade/注文解析に失敗しました。全体解析結果で安全判定を継続しています…';
@@ -1666,19 +1670,14 @@ $('mediaFile').addEventListener('change',async e=>{
     // stopped as soon as any position+order was found, which caused exactly that
     // failure mode. The focused pass is therefore mandatory for video and its
     // results are MERGED, never used only as a fallback.
-    const needsFocusedTradePass=isVideo && (
+    const needsFocusedTradePass=isVideo && !focusedTradePassCompleted && (
       parsed.positions.length<3 || parsed.pending.length<1 ||
       !/(?:GOLD#?|XAUUSD)\s+(?:buy|sell)/i.test(parsed.rawText||'')
     );
     if(needsFocusedTradePass){
       try{
-        // The initial fast pass uses 3 anchors. OCR the two unused anchors only
-        // when the basket is incomplete. For the 5-anchor layout these are the
-        // 35% and 85% frames, covering the common short Trade-screen transition
-        // without repeating an already OCR'd frame.
-        const focusedSources=isVideo && videoSourcesForReuse?.length>=5
-          ? [videoSourcesForReuse[1],videoSourcesForReuse[3]]
-          : selectFocusedVideoSources(videoSourcesForReuse,results,2);
+        // No duplicate OCR: this fallback is reached only if the first focused pass failed.
+        const focusedSources=selectFocusedVideoSources(videoSourcesForReuse,results,2);
         let focused=await recognizeFileFrames(T,f,'order',m=>{
           if(m.status==='recognizing text')$('ocrStatus').textContent=`注文・ポジション専用解析中… ${Math.round((m.progress||0)*100)}%`;
         },focusedSources,sharedVideoWorker);
@@ -1770,7 +1769,7 @@ $('mediaFile').addEventListener('change',async e=>{
     let savedUsd=quoteStore['USDJPY#']||priceStore['USDJPY#'];
     let savedUsdFresh=!!(savedUsd?.updatedAt && (Date.now()-Date.parse(savedUsd.updatedAt)<=5*60*1000));
     let requiredRate=(cfg().quote==='JPY')?1:(cfg().quote==='USD'?(mediaUsdJpyFresh?Number($('usdjpy').value):savedUsdFresh?Number(savedUsd.bid):NaN):quoteRateFor(cfg()));
-    // v116: all broad samples plus the focused Trade/Order pass have already
+    // v117: all broad samples plus the focused Trade/Order pass have already
     // completed before this gate. Do not launch a third OCR pass here: duplicating
     // OCR after the worker has been terminated only increases latency and can create
     // inconsistent evidence sets.
@@ -1994,7 +1993,7 @@ function runVideoBeforeOCRSelfTest(){
   const end=src.indexOf("\n});",start);
   if(start<0||end<0)return false;
   const h=src.slice(start,end);
-  const v=h.indexOf("videoFrameSources(f,12,(done,total)=>setImportStage('3/8',`動画フレーム読込 ${done}/${total}`))");
+  const v=h.indexOf("videoSourcesForReuse=await videoFrameSources(f,7,(done,total)=>setImportStage('3/8',`動画フレーム読込 ${done}/${total}`))");
   const o=h.indexOf("ensureOCR()");
   return v>=0 && o>v;
 }
@@ -2183,7 +2182,7 @@ function runCalcSelfTest(){
     const t32=s31.length===1&&s31[0].symbol==='GOLD#';
     // 回帰テスト33：動画OCRはフレームごとにworkerを作り直さず、1 workerを再利用する。
     const t33=(recognizeFileFrames.toString().match(/createOCRWorker/g)||[]).length===1;
-    const t39v=/URL\.createObjectURL\(file\)/.test(videoFrameSources.toString()) && !/v\.srcObject=file/.test(videoFrameSources.toString()) && /fractions=\[0\.04,0\.12,0\.20,0\.28,0\.36,0\.48,0\.60,0\.70,0\.80,0\.88,0\.94,0\.98\]/.test(videoFrameSources.toString()) && recognizeFileFrames.toString().includes('ocrMode:mode');
+    const t39v=/URL\.createObjectURL\(file\)/.test(videoFrameSources.toString()) && !/v\.srcObject=file/.test(videoFrameSources.toString()) && /fractions=\[0\.06,0\.20,0\.36,0\.52,0\.68,0\.84,0\.97\]/.test(videoFrameSources.toString()) && recognizeFileFrames.toString().includes('ocrMode:mode');
     // 回帰テスト34：注文数不一致でconfirmを使わず、古い注文を計算へ残さない。
     const forbiddenConfirm='confirm'+'('; const t34=!document.documentElement.innerHTML.includes(forbiddenConfirm) && /orderDataInvalid/.test(document.documentElement.innerHTML);
     // 回帰テスト35：完全なポジション画面＋単一Pending注文でも注文を確定できる。
@@ -2252,9 +2251,9 @@ function runCalcSelfTest(){
     // 回帰テスト50：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t50=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t52=window.__APP_BUILD__==='v116-20260821'&&/v116/.test($('buildMarker')?.textContent||'');
+    const t52=window.__APP_BUILD__==='v117-20260821';
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v116-20260821'&&/v116/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v117-20260821';
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト55b：今回の正解動画。3ポジション＋2 Pendingを1回のOCR漏れで欠落させない。
@@ -2284,7 +2283,7 @@ function runCalcSelfTest(){
     // 回帰テスト63：部分認識を計算に使わない。
     const t64=typeof sanitizeRecognizedPositions==='function'&&typeof invalidatePositionData==='function';
     const t66=typeof mergeOCRResultObjects==='function'&&typeof selectFocusedVideoSources==='function';
-    const t67=/videoFrameSources\(f,12/.test(document.documentElement.innerHTML)&&/高精度12フレーム/.test(document.documentElement.innerHTML);
+    const t67=/videoFrameSources\(f,7/.test(document.documentElement.innerHTML)&&/高精度7フレーム/.test(document.documentElement.innerHTML);
     const tests=[t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18,t19,t20,t21,t22,t23,t24,t25,t26,t27,t28,t29,t30,t31,t32,t33,t34,t35,t36,t37,t38,t39,t39v,t40,t41,t42,t43,t44,t45,t46,t47,t48,t49,t50,t51,t52,t53,t55,t56,t57,t58,t59,t60,t61,t62,t63,t65,t66,t67];
     const passed=tests.filter(Boolean).length;
     const failed=tests.map((v,i)=>v?null:`T${i+1}`).filter(Boolean);
@@ -2463,9 +2462,9 @@ $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 ['targetPnlPrice','targetPnlSymbol','targetPnlStep','targetPnlLevels'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcTargetPositionPnl);el.addEventListener('change',()=>{if(id==='targetPnlSymbol'){const p=Number.isFinite(goldBid)&&currentSymbol===el.value?goldBid:'';if(p)$('targetPnlPrice').value=p}calcTargetPositionPnl();})}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v116-20260821';
+window.__APP_BUILD__='v117-20260821';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
-window.__V116_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v116-20260821'};
+window.__V117_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v117-20260821'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

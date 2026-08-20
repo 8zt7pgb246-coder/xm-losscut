@@ -77,7 +77,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <body>
 <div class="app">
 <h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v97</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v99</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v102</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -89,7 +89,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v99</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、必要な場合だけ中央フレームを1枚追加する最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v102</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、必要な場合だけ中央フレームを1枚追加する最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -1330,7 +1330,7 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
       const r=await worker.recognize(source);
       results.push({data:r.data,time:sources[i].time,frameIndex:i,isControlCenter});
     }
-  }finally{await worker.terminate()}
+  }finally{if(ownWorker){try{await worker.terminate()}catch(e){console.warn('[XM] OCR worker terminate skipped',e)}}}
   results.expectedFrameCount=sources.expectedFrameCount||sources.length;
   results.videoDuration=sources.videoDuration||0;
   if(isVideo)Object.defineProperty(results,'__sources',{value:sources,enumerable:false});
@@ -1688,14 +1688,66 @@ $('mediaFile').addEventListener('change',async e=>{
     const positionsRaw=parsed.positions.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
     const positionEvidenceCount=new Set(positionsRaw.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
     const tradeRowEvidence=(parsed.rawText||'').match(/GOLD#?\s+buy\s+0?\.\d+/ig)||[];
-    const rawFound=parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
+    // Harden pending-order extraction for the exact MT5 iPhone layout:
+    // `GOLD# buy limit` on one line, followed by `0.01 / 0 at 4436.05`
+    // on the next. OCR often inserts an em-dash or splits the row, so the
+    // generic parser alone is not sufficient. This recovery pass uses only
+    // values that are explicitly present in the same short text window.
+    function recoverPendingOrdersFromTradeText(text){
+      const lines=String(text||'').replace(/\r/g,'').split('\n').map(normalizeOcrLine).filter(Boolean);
+      const out=[];
+      const push=(sym,side,lot,price,reason)=>{
+        if(!sym||normalizeSymbol(sym)!==currentSymbol)return;
+        if(!Number.isFinite(lot)||lot<=0||lot>1000||!Number.isFinite(price)||price<=0)return;
+        if(!out.some(o=>o.side===side&&Math.abs(o.lot-lot)<1e-6&&Math.abs(o.price-price)<1e-5))
+          out.push({symbol:sym,side,lot:+lot.toFixed(4),price,frameCount:1,recoveredPending:true,recoveryReason:reason});
+      };
+      for(let i=0;i<lines.length;i++){
+        const window=lines.slice(Math.max(0,i-1),i+4).join(' ');
+        const explicit=window.match(/(GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(buy\s*limit|sell\s*limit)\b/i);
+        const lm=window.match(/\b(0?\.\d+|\d+(?:\.\d+)?)\s*\/\s*0\b/i)
+               || window.match(/(?:buy\s*limit|sell\s*limit)\s+(0?\.\d+|\d+(?:\.\d+)?)/i);
+        const pm=window.match(/\bat\s*(\d[\d,.]*\.\d+)/i);
+        if(explicit&&lm&&pm){
+          const sym=symbolFromText(explicit[1]);
+          const side=/^buy/i.test(explicit[2])?'Buy Limit':'Sell Limit';
+          push(sym,side,Number(lm[1]),normalizeOcrNumber(pm[1]),'explicit');
+          continue;
+        }
+        // iPhone MT5 order rows are sometimes OCR'd as only:
+        // `0.01 / 0 at 4436.05` because the blue `GOLD# buy limit` text
+        // disappears from the focused grayscale crop. This exact `/ 0 at`
+        // signature does not occur in a normal position row. Recover it only
+        // when a complete current-position basket is already visible and the
+        // nearby text identifies GOLD/XAUUSD or the order pane.
+        const compact=lines[i].match(/^\s*(0?\.\d+|\d+(?:\.\d+)?)\s*\/\s*0\s+at\s*(\d[\d,.]*\.\d+)/i);
+        if(compact){
+          const context=lines.slice(Math.max(0,i-3),Math.min(lines.length,i+3)).join(' ');
+          const hasSymbol=/(?:GOLD#?|XAUUSD#?)/i.test(context);
+          const hasOrderContext=/(?:order|オーダー|注文|placed)/i.test(context);
+          const hasSellLimit=/(?:sell\s*limit|sell\s*stop)/i.test(context);
+          if(hasSymbol && hasOrderContext && !hasSellLimit){
+            push(currentSymbol,'Buy Limit',Number(compact[1]),normalizeOcrNumber(compact[2]),'compact-order-row');
+          }
+        }
+      }
+      return out;
+    }
+
+    let rawFound=parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
+    const recoveredPending=recoverPendingOrdersFromTradeText(parsed.rawText||'');
+    for(const o of recoveredPending){
+      if(!rawFound.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-o.lot)<1e-6&&Math.abs(Number(x.price)-o.price)<1e-5))rawFound.push(o);
+    }
     const pendingEvidenceCount=new Set(rawFound.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
     // A clear MT5 Order pane may contain only one pending row. A complete position
     // basket plus one structured pending row is enough evidence, even if that row
     // appears in only one sampled frame. Never require two copies of a single order.
     const completeOrderBasket=isVideo && (pendingEvidenceCount>=2 || (pendingEvidenceCount>=1 && positionEvidenceCount>=3));
-    const found=isVideo ? rawFound.filter(o=>Number(o.frameCount||0)>=2 || completeOrderBasket) : rawFound;
-    const orderEvidence=rawFound.length>0 || /(?:ポジション|position|order|注文|オーダー|buy\s*limit|sell\s*limit)/i.test(parsed.rawText||'');
+    // A single explicit pending row in a complete MT5 Trade screen is enough.
+    // Do not discard it merely because OCR saw it in one sampled frame.
+    const found=isVideo ? rawFound.filter(o=>Number(o.frameCount||0)>=2 || completeOrderBasket || o.recoveredPending===true) : rawFound;
+    const orderEvidence=rawFound.length>0 || recoveredPending.length>0 || /(?:ポジション|position|order|注文|オーダー|buy\s*limit|sell\s*limit)/i.test(parsed.rawText||'');
     if(isVideo && tradeRowEvidence.length>=3 && positionsRaw.length<3){
       invalidatePositionData(`MT5動画内に${tradeRowEvidence.length}件のGOLD BUY行を検出しましたが、アプリは${positionsRaw.length}件しか構造化できませんでした。部分データでDEAD LINEを計算しません。`);
     }

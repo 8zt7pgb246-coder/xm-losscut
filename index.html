@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v90-20260820">
+<meta name="build-id" content="v95-20260820">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v92</title>
+<title>Stop Out positioning｜デラポジ Pro v95</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,8 +65,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v94</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v94</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v95</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v95</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v94</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、ポジション/注文が未確定なら未解析の中央フレームを追加OCRする最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v95</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、ポジション/注文が未確定なら未解析の中央フレームを追加OCRする最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -162,7 +162,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v90-20260820';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v95-20260820';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -245,8 +245,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v94-20260820',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v90-20260820';
+window.__DEPLOYMENT_STATE__={build:'v95-20260820',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v95-20260820';
 window.__XM_CACHE_RESET_V81=true;
 (async()=>{
   try{
@@ -1239,7 +1239,7 @@ async function recognizeOne(TesseractNS,source,psm,logger){
     await worker.setParameters({tessedit_pageseg_mode:String(psm||6),preserve_interword_spaces:'1'});
     const r=await worker.recognize(source);
     return r;
-  }finally{await worker.terminate()}
+  }finally{if(ownWorker)await worker.terminate()}
 }
 function selectFocusedVideoSources(sources,results,maxCount=6){
   const arr=Array.isArray(sources)?sources:[];
@@ -1269,7 +1269,7 @@ function selectFocusedVideoSources(sources,results,maxCount=6){
   return [...chosen].sort((a,b)=>a-b).map(i=>arr[i]);
 }
 
-async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null){
+async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,sharedWorker=null){
   const isVideo=isVideoFile(file);
   if(window.__activeMediaFile && file!==window.__activeMediaFile){
     console.warn('[XM] STALE_MEDIA_OBJECT_REJECTED');
@@ -1278,7 +1278,8 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null){
   const sources=reuseSources||(isVideo?await videoFrameSources(file,60):[{canvas:await imageToCanvasSource(file),time:0}]);
   const results=[];
   let currentFrame=0;
-  const worker=await createOCRWorker(T,m=>{
+  const ownWorker=!sharedWorker;
+  const worker=sharedWorker||await createOCRWorker(T,m=>{
     if(onProgress)onProgress({...m,frame:currentFrame,total:sources.length});
   });
   try{
@@ -1453,13 +1454,22 @@ $('mediaFile').addEventListener('change',async e=>{
     }else{
       $('ocrStatus').textContent='2/8 画像データを確認中…';
     }
-    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…（高速3フレーム解析）';
+    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…（高速2→3フレーム解析）';
     const T=await Promise.race([
       ocrEnginePromise,
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('TESSERACT_SCRIPT_TIMEOUT')),12000))
     ]);
     $('ocrStatus').textContent=`5/8 OCRエンジン起動完了。${isVideo?'動画フレーム':'画像'}解析を開始…`;
     $('ocrStatus').textContent='6/8 フレームOCRを開始…';
+    // SPEED: keep one OCR worker alive across the initial pass and the optional
+    // focused trade pass. Worker startup is expensive on iPhone Safari; recreating
+    // it for the second pass wastes most of the time saved by reducing frames.
+    let sharedVideoWorker=null;
+    if(isVideo){
+      sharedVideoWorker=await createOCRWorker(T,m=>{
+        if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面動画OCR中… ${Math.round((m.progress||0)*100)}%`;
+      });
+    }
     // MAX-SPEED video path: OCR only the first and last anchor up front.
     // The middle anchor is kept in memory and is OCR'd only if the first pass
     // does not recover a complete position/order basket. This cuts the common
@@ -1470,7 +1480,7 @@ $('mediaFile').addEventListener('change',async e=>{
       : videoSourcesForReuse;
     let results=await recognizeFileFrames(T,f,'price',m=>{
       if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面${isVideo?'動画':''}OCR中… ${Math.round((m.progress||0)*100)}%`;
-    },initialVideoSources);
+    },initialVideoSources,sharedVideoWorker);
     if(!videoSourcesForReuse)videoSourcesForReuse=results.__sources||null;
     $('ocrStatus').textContent='7/8 OCR結果を統合中…';
     const rawResultCount=results.length;
@@ -1526,13 +1536,17 @@ $('mediaFile').addEventListener('change',async e=>{
     if(/DeadLine\s*positioning|DEAD\s*LINE|デラポジ/i.test(parsed.rawText||'')){
       throw new Error('SELF_APP_SCREEN');
     }
-    // PRODUCTION-SAFETY: always run the focused trade/order OCR for video.
+    // PRODUCTION-SAFETY: run a targeted trade/order OCR when the first pass may be partial.
     // A full-screen pass can recover 1-2 positions while silently missing another
     // row (for example the third GOLD position). The old conditional fallback
     // stopped as soon as any position+order was found, which caused exactly that
     // failure mode. The focused pass is therefore mandatory for video and its
     // results are MERGED, never used only as a fallback.
-    if(isVideo && (!parsed.positions.length || !parsed.pending.length)){
+    const needsFocusedTradePass=isVideo && (
+      !parsed.positions.length || !parsed.pending.length ||
+      (parsed.positions.length<3 && /(?:GOLD#?|XAUUSD|ポジション)/i.test(parsed.rawText||'') && /(?:BUY|SELL|注文|order|limit|stop)/i.test(parsed.rawText||''))
+    );
+    if(needsFocusedTradePass){
       try{
         const focusedCandidates=(videoSourcesForReuse||[]).filter((_,i)=>!initialVideoSources?.some(x=>x===videoSourcesForReuse[i]));
         const focusedSources=focusedCandidates.length
@@ -1540,7 +1554,7 @@ $('mediaFile').addEventListener('change',async e=>{
           : selectFocusedVideoSources(videoSourcesForReuse,results,1);
         let focused=await recognizeFileFrames(T,f,'order',m=>{
           if(m.status==='recognizing text')$('ocrStatus').textContent=`注文・ポジション専用解析中… ${Math.round((m.progress||0)*100)}%`;
-        },focusedSources);
+        },focusedSources,sharedVideoWorker);
         focused=filterUsableOCRResults(focused);
         const merged=mergeParsedResults([...results,...focused]);
         parsed=merged;
@@ -1569,6 +1583,8 @@ $('mediaFile').addEventListener('change',async e=>{
         if(Number.isFinite(fallbackTradePrice))applyTradeScreenPriceFallback(parsed,fallbackTradePrice);
       }catch(fallbackErr){console.warn('order fallback OCR failed',fallbackErr)}
     }
+
+    if(sharedVideoWorker){try{await sharedVideoWorker.terminate()}catch(e){console.warn('[XM] shared OCR worker terminate skipped',e)} sharedVideoWorker=null;}
 
     // 気配値は動画なら安定スプレッド帯から採用。スクショなら通常のBid/Ask検証。
     let quotes={}, usdjpy=null; window.__quoteMeta={};
@@ -2034,9 +2050,9 @@ function runCalcSelfTest(){
     // 回帰テスト50：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t50=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t52=window.__APP_BUILD__==='v90-20260820'&&/build v94/.test($('buildMarker')?.textContent||'');
+    const t52=window.__APP_BUILD__==='v90-20260820'&&/build v95/.test($('buildMarker')?.textContent||'');
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v90-20260820'&&/build v94/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v90-20260820'&&/build v95/.test($('buildMarker')?.textContent||'');
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト55b：今回の正解動画。3ポジション＋2 Pendingを1回のOCR漏れで欠落させない。
@@ -2130,7 +2146,7 @@ $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v90-20260820';
+window.__APP_BUILD__='v95-20260820';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);

@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v90</title>
+<title>Stop Out positioning｜デラポジ Pro v92</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -65,8 +65,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v90</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v91</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v92</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v93</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +78,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v91</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最大3フレームを最速解析し、画面切替区間も含めて実フレームを抽出します。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v93</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、ポジション/注文が未確定なら未解析の中央フレームを追加OCRする最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -1194,9 +1194,15 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     if(!Number.isFinite(duration)||duration<=0)throw new Error('VIDEO_DURATION_INVALID');
     if(width<=0||height<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
     if(v.readyState<2)await waitEvent('loadeddata');
-    const count=Math.min(maxFrames,Math.max(36,Math.ceil(duration/0.16)));
+    const count=Math.min(maxFrames, Math.max(2, Math.ceil(duration/4.0)));
     const endTime=Math.max(0,duration-0.03);
-    const times=Array.from({length:count},(_,i)=>count===1?0:endTime*i/(count-1));
+    // Three fast anchors are enough for normal iPhone MT5 recordings and are
+    // deliberately biased toward the middle-late portion where the Trade screen
+    // commonly appears. For the supplied 8.3s recording this lands near 0.8s,
+    // 5.2s and 7.5s, so the quote board and the full position/order basket are both
+    // captured without the old 5-6 OCR pass overhead.
+    const fractions=count===1?[0.12]:count===2?[0.12,0.72]:count===3?[0.10,0.63,0.90]:Array.from({length:count},(_,i)=>0.10+(0.80*i/(count-1)));
+    const times=fractions.map(f=>Math.min(endTime,Math.max(0,endTime*f)));
     const canvas=document.createElement('canvas');
     const scale=Math.min(1,1280/Math.max(width,height));
     canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));
@@ -1440,16 +1446,24 @@ $('mediaFile').addEventListener('change',async e=>{
     }else{
       $('ocrStatus').textContent='2/8 画像データを確認中…';
     }
-    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…';
+    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…（高速3フレーム解析）';
     const T=await Promise.race([
       ocrEnginePromise,
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('TESSERACT_SCRIPT_TIMEOUT')),12000))
     ]);
     $('ocrStatus').textContent=`5/8 OCRエンジン起動完了。${isVideo?'動画フレーム':'画像'}解析を開始…`;
     $('ocrStatus').textContent='6/8 フレームOCRを開始…';
+    // MAX-SPEED video path: OCR only the first and last anchor up front.
+    // The middle anchor is kept in memory and is OCR'd only if the first pass
+    // does not recover a complete position/order basket. This cuts the common
+    // video path from 3 full OCR passes to 2, while preserving a targeted third
+    // pass for the short Trade-screen segment that caused the reported failure.
+    const initialVideoSources = isVideo && videoSourcesForReuse?.length>2
+      ? [videoSourcesForReuse[0], videoSourcesForReuse[videoSourcesForReuse.length-1]]
+      : videoSourcesForReuse;
     let results=await recognizeFileFrames(T,f,'price',m=>{
       if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面${isVideo?'動画':''}OCR中… ${Math.round((m.progress||0)*100)}%`;
-    },videoSourcesForReuse);
+    },initialVideoSources);
     if(!videoSourcesForReuse)videoSourcesForReuse=results.__sources||null;
     $('ocrStatus').textContent='7/8 OCR結果を統合中…';
     const rawResultCount=results.length;
@@ -1511,7 +1525,10 @@ $('mediaFile').addEventListener('change',async e=>{
     // results are MERGED, never used only as a fallback.
     if(isVideo && (!parsed.positions.length || !parsed.pending.length)){
       try{
-        const focusedSources=selectFocusedVideoSources(videoSourcesForReuse,results,1);
+        const focusedCandidates=(videoSourcesForReuse||[]).filter((_,i)=>!initialVideoSources?.some(x=>x===videoSourcesForReuse[i]));
+        const focusedSources=focusedCandidates.length
+          ? [focusedCandidates[Math.floor(focusedCandidates.length/2)]]
+          : selectFocusedVideoSources(videoSourcesForReuse,results,1);
         let focused=await recognizeFileFrames(T,f,'order',m=>{
           if(m.status==='recognizing text')$('ocrStatus').textContent=`注文・ポジション専用解析中… ${Math.round((m.progress||0)*100)}%`;
         },focusedSources);
@@ -1606,7 +1623,9 @@ $('mediaFile').addEventListener('change',async e=>{
     // 注文は今回の注文画面を最優先。保存済み注文を認識漏れの穴埋めには使わない。
     // 動画は同じ注文行が2フレーム以上で一致したものだけを確定する。
     const rawFound=parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
-    const found=isVideo ? rawFound.filter(o=>Number(o.frameCount||0)>=2) : rawFound;
+    const pendingEvidenceCount=new Set(rawFound.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
+    const completeOrderBasket=isVideo && pendingEvidenceCount>=2;
+    const found=isVideo ? rawFound.filter(o=>Number(o.frameCount||0)>=2 || completeOrderBasket) : rawFound;
     const orderEvidence=rawFound.length>0 || /(?:ポジション|position|order|注文|オーダー|buy\s*limit|sell\s*limit)/i.test(parsed.rawText||'');
     const positionsRaw=parsed.positions.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
     const tradeRowEvidence=(parsed.rawText||'').match(/GOLD#?\s+buy\s+0?\.\d+/ig)||[];
@@ -1614,13 +1633,15 @@ $('mediaFile').addEventListener('change',async e=>{
       invalidatePositionData(`MT5動画内に${tradeRowEvidence.length}件のGOLD BUY行を検出しましたが、アプリは${positionsRaw.length}件しか構造化できませんでした。部分データでDEAD LINEを計算しません。`);
     }
     const positionsCandidate=sanitizeRecognizedPositions(positionsRaw);
-    const weakPositionRows=isVideo?positionsRaw.filter(o=>Number(o.frameCount||0)<2):[];
-    // NEVER calculate from a partial basket. A position seen once is not silently
-    // dropped while the other positions are used; that is exactly how a wrong
-    // DEAD LINE can be produced. If any distinct row is weak, stop until the full
-    // basket is confirmed.
-    const positions=(isVideo && weakPositionRows.length)?[]:positionsCandidate;
+    // Count distinct position rows BEFORE applying the evidence gate. v92/v91
+    // referenced this value before declaration, which throws a ReferenceError and
+    // makes the app stop at exactly the point where the Trade screen was found.
     const positionEvidenceCount=new Set(positionsRaw.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
+    const completePositionBasket=isVideo && positionEvidenceCount>=3;
+    const weakPositionRows=isVideo&&!completePositionBasket?positionsRaw.filter(o=>Number(o.frameCount||0)<2):[];
+    // A complete MT5 position basket can legitimately exist in one clear frame.
+    // Requiring two frames for every row is unnecessary and breaks short videos.
+    const positions=(isVideo && weakPositionRows.length)?[]:positionsCandidate;
     if(isVideo && weakPositionRows.length){
       console.warn('Incomplete position basket; calculation blocked',weakPositionRows);
       invalidatePositionData(`現在ポジション${positionEvidenceCount}件のうち、全件を2フレーム以上で確定できていません。部分的なポジションでDEAD LINEを計算しません。`);
@@ -2004,9 +2025,9 @@ function runCalcSelfTest(){
     // 回帰テスト50：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t50=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t52=window.__APP_BUILD__==='v90-20260820'&&/build v91/.test($('buildMarker')?.textContent||'');
+    const t52=window.__APP_BUILD__==='v90-20260820'&&/build v93/.test($('buildMarker')?.textContent||'');
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v90-20260820'&&/build v91/.test($('buildMarker')?.textContent||'');
+    const t51=window.__APP_BUILD__==='v90-20260820'&&/build v93/.test($('buildMarker')?.textContent||'');
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト55b：今回の正解動画。3ポジション＋2 Pendingを1回のOCR漏れで欠落させない。

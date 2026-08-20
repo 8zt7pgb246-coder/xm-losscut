@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v104-20260821">
+<meta name="build-id" content="v105-20260821">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v104</title>
+<title>Stop Out positioning｜デラポジ Pro v105</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -74,12 +74,15 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .targetPnlRow .name{font-weight:800;color:#fff}.targetPnlRow .meta{font-size:12px;color:var(--muted);margin-top:3px}.targetPnlRow .amount{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
 
 .compactCard{padding:11px 13px}.compactCard .row{padding:3px 0}.compactDetails{padding:10px 13px}.compactDetails summary{cursor:pointer;list-style:none}.compactDetails summary::-webkit-details-marker{display:none}.compactDetails summary:after{content:"＋";float:right;color:var(--muted)}.compactDetails[open] summary:after{content:"−"}.compactDetails .footer{margin-top:8px}.page#pageLC > .card{margin:8px 0}.page#pageLC .alert,.page#pageLC .danger{padding:9px 11px}.page#pageLC .small{line-height:1.4}
+
+/* v105 compact mobile UI */
+.app{padding:9px 10px}h1{font-size:21px;margin:1px 0}.sub{font-size:11px;margin-bottom:8px}.nav{margin-bottom:7px}.nav button{padding:9px 10px;font-size:13px}.card,.hero{border-radius:14px;padding:10px;margin:6px 0}.grid{gap:7px}label{font-size:11px;margin:3px 0}input,select{padding:8px 9px;font-size:15px}.small{font-size:11px;line-height:1.35}.row{padding:5px 0;gap:7px}.toolbar{gap:5px}.toolbar button{padding:8px 10px;font-size:12px}.drop{padding:10px;border-radius:12px}.deadlineHero{padding:12px 10px 10px}.deadlineKicker{font-size:12px;letter-spacing:2px;padding:5px 10px}.deadlineSub{font-size:10px;margin-bottom:2px}.deadlineHero .price{font-size:44px;margin:2px 0 4px}.deadlineRule{margin-top:7px;padding-top:6px;font-size:10px}.compactInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.compactInfoGrid .row{display:block;padding:4px 0}.compactInfoGrid .row span,.compactInfoGrid .row b{display:block}.compactInfoGrid .row b{margin-top:1px;font-size:13px}.compactCard{padding:8px 10px}.compactDetails{padding:8px 10px}.alert,.danger{padding:7px 9px;font-size:11px;line-height:1.35}.page#pageLC > .card{margin:6px 0}.page#pageLC .alert,.page#pageLC .danger{padding:7px 9px}.mediaDone{margin-top:7px;padding:9px 10px}.mediaDone .title{font-size:13px;margin-bottom:5px}.mediaDone .item{font-size:11px}.mediaDone .item b{font-size:12px}.resultBox{padding:12px;border-radius:12px;margin-top:7px}.resultBig{font-size:31px}.targetPnlRow{padding:7px 0}.targetPnlRow .amount{font-size:16px}.subcard{padding:8px!important;margin-top:8px!important}.page#pagePnl .card{padding:10px;margin:6px 0}.page#pagePnl .grid{gap:6px}
 </style>
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v104</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v104</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v105</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v105</div><div class="sub">XM画面を読み込み → ポジション・注文を自動判定 → 推定Stop Outを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -91,7 +94,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v104</span></div><div class="small" style="margin-top:8px"><b>読み込み：</b>気配値・ポジション・注文を自動判定。必要データが揃わない場合は安全停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v105</span></div><div class="small" style="margin-top:6px">必要データ不足時は安全停止。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -105,34 +108,35 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div><label>損益補正</label><span id="pnlAdjustStatus" class="small">自動補正なし</span></div>
 </div></div>
 
-<div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">※ メイン表示は現在保有分。Pending全約定後の値は下落シナリオに表示</div></div>
+<div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">現在保有分を表示。Pending後は下落シナリオへ。</div></div>
 
-<div class="card" id="scenarioCard"><div class="row"><b>下落シナリオ</b><span id="scenarioStatus" class="small">—</span></div><div id="scenarioSteps" class="small">現在 → Pending約定 → Stop Out の順で表示</div></div><div class="card">
+<div class="card" id="scenarioCard"><div class="row"><b>下落シナリオ</b><span id="scenarioStatus" class="small">—</span></div><div id="scenarioSteps" class="small">現在 → Pending約定 → Stop Out の順で表示</div></div><div class="card compactCard">
+<div class="compactInfoGrid">
 <div class="row"><span id="bidLabel">XM Bid</span><b id="goldBid">—</b></div>
 <div class="row"><span id="askLabel">XM Ask</span><b id="goldAsk">—</b></div>
 <div class="row"><span>XM Spread</span><b id="goldSpread">—</b></div>
 <div class="row"><span>現在平均約定価格</span><b id="avg">—</b></div>
 <div class="row"><span>現在保有Lot</span><b id="lots">—</b></div>
-<div class="row"><span>全約定後 平均約定価格</span><b id="lcAvg">—</b></div>
+<div class="row"><span>現在含み損益</span><b id="currentPnl">—</b></div>
+<div class="row"><span>全約定後 平均価格</span><b id="lcAvg">—</b></div>
 <div class="row"><span>全約定後 Lot</span><b id="lcLots">—</b></div>
-<div class="row"><span>現在含み損益 合計</span><b id="currentPnl">—</b></div>
-<div class="row"><span>Stop Out価格時 想定含み損</span><b id="lcLoss">—</b></div>
+<div class="row"><span>Stop Out時 想定損失</span><b id="lcLoss">—</b></div>
 <div class="row"><span>合計数量</span><b id="qty">—</b></div>
-<div class="row"><span>Stop Out価格時 総ポジション</span><b id="lcTotalPositions">—</b></div>
-<div class="row"><span>現在のUSD/JPY</span><b id="usedRate">—</b></div>
-<div class="row"><span>価格最終更新</span><b id="priceUpdated">—</b></div>
-</div>
+<div class="row"><span>Stop Out時 総ポジション</span><b id="lcTotalPositions">—</b></div>
+<div class="row"><span>USD/JPY</span><b id="usedRate">—</b></div>
+<div class="row"><span>価格更新</span><b id="priceUpdated">—</b></div>
+</div></div>
 
 <div class="card"><div class="row"><b>1 pip / 1 point の変動額</b><span>0.01 lot基準</span></div><div class="row"><span id="pipLabel">現在の銘柄</span><b id="pipValue">—</b></div><div class="small" id="pipNote">—</div><div class="small" style="margin-top:6px">※LC時含み損は概算。実際は約定・スプレッド・スワップ等で変動します。</div></div>
 
-<div class="card" id="calcBasisCard"><div class="row"><b>DEAD LINE計算根拠</b><span id="basisStatus" class="small">現在の入力状態</span></div><div id="calcBasis" class="small">ポジション・注文・換算レート確定後に表示</div></div>
-<div class="card"><div class="row"><b>現在ポジション</b><span id="positionCount">0件</span></div><div id="positions"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addPosition()">＋ ポジション追加</button><button class="secondary" onclick="resetPositions()">ポジションリセット</button></div></div>
+<details class="card compactDetails" id="calcBasisCard"><summary><b>計算根拠</b> <span id="basisStatus" class="small">現在の入力状態</span></summary><div id="calcBasis" class="footer">ポジション・注文・換算レート確定後に表示</div></details>
+<details class="card compactDetails"><summary><b>現在ポジション</b> <span id="positionCount">0件</span></summary><div id="positions"></div><div class="toolbar" style="margin-top:7px"><button class="secondary" onclick="addPosition()">＋ 追加</button><button class="secondary" onclick="resetPositions()">リセット</button></div></details>
 
-<div class="card"><div class="row"><b>認識した注文 / 下落時シナリオ</b><span id="count">0件 / 下落時の想定追加約定 0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">注文リセット</button></div></div>
+<details class="card compactDetails"><summary><b>注文 / 下落シナリオ</b> <span id="count">0件 / 追加0件</span></summary><div id="orders"></div><div class="toolbar" style="margin-top:7px"><button class="secondary" onclick="addOrder()">＋ 追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></details>
 
-<div class="card compactCard"><div class="row"><b>価格ソース</b><span class="small">XM画面</span></div><div class="small">読み込んだBid/Askを銘柄別に保存。新しい気配値を読むまで維持します。</div></div>
+<details class="card compactDetails"><summary><b>価格ソース</b> <span class="small">XM画面</span></summary><div class="footer">読み込んだBid/Askを銘柄別に保存。</div></details>
 
-<div class="alert"><b>計算ルール</b><br>DEAD LINE＝Stop Out開始の推定価格。現在ポジションを含め、下落時はBuy Limitを到達順に反映します。Stop Outは段階決済です。OCRや時系列に不整合があれば計算を停止します。</div>
+<div class="alert"><b>計算：</b>現在ポジション＋下落時のBuy Limitを到達順に反映。Stop Outは段階決済。データ不整合時は停止。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
 
 <div id="diagnosticPanel" class="card" style="display:none"><div class="row"><b>開発者診断：計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">本番画面には表示せず、?debug=1 または診断モードでのみ表示します。回帰テストは開発者向け監視です。NGでも本番の入力データ検証には影響しません。</div></div>
@@ -149,7 +153,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="resultBox" style="margin-top:12px">
       <div class="muted">保有ポジション合計の想定含み損益</div>
       <div class="resultBig" id="targetPnlTotal">—</div>
-      <div class="row" style="margin-top:8px"><span>獲得pips（Lot加重平均）</span><b id="targetPnlPips">—</b></div>
+      <div class="row" style="margin-top:8px"><span id="targetPnlUnitLabel">獲得ポイント（Lot加重平均）</span><b id="targetPnlPips">—</b></div>
       <div class="small" id="targetPnlSummary">価格を入力すると、現在保有中の全ポジションをまとめて計算します。</div>
     </div>
     <div id="targetPnlRows" style="margin-top:10px"></div>
@@ -161,7 +165,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
       </div>
       <div id="targetPnlTable" style="margin-top:10px"></div>
     </div>
-    <div class="small" style="margin-top:10px">※ 価格ごとの損益は現在保有中のポジションだけを対象にした概算です。Buyは指定価格−約定価格、Sellは約定価格−指定価格で計算します。手数料・スワップ・実際の約定時スプレッド等は含みません。</div>
+    <div class="small" style="margin-top:10px">※ 現在ポジションのみ。手数料・スワップ・スプレッド等を除く概算。</div>
   </div>
 
   <div class="card">
@@ -2257,6 +2261,10 @@ function calcTargetPositionPnl(){
   let weightedPips=0;
   let totalLots=0;
   const pipStep=pointStepFor(sym,c);
+  const moveUnit=c.type==='fx'?'pips':'points';
+  const moveUnitLabel=c.type==='fx'?'獲得pips':'獲得ポイント';
+  const unitLabelEl=$('targetPnlUnitLabel');
+  if(unitLabelEl)unitLabelEl.textContent=`${moveUnitLabel}（Lot加重平均）`;
   const details=positions.map((o,i)=>{
     const lot=Number(o.lot),entry=Number(o.price);
     const isBuy=/^buy$/i.test(String(o.side||''));
@@ -2270,13 +2278,13 @@ function calcTargetPositionPnl(){
     const pipCls=pips>0?'targetPnlProfit':pips<0?'targetPnlLoss':'targetPnlFlat';
     const sign=pnl>0?'+':pnl<0?'−':'';
     const pipSign=pips>0?'+':pips<0?'−':'';
-    const pipText=`${pipSign}${Math.abs(pips).toFixed(1)} pips`;
+    const pipText=`${pipSign}${Math.abs(pips).toFixed(1)} ${moveUnit}`;
     return `<div class="targetPnlRow"><div class="row" style="padding:0;border:0"><div><div class="name">${String(o.side)} ${lot.toFixed(2)} lot</div><div class="meta">約定価格 ${entry.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(entry))))} → 指定価格 ${target.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(target))))} ／ <span class="${pipCls}">${pipText}</span></div></div><div class="amount ${cls}">${sign}${Math.round(Math.abs(pnl)).toLocaleString('ja-JP')} 円</div></div></div>`;
   });
   const avgPips=totalLots>0?weightedPips/totalLots:0;
   if(pipsEl){
     const pipSign=avgPips>0?'+':avgPips<0?'−':'';
-    pipsEl.textContent=`${pipSign}${Math.abs(avgPips).toFixed(1)} pips`;
+    pipsEl.textContent=`${pipSign}${Math.abs(avgPips).toFixed(1)} ${moveUnit}`;
     pipsEl.className=avgPips>0?'targetPnlProfit':avgPips<0?'targetPnlLoss':'targetPnlFlat';
   }
   const totalSign=total>0?'+':total<0?'−':'';

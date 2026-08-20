@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v97-20260821">
+<meta name="build-id" content="v104-20260821">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v95</title>
+<title>Stop Out positioning｜デラポジ Pro v104</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -72,12 +72,14 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .targetPnlRow{padding:11px 0;border-top:1px solid var(--line)}
 .targetPnlRow:first-child{border-top:0}
 .targetPnlRow .name{font-weight:800;color:#fff}.targetPnlRow .meta{font-size:12px;color:var(--muted);margin-top:3px}.targetPnlRow .amount{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
+
+.compactCard{padding:11px 13px}.compactCard .row{padding:3px 0}.compactDetails{padding:10px 13px}.compactDetails summary{cursor:pointer;list-style:none}.compactDetails summary::-webkit-details-marker{display:none}.compactDetails summary:after{content:"＋";float:right;color:var(--muted)}.compactDetails[open] summary:after{content:"−"}.compactDetails .footer{margin-top:8px}.page#pageLC > .card{margin:8px 0}.page#pageLC .alert,.page#pageLC .danger{padding:9px 11px}.page#pageLC .small{line-height:1.4}
 </style>
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v97</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v102</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v104</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v104</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -89,7 +91,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v102</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、必要な場合だけ中央フレームを1枚追加する最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v104</span></div><div class="small" style="margin-top:8px"><b>読み込み：</b>気配値・ポジション・注文を自動判定。必要データが揃わない場合は安全停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -105,7 +107,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 <div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">※ メイン表示は現在保有分。Pending全約定後の値は下落シナリオに表示</div></div>
 
-<div class="card" id="scenarioCard"><div class="row"><b>下落シナリオ</b><span id="scenarioStatus" class="small">—</span></div><div id="scenarioSteps" class="small">現在ポジション → Pending約定 → Stop Out開始の順で表示します。</div></div><div class="card">
+<div class="card" id="scenarioCard"><div class="row"><b>下落シナリオ</b><span id="scenarioStatus" class="small">—</span></div><div id="scenarioSteps" class="small">現在 → Pending約定 → Stop Out の順で表示</div></div><div class="card">
 <div class="row"><span id="bidLabel">XM Bid</span><b id="goldBid">—</b></div>
 <div class="row"><span id="askLabel">XM Ask</span><b id="goldAsk">—</b></div>
 <div class="row"><span>XM Spread</span><b id="goldSpread">—</b></div>
@@ -121,20 +123,20 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div class="row"><span>価格最終更新</span><b id="priceUpdated">—</b></div>
 </div>
 
-<div class="card"><div class="row"><b>1 pip / 1 point の変動額</b><span>0.01 lot基準</span></div><div class="row"><span id="pipLabel">現在の銘柄</span><b id="pipValue">—</b></div><div class="small" id="pipNote">—</div><div class="small" style="margin-top:6px">※「LC時想定含み損」は、推定LC価格まで到達した時点の各注文の評価損を概算したものです。実際の損益は約定・スプレッド・スワップ等で変わります。</div></div>
+<div class="card"><div class="row"><b>1 pip / 1 point の変動額</b><span>0.01 lot基準</span></div><div class="row"><span id="pipLabel">現在の銘柄</span><b id="pipValue">—</b></div><div class="small" id="pipNote">—</div><div class="small" style="margin-top:6px">※LC時含み損は概算。実際は約定・スプレッド・スワップ等で変動します。</div></div>
 
-<div class="card" id="calcBasisCard"><div class="row"><b>DEAD LINE計算根拠</b><span id="basisStatus" class="small">現在の入力状態</span></div><div id="calcBasis" class="small">現在ポジション・注文・換算レートが確定すると、DEAD LINEの根拠をここに表示します。</div></div>
+<div class="card" id="calcBasisCard"><div class="row"><b>DEAD LINE計算根拠</b><span id="basisStatus" class="small">現在の入力状態</span></div><div id="calcBasis" class="small">ポジション・注文・換算レート確定後に表示</div></div>
 <div class="card"><div class="row"><b>現在ポジション</b><span id="positionCount">0件</span></div><div id="positions"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addPosition()">＋ ポジション追加</button><button class="secondary" onclick="resetPositions()">ポジションリセット</button></div></div>
 
 <div class="card"><div class="row"><b>認識した注文 / 下落時シナリオ</b><span id="count">0件 / 下落時の想定追加約定 0件</span></div><div id="orders"></div><div class="toolbar" style="margin-top:10px"><button class="secondary" onclick="addOrder()">＋ 注文追加</button><button class="secondary" onclick="resetOrders()">注文リセット</button></div></div>
 
-<div class="card"><label>価格ソース</label><div class="small"><b>XM画面（スクショ/動画） → このアプリ</b>。1枚のスクショから認識できた全銘柄のBid/Askを銘柄別に保存します。新しい気配値を読み込むまで上書きしません。銘柄を切り替えても他銘柄の保存価格は消えません。</div></div>
+<div class="card compactCard"><div class="row"><b>価格ソース</b><span class="small">XM画面</span></div><div class="small">読み込んだBid/Askを銘柄別に保存。新しい気配値を読むまで維持します。</div></div>
 
-<div class="alert"><b>重要：</b>DEAD LINEはXMのStop Outが<strong>最初に発動する閾値</strong>を推定します。XMの規約上、Stop Out発動時はポジションが段階的に強制決済され、同価格のStop Outが優先されるため、同価格のPendingは追加約定させません。Stop Out予測は「現在価格から下落し、Buy Limitが価格到達順に約定する」将来シナリオを計算します。気配値OCRはBid/Askの価格関係・異常スプレッド・前回値との急変を検証し、異常候補は計算に採用しません。現在ポジションはすでに約定済みとしてLC計算に含めます。保存済みの古いポジションは起動・銘柄切替時に自動で無効化します。表示される「LC時想定追加約定」は実際の約定履歴ではありません。現在未約定でも、LC到達前に価格を通過するBuy Limitはシミュレーション上で追加約定させます。MT5実測含み損益は検証専用で、OCR値をLC計算へ自動補正入力しません。現在Askが既に注文価格以下なのに「placed」のままの注文は、時系列不整合として自動約定扱いせず計算を停止します。</div>
+<div class="alert"><b>計算ルール</b><br>DEAD LINE＝Stop Out開始の推定価格。現在ポジションを含め、下落時はBuy Limitを到達順に反映します。Stop Outは段階決済です。OCRや時系列に不整合があれば計算を停止します。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
 
 <div id="diagnosticPanel" class="card" style="display:none"><div class="row"><b>開発者診断：計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">本番画面には表示せず、?debug=1 または診断モードでのみ表示します。回帰テストは開発者向け監視です。NGでも本番の入力データ検証には影響しません。</div></div>
-<div class="card footer"><b>計算モデル</b><br>口座残高はJPY。候補価格で必要証拠金を再計算するモデルを使用し、Stop Out時のEquity＝Stop Out率×Used MarginとしてStop Out開始価格を解きます。Buy Limitの約定判定はAsk、ロングの含み損評価はBidを使います。Buy Limitの発動判定にスプレッドを二重適用しません。価格変動による損益は銘柄の決済通貨からJPYへ換算します。既存ポジション、スワップ、手数料、ヘッジ、段階式レバレッジ、銘柄固有の証拠金率等は別途反映が必要です。したがって結果は「推定」です。</div>
+<details class="card compactDetails"><summary><b>計算モデル・注意点</b></summary><div class="footer">候補価格ごとに必要証拠金を再計算し、Stop Out開始点を推定。Buy LimitはAsk、含み損はBidで評価し、JPYへ換算します。スワップ・手数料・ヘッジ等は別途影響するため、結果は推定値です。</div></details>
 </div>
 
 <div id="pagePnl" class="page">
@@ -147,6 +149,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="resultBox" style="margin-top:12px">
       <div class="muted">保有ポジション合計の想定含み損益</div>
       <div class="resultBig" id="targetPnlTotal">—</div>
+      <div class="row" style="margin-top:8px"><span>獲得pips（Lot加重平均）</span><b id="targetPnlPips">—</b></div>
       <div class="small" id="targetPnlSummary">価格を入力すると、現在保有中の全ポジションをまとめて計算します。</div>
     </div>
     <div id="targetPnlRows" style="margin-top:10px"></div>
@@ -2233,8 +2236,9 @@ function calcTargetPositionPnl(){
   const target=+$('targetPnlPrice')?.value;
   const positions=Array.isArray(positionStore?.[sym])?positionStore[sym].filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0):[];
   const qr=targetPnlRateToJPY(c);
-  const rows=$('targetPnlRows'),totalEl=$('targetPnlTotal'),summary=$('targetPnlSummary'),status=$('targetPnlStatus');
+  const rows=$('targetPnlRows'),totalEl=$('targetPnlTotal'),pipsEl=$('targetPnlPips'),summary=$('targetPnlSummary'),status=$('targetPnlStatus');
   if(status)status.textContent=positions.length?`${positions.length}件の現在ポジションを使用`:'現在ポジションなし';
+  if(pipsEl)pipsEl.textContent='—';
   if(!Number.isFinite(target)||target<=0){
     if(totalEl){totalEl.textContent='—';totalEl.className='resultBig targetPnlFlat'}
     if(summary)summary.textContent=`${sym} の価格を入力してください。`
@@ -2250,14 +2254,31 @@ function calcTargetPositionPnl(){
     return;
   }
   let total=0;
+  let weightedPips=0;
+  let totalLots=0;
+  const pipStep=pointStepFor(sym,c);
   const details=positions.map((o,i)=>{
     const lot=Number(o.lot),entry=Number(o.price);
-    const pnl=(/^buy$/i.test(String(o.side||''))?(target-entry):(entry-target))*lot*c.contract*qr;
+    const isBuy=/^buy$/i.test(String(o.side||''));
+    const priceMove=isBuy?(target-entry):(entry-target);
+    const pnl=priceMove*lot*c.contract*qr;
+    const pips=priceMove/pipStep;
     total+=pnl;
+    weightedPips+=pips*lot;
+    totalLots+=lot;
     const cls=pnl>0?'targetPnlProfit':pnl<0?'targetPnlLoss':'targetPnlFlat';
+    const pipCls=pips>0?'targetPnlProfit':pips<0?'targetPnlLoss':'targetPnlFlat';
     const sign=pnl>0?'+':pnl<0?'−':'';
-    return `<div class="targetPnlRow"><div class="row" style="padding:0;border:0"><div><div class="name">${String(o.side)} ${lot.toFixed(2)} lot</div><div class="meta">約定価格 ${entry.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(entry))))} → 指定価格 ${target.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(target))))}</div></div><div class="amount ${cls}">${sign}${Math.round(Math.abs(pnl)).toLocaleString('ja-JP')} 円</div></div></div>`;
+    const pipSign=pips>0?'+':pips<0?'−':'';
+    const pipText=`${pipSign}${Math.abs(pips).toFixed(1)} pips`;
+    return `<div class="targetPnlRow"><div class="row" style="padding:0;border:0"><div><div class="name">${String(o.side)} ${lot.toFixed(2)} lot</div><div class="meta">約定価格 ${entry.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(entry))))} → 指定価格 ${target.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(target))))} ／ <span class="${pipCls}">${pipText}</span></div></div><div class="amount ${cls}">${sign}${Math.round(Math.abs(pnl)).toLocaleString('ja-JP')} 円</div></div></div>`;
   });
+  const avgPips=totalLots>0?weightedPips/totalLots:0;
+  if(pipsEl){
+    const pipSign=avgPips>0?'+':avgPips<0?'−':'';
+    pipsEl.textContent=`${pipSign}${Math.abs(avgPips).toFixed(1)} pips`;
+    pipsEl.className=avgPips>0?'targetPnlProfit':avgPips<0?'targetPnlLoss':'targetPnlFlat';
+  }
   const totalSign=total>0?'+':total<0?'−':'';
   totalEl.textContent=`${totalSign}${Math.round(Math.abs(total)).toLocaleString('ja-JP')} 円`;
   totalEl.className=`resultBig ${total>0?'targetPnlProfit':total<0?'targetPnlLoss':'targetPnlFlat'}`;

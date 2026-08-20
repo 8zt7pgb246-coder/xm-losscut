@@ -956,6 +956,57 @@ function parseOCR(text){
   const pair=parseTradeRowsByLinePair(raw);
   for(const o of pair.positions){if(!positions.some(x=>x.side===o.side&&Math.abs(x.lot-o.lot)<1e-6&&Math.abs(x.price-o.price)<1e-5))positions.push(o)}
   for(const o of pair.pending){if(!pending.some(x=>x.side===o.side&&Math.abs(x.lot-o.lot)<1e-6&&Math.abs(x.price-o.price)<1e-5))pending.push(o)}
+
+  // iPhone Tesseract can completely drop the blue BUY/SELL label on MT5
+  // Trade rows while preserving the structural numbers:
+  //   GOLD#
+  //   4318.10 -> 4522.39
+  // Treat a clear symbol + entry/current pair as a position row when the
+  // side label is missing. Infer direction from the entry/current relation
+  // only when every recovered row in the same basket points the same way.
+  // This is a recovery path for OCR loss, not a replacement for explicit side text.
+  const bareRows=[];
+  for(let i=0;i<lines.length;i++){
+    const sm=lines[i].match(/(GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i);
+    if(!sm)continue;
+    const sym=symbolFromText(sm[1]); if(!sym)continue;
+    if(/\b(?:buy|sell|limit|stop)\b/i.test(lines[i]))continue;
+    const chunk=lines.slice(i,i+3).join(' ');
+    const arrow=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|→|>|—|–|-)\s*(\d[\d,.]*\.\d+)/i);
+    if(!arrow)continue;
+    const entry=normalizeOcrNumber(arrow[1]), cur=normalizeOcrNumber(arrow[2]);
+    if(!Number.isFinite(entry)||!Number.isFinite(cur)||entry<=0||cur<=0)continue;
+    const lotM=chunk.match(/\b(0?\.\d+|\d+(?:\.\d+)?)\s*(?:lot)?\b/i);
+    const lot=lotM?Number(lotM[1]):0.01;
+    if(!Number.isFinite(lot)||lot<=0||lot>1000)continue;
+    bareRows.push({symbol:sym,entry,cur,lot});
+  }
+  if(bareRows.length){
+    const dirs=bareRows.map(r=>r.cur>=r.entry?'Buy':'Sell');
+    const sameDir=dirs.every(d=>d===dirs[0]);
+    if(sameDir){
+      for(const r of bareRows){
+        const side=dirs[0];
+        if(!positions.some(x=>x.side===side&&Math.abs(x.lot-r.lot)<1e-6&&Math.abs(x.price-r.entry)<1e-5))
+          positions.push({symbol:r.symbol,side,lot:+r.lot.toFixed(4),price:r.entry,positionPattern:'ocr-bare-entry-current',ocrRecoveredSide:true});
+      }
+    }
+  }
+
+  // The order label can also disappear, leaving the very distinctive MT5
+  // pending-row signature: `0.01 / 0 at 4436.05`. If a nearby GOLD/XAUUSD
+  // label exists, recover it as a BUY LIMIT. The signature is not produced by
+  // normal position rows because those contain an entry -> current pair.
+  for(let i=0;i<lines.length;i++){
+    const m=lines[i].match(/^\s*(0?\.\d+|\d+(?:\.\d+)?)\s*\/\s*0\s+at\s*(\d[\d,.]*\.\d+)/i);
+    if(!m)continue;
+    const context=lines.slice(Math.max(0,i-5),Math.min(lines.length,i+3)).join(' ');
+    if(!/(?:GOLD#?|XAUUSD#?)/i.test(context))continue;
+    const lot=Number(m[1]), price=normalizeOcrNumber(m[2]);
+    if(!Number.isFinite(lot)||lot<=0||!Number.isFinite(price)||price<=0)continue;
+    if(!pending.some(x=>x.side==='Buy Limit'&&Math.abs(x.lot-lot)<1e-6&&Math.abs(x.price-price)<1e-5))
+      pending.push({symbol:currentSymbol,side:'Buy Limit',lot:+lot.toFixed(4),price,recoveredPending:true,positionPattern:'ocr-compact-order'});
+  }
   return {positions,pending,brokerPnl,rawText:raw};
 }
 function isControlCenterFrameText(text){
@@ -1246,7 +1297,7 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     // trade-screen anchor, and a late anchor. The old duration/4 rule could
     // collapse a 6-8s recording to only two frames and miss the short Trade pane.
     const count=Math.min(3,Math.max(2,maxFrames));
-    const fractions=count===2?[0.10,0.90]:[0.10,0.72,0.90];
+    const fractions=count===2?[0.10,0.90]:[0.10,0.73,0.90];
     const endTime=Math.max(0,duration-0.05);
     const times=fractions.map(f=>Math.min(endTime,Math.max(0.02,endTime*f)));
     const scale=Math.min(1,1280/Math.max(width,height));
@@ -1665,7 +1716,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const quoteEvidenceLines=(parsed.rawText||'').split(/\r?\n/).filter(x=>/(?:GOLD|XAUUSD|USDJPY|BTCUSD|OILCash|JP225Cash|EURUSD|GBPUSD)/i.test(x));
     const quoteBoardEvidence=/(?:\bL\s*[:：]|\bH\s*[:：])/.test(parsed.rawText||'') &&
       quoteEvidenceLines.length>=5 && /(?:GOLD|XAUUSD)\s*#?/i.test(parsed.rawText||'');
-    const tradeScreenFresh = mediaPriceFresh && priceSource==='trade-screen-inferred' && Number.isFinite(goldBid) && Number.isFinite(goldAsk);
+    let tradeScreenFresh = mediaPriceFresh && priceSource==='trade-screen-inferred' && Number.isFinite(goldBid) && Number.isFinite(goldAsk);
     if(quoteBoardEvidence && !(quotes[currentSymbol]?.bid>0 && quotes[currentSymbol]?.ask>0) && !tradeScreenFresh){
       // A video may begin on the quote board and switch to the MT5 Trade pane.
       // Never abort here, because doing so discards valid positions/orders from
@@ -1680,11 +1731,39 @@ $('mediaFile').addEventListener('change',async e=>{
     // not a dedicated Bid/Ask row. applyTradeScreenPriceFallback() deliberately
     // marks that price as fresh and inferred. Keep it valid for the same import
     // transaction instead of aborting before the position/order parser runs.
-    const requiredBid=mediaQuote?mediaQuote.bid:(tradeScreenFresh?goldBid:null);
-    const requiredAsk=mediaQuote?mediaQuote.ask:(tradeScreenFresh?goldAsk:null);
-    const savedUsd=quoteStore['USDJPY#']||priceStore['USDJPY#'];
-    const savedUsdFresh=!!(savedUsd?.updatedAt && (Date.now()-Date.parse(savedUsd.updatedAt)<=5*60*1000));
-    const requiredRate=(cfg().quote==='JPY')?1:(cfg().quote==='USD'?(mediaUsdJpyFresh?Number($('usdjpy').value):savedUsdFresh?Number(savedUsd.bid):NaN):quoteRateFor(cfg()));
+    let requiredBid=mediaQuote?mediaQuote.bid:(tradeScreenFresh?goldBid:null);
+    let requiredAsk=mediaQuote?mediaQuote.ask:(tradeScreenFresh?goldAsk:null);
+    let savedUsd=quoteStore['USDJPY#']||priceStore['USDJPY#'];
+    let savedUsdFresh=!!(savedUsd?.updatedAt && (Date.now()-Date.parse(savedUsd.updatedAt)<=5*60*1000));
+    let requiredRate=(cfg().quote==='JPY')?1:(cfg().quote==='USD'?(mediaUsdJpyFresh?Number($('usdjpy').value):savedUsdFresh?Number(savedUsd.bid):NaN):quoteRateFor(cfg()));
+    // Do not let a missing quote/rate prevent the Trade screen from being OCR'd.
+    // Recognition and calculation validity are separate concerns. The Trade pane
+    // is often the last/shortest part of an iPhone recording, so run the focused
+    // pass before the final price gate whenever the first pass is incomplete.
+    if(isVideo && (parsed.positions.length<3 || parsed.pending.length<1)){
+      try{
+        const mid=videoSourcesForReuse?.[1] || null;
+        if(mid){
+          const focused=await recognizeFileFrames(T,f,'order',m=>{
+            if(m.status==='recognizing text')$('ocrStatus').textContent=`注文・ポジション専用解析中… ${Math.round((m.progress||0)*100)}%`;
+          },[mid],sharedVideoWorker);
+          const fp=mergeParsedResults(filterUsableOCRResults(focused));
+          parsed=mergeParsedResults([parsed,fp]);
+          const recoveredPrice=extractTradeScreenPriceFromResults(focused,currentSymbol);
+          if(Number.isFinite(recoveredPrice))applyTradeScreenPriceFallback(parsed,recoveredPrice);
+        }
+      }catch(e){console.warn('[XM] early focused Trade OCR skipped',e)}
+      // Recompute the price/rate gate after the focused Trade OCR. The first pass
+      // may have contained only the quote/control-center frame, while the Trade
+      // frame can provide a fresh current price and the quote frame can provide USDJPY.
+      const mq2=currentMediaPriceSnapshot();
+      tradeScreenFresh=mediaPriceFresh && priceSource==='trade-screen-inferred' && Number.isFinite(goldBid) && Number.isFinite(goldAsk);
+      requiredBid=mq2?mq2.bid:(tradeScreenFresh?goldBid:null);
+      requiredAsk=mq2?mq2.ask:(tradeScreenFresh?goldAsk:null);
+      savedUsd=quoteStore['USDJPY#']||priceStore['USDJPY#'];
+      savedUsdFresh=!!(savedUsd?.updatedAt && (Date.now()-Date.parse(savedUsd.updatedAt)<=5*60*1000));
+      requiredRate=(cfg().quote==='JPY')?1:(cfg().quote==='USD'?(mediaUsdJpyFresh?Number($('usdjpy').value):savedUsdFresh?Number(savedUsd.bid):NaN):quoteRateFor(cfg()));
+    }
     if(!(requiredBid>0 && requiredAsk>0 && requiredRate>0)){
       $('specWarning').style.display='block';
       $('specWarning').textContent=`⚠ ${currentSymbol} の今回の価格またはUSD/JPY換算レートが未確定です。古い価格は自動で穴埋めせず、必要な気配値を読み込んでください。`;

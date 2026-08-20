@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v108-20260821">
+<meta name="build-id" content="v112-20260821">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v108</title>
+<title>Stop Out positioning｜デラポジ Pro v112</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -19,7 +19,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v50 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
+/* v112 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -88,7 +88,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v108</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v112</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
@@ -289,8 +289,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v109-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v109-20260821';
+window.__DEPLOYMENT_STATE__={build:'v112-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v112-20260821';
 window.__XM_CACHE_RESET_V81=true;
 (async()=>{
   try{
@@ -318,7 +318,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // the newly uploaded index.html.
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_sw_reset_v109_done';
+    const key='xm_lc_sw_reset_v112_done';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
     let changed=false;
@@ -331,7 +331,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
     sessionStorage.setItem(key,'1');
     if(changed || navigator.serviceWorker.controller){
       const u=new URL(location.href);
-      u.searchParams.set('appbuild','v109');
+      u.searchParams.set('appbuild','v112');
       u.searchParams.set('fresh',String(Date.now()));
       console.info('LEGACY_SW_RESET_RELOAD',u.href);
       location.replace(u.href);
@@ -1154,7 +1154,7 @@ function sanitizeRecognizedPositions(arr){
     if(!side||!Number.isFinite(lot)||lot<=0||lot>1000||!Number.isFinite(price)||price<=0)continue;
     // OCRで新規確定するポジションはMT5の「約定価格 → 現在価格」
     // パターンを必須にし、証拠金率や残高等の数値をentry priceにしない。
-    if(o.positionPattern && o.positionPattern!=='entry-current-arrow')continue;
+    if(o.positionPattern && !['entry-current-arrow','ocr-bare-entry-current'].includes(o.positionPattern))continue;
     // Never accept a P/L number as an entry price. If the trade screen itself
     // supplied the current market price, use that as the sanity anchor even
     // when no separate quote-board screen was uploaded.
@@ -1180,13 +1180,11 @@ function extractTradeScreenPrice(text,symbol=currentSymbol){
   for(let i=0;i<lines.length;i++){
     const symLine=lines[i].match(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i);
     if(!symLine||normalizeSymbol(symLine[0])!==target)continue;
-    if(!/\b(?:buy|sell)\b/i.test(lines[i])||/\b(?:buy|sell)\s*limit\b/i.test(lines[i]))continue;
-    const chunk=lines.slice(i,i+3).join(' ');
-    const arrow=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|→|—|–|-|to)\s*(\d[\d,.]*\.\d+)/i);
-    if(arrow){
-      const cur=normalizeOcrNumber(arrow[2]);
-      if(Number.isFinite(cur)&&cur>0)vals.push(cur);
-    }
+    const chunk=lines.slice(i,i+4).join(' ');
+    const arrow=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|→|>|—|–|-|to)\s*(\d[\d,.]*\.\d+)/i);
+    if(!arrow)continue;
+    const cur=normalizeOcrNumber(arrow[2]);
+    if(Number.isFinite(cur)&&cur>0)vals.push(cur);
   }
   if(!vals.length)return null;
   vals.sort((a,b)=>a-b);
@@ -1330,7 +1328,7 @@ async function recognizeOne(TesseractNS,source,psm,logger){
     await worker.setParameters({tessedit_pageseg_mode:String(psm||6),preserve_interword_spaces:'1'});
     const r=await worker.recognize(source);
     return r;
-  }finally{if(ownWorker)await worker.terminate()}
+  }finally{try{await worker.terminate()}catch(e){console.warn('[XM] recognizeOne worker terminate skipped',e)}}
 }
 function selectFocusedVideoSources(sources,results,maxCount=6){
   const arr=Array.isArray(sources)?sources:[];
@@ -1815,12 +1813,15 @@ $('mediaFile').addEventListener('change',async e=>{
         // nearby text identifies GOLD/XAUUSD or the order pane.
         const compact=lines[i].match(/^\s*(0?\.\d+|\d+(?:\.\d+)?)\s*\/\s*0\s+at\s*(\d[\d,.]*\.\d+)/i);
         if(compact){
-          const context=lines.slice(Math.max(0,i-3),Math.min(lines.length,i+3)).join(' ');
+          const context=lines.slice(Math.max(0,i-5),Math.min(lines.length,i+4)).join(' ');
           const hasSymbol=/(?:GOLD#?|XAUUSD#?)/i.test(context);
           const hasOrderContext=/(?:order|オーダー|注文|placed)/i.test(context);
           const hasSellLimit=/(?:sell\s*limit|sell\s*stop)/i.test(context);
-          if(hasSymbol && hasOrderContext && !hasSellLimit){
-            push(currentSymbol,'Buy Limit',Number(compact[1]),normalizeOcrNumber(compact[2]),'compact-order-row');
+          const orderPrice=normalizeOcrNumber(compact[2]);
+          const completeBareBasket=(lines.join(' ').match(/(?:GOLD#?|XAUUSD#?)/ig)||[]).length>=3;
+          const inferredBuyLimit=Number.isFinite(goldBid)&&orderPrice<goldBid;
+          if(hasSymbol && !hasSellLimit && (hasOrderContext || (completeBareBasket && inferredBuyLimit))){
+            push(currentSymbol,'Buy Limit',Number(compact[1]),orderPrice,'compact-order-row');
           }
         }
       }
@@ -2448,7 +2449,7 @@ $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 ['targetPnlPrice','targetPnlSymbol','targetPnlStep','targetPnlLevels'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcTargetPositionPnl);el.addEventListener('change',()=>{if(id==='targetPnlSymbol'){const p=Number.isFinite(goldBid)&&currentSymbol===el.value?goldBid:'';if(p)$('targetPnlPrice').value=p}calcTargetPositionPnl();})}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v109-20260821';
+window.__APP_BUILD__='v112-20260821';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);

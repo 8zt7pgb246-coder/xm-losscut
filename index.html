@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v106-20260821">
+<meta name="build-id" content="v107-20260821">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v106</title>
+<title>Stop Out positioning｜デラポジ Pro v107</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -88,7 +88,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v106</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v107</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
@@ -105,6 +105,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </div>
 
 <div class="card compactCard"><div class="drop"><div id="ocrStatus" class="small">XMの気配値・ポジション・注文を読み込み。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
+<div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">現在保有分。Pending後は下落シナリオへ。</div></div>
+
 
 <div class="card posOrderCard"><div class="posOrderHead"><span>現在ポジション</span><span class="count" id="positionCount">0件</span></div><div id="positions" class="posOrderRows"></div><div class="posOrderTools"><button class="secondary" onclick="addPosition()">＋ 追加</button><button class="secondary" onclick="resetPositions()">リセット</button></div></div>
 <div class="card posOrderCard"><div class="posOrderHead"><span>未約定注文</span><span class="count" id="count">0件 / 追加0件</span></div><div id="orders" class="posOrderRows"></div><div class="posOrderTools"><button class="secondary" onclick="addOrder()">＋ 追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></div>
@@ -116,8 +118,6 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div><label>MT5含み損益</label><input id="brokerPnl" type="number" step="1" placeholder="自動"></div>
 <div><label>損益補正</label><span id="pnlAdjustStatus" class="small">なし</span></div>
 </div></div>
-
-<div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">現在保有分を表示。Pending後は下落シナリオへ。</div></div>
 
 <div class="card compactCard" id="scenarioCard"><div class="row"><b>下落シナリオ</b><span id="scenarioStatus" class="small">—</span></div><div id="scenarioSteps" class="small">現在 → Pending → Stop Out</div></div><div class="card compactCard">
 <div class="compactInfoGrid">
@@ -1667,17 +1667,23 @@ $('mediaFile').addEventListener('change',async e=>{
     const quoteEvidenceLines=(parsed.rawText||'').split(/\r?\n/).filter(x=>/(?:GOLD|XAUUSD|USDJPY|BTCUSD|OILCash|JP225Cash|EURUSD|GBPUSD)/i.test(x));
     const quoteBoardEvidence=/(?:\bL\s*[:：]|\bH\s*[:：])/.test(parsed.rawText||'') &&
       quoteEvidenceLines.length>=5 && /(?:GOLD|XAUUSD)\s*#?/i.test(parsed.rawText||'');
-    if(quoteBoardEvidence && !(quotes[currentSymbol]?.bid>0 && quotes[currentSymbol]?.ask>0)){
+    const tradeScreenFresh = mediaPriceFresh && priceSource==='trade-screen-inferred' && Number.isFinite(goldBid) && Number.isFinite(goldAsk);
+    if(quoteBoardEvidence && !(quotes[currentSymbol]?.bid>0 && quotes[currentSymbol]?.ask>0) && !tradeScreenFresh){
+      // A video may begin on the quote board and switch to the MT5 Trade pane.
+      // Never abort here, because doing so discards valid positions/orders from
+      // the later Trade frame. The final price gate below will still stop the
+      // DEAD LINE if neither a fresh quote nor a fresh trade-screen price exists.
       $('specWarning').style.display='block';
-      $('specWarning').textContent=`⚠ 今回の動画に気配値画面は検出しましたが、${currentSymbol}の最新Bid/Askを確定できませんでした。保存済みの古い価格は使わず計算を停止します。`;
-      $('result').textContent='—';$('distance').textContent='今回の気配値が未確定のため計算停止';
-      $('rateStatus').innerHTML='<span class="err">✕ 今回の気配値を確定できません。</span>';
-      return;
+      $('specWarning').textContent=`⚠ 気配値画面は検出しましたが、${currentSymbol}のBid/Askは未確定。後続のポジション/注文画面を優先して解析します。`;
     }
     // 安全停止は「気配値の銘柄数不足」ではなく、現在銘柄に必要な価格/換算レート不足だけ。
     const mediaQuote=currentMediaPriceSnapshot();
-    const requiredBid=mediaQuote?mediaQuote.bid:null;
-    const requiredAsk=mediaQuote?mediaQuote.ask:null;
+    // Trade-screen recordings often contain only the live entry/current price,
+    // not a dedicated Bid/Ask row. applyTradeScreenPriceFallback() deliberately
+    // marks that price as fresh and inferred. Keep it valid for the same import
+    // transaction instead of aborting before the position/order parser runs.
+    const requiredBid=mediaQuote?mediaQuote.bid:(tradeScreenFresh?goldBid:null);
+    const requiredAsk=mediaQuote?mediaQuote.ask:(tradeScreenFresh?goldAsk:null);
     const savedUsd=quoteStore['USDJPY#']||priceStore['USDJPY#'];
     const savedUsdFresh=!!(savedUsd?.updatedAt && (Date.now()-Date.parse(savedUsd.updatedAt)<=5*60*1000));
     const requiredRate=(cfg().quote==='JPY')?1:(cfg().quote==='USD'?(mediaUsdJpyFresh?Number($('usdjpy').value):savedUsdFresh?Number(savedUsd.bid):NaN):quoteRateFor(cfg()));

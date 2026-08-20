@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v95-20260820">
+<meta name="build-id" content="v97-20260821">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
@@ -61,12 +61,23 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .dataLock{border:1px solid #6e2428;background:#1a0d0d;color:#ff9a93;border-radius:14px;padding:12px;font-size:12px;line-height:1.55;margin-top:10px}.dataLock strong{color:#fff}
 #lcLoss{color:#ff6b63}
 #result{font-variant-numeric:tabular-nums}
+
+#targetPnlTotal{font-variant-numeric:tabular-nums}
+.targetPnlTableHead,.targetPnlTableRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center}
+.targetPnlTableHead{padding:8px 10px;color:var(--muted);font-size:12px;font-weight:800;border-bottom:1px solid var(--line)}
+.targetPnlTableRow{padding:10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.targetPnlTablePrice{font-weight:850}.targetPnlTablePnl{text-align:right;font-weight:900}.targetPnlCurrentRow{background:rgba(255,255,255,.045);border-radius:8px}
+
+.targetPnlProfit{color:#39e58c!important}.targetPnlLoss{color:#ff6b63!important}.targetPnlFlat{color:#fff!important}
+.targetPnlRow{padding:11px 0;border-top:1px solid var(--line)}
+.targetPnlRow:first-child{border-top:0}
+.targetPnlRow .name{font-weight:800;color:#fff}.targetPnlRow .meta{font-size:12px;color:var(--muted);margin-top:3px}.targetPnlRow .amount{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v95</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v95</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v97</span></h1>
+<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v97</div><div class="sub">通称「デラポジ」｜XM画面のスクショ/動画を1つのボタンから読み込み → 気配値・トレード・注文・ポジションを自動判定 → 推定DEAD LINEを計算</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -78,7 +89,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
   </div>
   <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v95</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、ポジション/注文が未確定なら未解析の中央フレームを追加OCRする最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
+  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v97</span></div><div class="small" style="margin-top:8px">1つの読み込みボタンで、気配値・トレード・注文画面のスクショ/動画を自動判定します。動画は最初に2フレームだけOCRし、ポジション/注文が未確定なら未解析の中央フレームを追加OCRする最速方式です。気配値画面と注文/ポジション画面を別々の解析領域で再解析し、同じフレーム内の重複OCRは1件に統合します。瞬間的な異常スプレッド・Bid/Askずれ・画面切替途中の値を除外し、複数フレームで一致した実データだけを確定します。今回の読み込み結果を最優先し、過去の保存データを認識漏れの穴埋めには使用しません。必要データが確定しない場合はDEAD LINEを計算停止します。</div>
 </div>
 
 <div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
@@ -127,6 +138,29 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </div>
 
 <div id="pagePnl" class="page">
+  <div class="card" id="targetPositionPnlCard">
+    <div class="row"><b>保有ポジション｜指定価格の含み損益</b><span id="targetPnlStatus" class="small">現在の保有ポジションを使用</span></div>
+    <div class="grid">
+      <div class="wide"><label>銘柄</label><select id="targetPnlSymbol"></select></div>
+      <div class="wide"><label>この価格まで行ったら？</label><input id="targetPnlPrice" type="number" step="any" placeholder="例：4300.00"></div>
+    </div>
+    <div class="resultBox" style="margin-top:12px">
+      <div class="muted">保有ポジション合計の想定含み損益</div>
+      <div class="resultBig" id="targetPnlTotal">—</div>
+      <div class="small" id="targetPnlSummary">価格を入力すると、現在保有中の全ポジションをまとめて計算します。</div>
+    </div>
+    <div id="targetPnlRows" style="margin-top:10px"></div>
+    <div class="subcard" style="margin-top:14px">
+      <div class="row"><b>価格ごとの損益シミュレーション</b><span class="small">指定価格を中心に一覧表示</span></div>
+      <div class="grid">
+        <div><label>価格間隔</label><input id="targetPnlStep" type="number" min="0.01" step="any" value="100" inputmode="decimal"></div>
+        <div><label>上下の段数</label><input id="targetPnlLevels" type="number" min="1" max="10" step="1" value="3" inputmode="numeric"></div>
+      </div>
+      <div id="targetPnlTable" style="margin-top:10px"></div>
+    </div>
+    <div class="small" style="margin-top:10px">※ 価格ごとの損益は現在保有中のポジションだけを対象にした概算です。Buyは指定価格−約定価格、Sellは約定価格−指定価格で計算します。手数料・スワップ・実際の約定時スプレッド等は含みません。</div>
+  </div>
+
   <div class="card">
     <div class="row"><b>損益計算</b><span>概算・手数料等を除く</span></div>
     <div class="grid">
@@ -162,7 +196,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v95-20260820';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v97-20260821';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -245,8 +279,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v95-20260820',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v95-20260820';
+window.__DEPLOYMENT_STATE__={build:'v97-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v97-20260821';
 window.__XM_CACHE_RESET_V81=true;
 (async()=>{
   try{
@@ -2113,6 +2147,96 @@ function ensureSymbolOptionForPnl(sym){
   const sel=$('pnlSymbol'); if(!sel||!sym||[...sel.options].some(o=>o.value===sym))return;
   const o=document.createElement('option');o.value=sym;o.textContent=ensureSpec(sym).name;sel.appendChild(o);
 }
+
+function populateTargetPnlSymbols(){
+  const sel=$('targetPnlSymbol');
+  if(!sel)return;
+  const keep=currentSymbol;
+  sel.innerHTML='';
+  const seen=new Set();
+  const add=sym=>{if(!sym||seen.has(sym))return;seen.add(sym);const o=document.createElement('option');o.value=sym;o.textContent=ensureSpec(sym).name;sel.appendChild(o)};
+  add(currentSymbol);
+  Object.keys(positionStore||{}).forEach(add);
+  Object.keys(BASE_SPECS).forEach(add);
+  Object.keys(quoteStore).forEach(add);
+  sel.value=seen.has(keep)?keep:(sel.options[0]?.value||'GOLD#');
+}
+function targetPnlRateToJPY(c){
+  if(c.quote==='JPY')return 1;
+  if(c.quote==='USD'){const r=+$('usdjpy')?.value||+$('pnlUsdjpy')?.value||0;return r>0?r:0}
+  return getRateToJPY(c.quote);
+}
+function calcTargetPositionPnl(){
+  const sym=$('targetPnlSymbol')?.value||currentSymbol;
+  const c=ensureSpec(sym);
+  const target=+$('targetPnlPrice')?.value;
+  const positions=Array.isArray(positionStore?.[sym])?positionStore[sym].filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0):[];
+  const qr=targetPnlRateToJPY(c);
+  const rows=$('targetPnlRows'),totalEl=$('targetPnlTotal'),summary=$('targetPnlSummary'),status=$('targetPnlStatus');
+  if(status)status.textContent=positions.length?`${positions.length}件の現在ポジションを使用`:'現在ポジションなし';
+  if(!Number.isFinite(target)||target<=0){
+    if(totalEl){totalEl.textContent='—';totalEl.className='resultBig targetPnlFlat'}
+    if(summary)summary.textContent=`${sym} の価格を入力してください。`
+    if(rows)rows.innerHTML=positions.length?positions.map((o,i)=>`<div class="targetPnlRow"><div class="name">${String(o.side)} ${Number(o.lot).toFixed(2)} lot</div><div class="meta">約定価格 ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(o.price))))}</div></div>`).join(''):'<div class="small">現在保有中のポジションがありません。先にXM画面を読み込んでください。</div>';
+    renderTargetPnlTable();
+    return;
+  }
+  if(!(qr>0&&c.contract>0)){
+    if(totalEl){totalEl.textContent='—';totalEl.className='resultBig targetPnlFlat'}
+    if(summary)summary.textContent=`${c.quote}→JPYの換算レートが取得できないため計算できません。`;
+    if(rows)rows.innerHTML='';
+    renderTargetPnlTable();
+    return;
+  }
+  let total=0;
+  const details=positions.map((o,i)=>{
+    const lot=Number(o.lot),entry=Number(o.price);
+    const pnl=(/^buy$/i.test(String(o.side||''))?(target-entry):(entry-target))*lot*c.contract*qr;
+    total+=pnl;
+    const cls=pnl>0?'targetPnlProfit':pnl<0?'targetPnlLoss':'targetPnlFlat';
+    const sign=pnl>0?'+':pnl<0?'−':'';
+    return `<div class="targetPnlRow"><div class="row" style="padding:0;border:0"><div><div class="name">${String(o.side)} ${lot.toFixed(2)} lot</div><div class="meta">約定価格 ${entry.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(entry))))} → 指定価格 ${target.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(target))))}</div></div><div class="amount ${cls}">${sign}${Math.round(Math.abs(pnl)).toLocaleString('ja-JP')} 円</div></div></div>`;
+  });
+  const totalSign=total>0?'+':total<0?'−':'';
+  totalEl.textContent=`${totalSign}${Math.round(Math.abs(total)).toLocaleString('ja-JP')} 円`;
+  totalEl.className=`resultBig ${total>0?'targetPnlProfit':total<0?'targetPnlLoss':'targetPnlFlat'}`;
+  summary.textContent=`${sym} ${target.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(target))))} 到達時 / ${positions.length}ポジション合計 / ${c.quote}→JPY換算 ${qr.toFixed(3)}`;
+  rows.innerHTML=details.join('');
+  renderTargetPnlTable();
+}
+function calcTargetPnlForPrice(sym,target){
+  const c=ensureSpec(sym);
+  const positions=Array.isArray(positionStore?.[sym])?positionStore[sym].filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0):[];
+  const qr=targetPnlRateToJPY(c);
+  if(!(Number.isFinite(target)&&target>0&&qr>0&&c.contract>0))return null;
+  let total=0;
+  for(const o of positions){
+    const lot=Number(o.lot),entry=Number(o.price);
+    total+=(/^buy$/i.test(String(o.side||''))?(target-entry):(entry-target))*lot*c.contract*qr;
+  }
+  return {total,positions,qr,c};
+}
+function renderTargetPnlTable(){
+  const table=$('targetPnlTable'); if(!table)return;
+  const sym=$('targetPnlSymbol')?.value||currentSymbol;
+  const target=+$('targetPnlPrice')?.value;
+  const step=+$('targetPnlStep')?.value||0;
+  const levels=Math.max(1,Math.min(10,Math.floor(+$('targetPnlLevels')?.value||3)));
+  if(!(Number.isFinite(target)&&target>0&&step>0)){table.innerHTML='<div class="small">指定価格と価格間隔を入力すると一覧を表示します。</div>';return;}
+  const c=ensureSpec(sym), decimals=Math.min(5,Math.max(2,decimalPlacesFor(target)));
+  const rows=[];
+  for(let n=-levels;n<=levels;n++){
+    const price=target+n*step;
+    if(price<=0)continue;
+    const r=calcTargetPnlForPrice(sym,price); if(!r)continue;
+    const cls=r.total>0?'targetPnlProfit':r.total<0?'targetPnlLoss':'targetPnlFlat';
+    const sign=r.total>0?'+':r.total<0?'−':'';
+    const marker=n===0?' ← 指定価格':'';
+    rows.push(`<div class="targetPnlTableRow ${n===0?'targetPnlCurrentRow':''}"><div class="targetPnlTablePrice">${price.toFixed(decimals)}${marker}</div><div class="targetPnlTablePnl ${cls}">${sign}${Math.round(Math.abs(r.total)).toLocaleString('ja-JP')} 円</div></div>`);
+  }
+  table.innerHTML=`<div class="targetPnlTableHead"><span>価格</span><span>想定含み損益</span></div>${rows.join('')}`;
+}
+
 function calcPnl(){
   const sym=$('pnlSymbol')?.value||currentSymbol;
   const c=ensureSpec(sym);
@@ -2140,13 +2264,14 @@ function switchPage(which){
   $('pageLC').classList.toggle('active',lc);$('pagePnl').classList.toggle('active',!lc);
   $('navLC').classList.toggle('active',lc);$('navPnl').classList.toggle('active',!lc);
   $('navLC').classList.toggle('secondary',!lc);$('navPnl').classList.toggle('secondary',lc);
-  if(!lc){populatePnlSymbols();$('pnlUsdjpy').value=$('usdjpy').value;calcPnl();}
+  if(!lc){populatePnlSymbols();populateTargetPnlSymbols();$('pnlUsdjpy').value=$('usdjpy').value;const tp=$('targetPnlPrice');if(tp&&!tp.value&&Number.isFinite(goldBid)&&currentSymbol===($('targetPnlSymbol')?.value||currentSymbol))tp.value=goldBid;calcPnl();calcTargetPositionPnl();}
 }
 $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
+['targetPnlPrice','targetPnlSymbol','targetPnlStep','targetPnlLevels'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcTargetPositionPnl);el.addEventListener('change',()=>{if(id==='targetPnlSymbol'){const p=Number.isFinite(goldBid)&&currentSymbol===el.value?goldBid:'';if(p)$('targetPnlPrice').value=p}calcTargetPositionPnl();})}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v95-20260820';
+window.__APP_BUILD__='v97-20260821';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);

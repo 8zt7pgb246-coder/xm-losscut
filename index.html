@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v117-20260821">
+<meta name="build-id" content="v118-20260821">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v117</title>
+<title>Stop Out positioning｜デラポジ Pro v118</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -19,7 +19,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v117 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
+/* v118 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -88,7 +88,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v117</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v118</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
@@ -206,7 +206,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v117-20260821';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v118-20260821';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -289,8 +289,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v117-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v117-20260821';
+window.__DEPLOYMENT_STATE__={build:'v118-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v118-20260821';
 window.__XM_CACHE_RESET_V81=true;
 (async()=>{
   try{
@@ -318,7 +318,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // the newly uploaded index.html.
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_sw_reset_v117_done';
+    const key='xm_lc_sw_reset_v118_done';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
     let changed=false;
@@ -331,7 +331,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
     sessionStorage.setItem(key,'1');
     if(changed || navigator.serviceWorker.controller){
       const u=new URL(location.href);
-      u.searchParams.set('appbuild','v117');
+      u.searchParams.set('appbuild','v118');
       u.searchParams.set('fresh',String(Date.now()));
       console.info('LEGACY_SW_RESET_RELOAD',u.href);
       location.replace(u.href);
@@ -1292,19 +1292,14 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     if(width<=0||height<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
     if(v.readyState<2)await waitEvent('loadeddata',10000);
 
-    // v117 PRO-QUALITY VIDEO SAMPLING:
-    // The previous build used 5 temporal anchors and only OCR'd 3 initially.
-    // That was fast, but a short MT5 Trade pane could sit between anchors.
-    // For a professional risk calculator, missing one decisive Trade frame is
-    // more dangerous than spending another few OCR passes. Sample 7 anchors
-    // across the full duration, then run a second PSM-6 pass only on the
-    // highest-scoring Trade/Order frames. The same canvas objects are reused,
-    // so decoding is still done only once.
-    const requested=Math.max(2,Math.min(7,Number(maxFrames)||7));
-    const count=Math.min(requested,7);
-    // Seven anchors cover short iPhone recordings while keeping OCR latency bounded.
-    // The last two anchors deliberately cover the common late Trade-screen window.
-    const fractions=[0.06,0.20,0.36,0.52,0.68,0.84,0.97].slice(0,count);
+    // v118 FAST/SAFE VIDEO SAMPLING:
+    // The prior build OCR'd 7 broad frames and then could add 2 focused passes.
+    // That was unnecessarily slow on iPhone. Four anchors cover the common
+    // quote-board -> Trade -> transition sequence, and the OCR loop can stop
+    // early when a structurally complete basket is already visible.
+    const requested=Math.max(2,Math.min(4,Number(maxFrames)||4));
+    const count=Math.min(requested,4);
+    const fractions=[0.05,0.35,0.72,0.92].slice(0,count);
     const endTime=Math.max(0,duration-0.05);
     const times=fractions.map(f=>Math.min(endTime,Math.max(0.02,endTime*f)));
     const scale=Math.min(1,1280/Math.max(width,height));
@@ -1357,6 +1352,14 @@ function selectFocusedVideoSources(sources,results,maxCount=6){
     if(chosen.size>=maxCount)break;
     if(x.score>0)chosen.add(x.i);
   }
+  // If the broad pass intentionally OCR'd only a prefix of the decoded anchors,
+  // make one unprocessed anchor eligible for the focused pass. This is the
+  // critical fourth-anchor escape hatch for a late Trade screen.
+  if(chosen.size<maxCount){
+    for(let i=arr.length-1;i>=0 && chosen.size<maxCount;i--){
+      if(i >= (results?.length||0)) chosen.add(i);
+    }
+  }
   // If OCR gave no useful signal, use temporal anchors as a safe fallback.
   if(!chosen.size){
     [0,Math.floor((arr.length-1)/2),arr.length-1].forEach(i=>{
@@ -1379,7 +1382,27 @@ function mergeOCRResultObjects(baseResults,focusedResults){
   return out;
 }
 
-async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,sharedWorker=null){
+
+function videoFastStopEvidence(texts){
+  const raw=String((Array.isArray(texts)?texts:[]).join('\n'));
+  if(!raw)return false;
+  // Fast-stop is only an optimization. It may end the initial OCR early when
+  // the MT5 Trade basket is already structurally complete. Safety gates later
+  // still require the normal position/order evidence before any DEAD LINE result.
+  const parsed=mergeParsedResults((Array.isArray(texts)?texts:[]).map(t=>({data:{text:String(t||'')}})));
+  const positions=parsed.positions.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
+  const pending=parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
+  const hasCurrentSymbol=new RegExp(currentSymbol.replace(/[#]/g,'#?').replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(raw);
+  const hasQuote=/GOLD#?|XAUUSD|USDJPY|気配値|Bid|Ask/i.test(raw);
+  // Two or more structured positions + one pending order is a strong complete
+  // Trade-screen signature. Three or more positions alone is also sufficient
+  // because the normal safety gate independently validates the basket.
+  return hasCurrentSymbol && hasQuote && (
+    (positions.length>=2 && pending.length>=1) ||
+    positions.length>=3
+  );
+}
+async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,sharedWorker=null,fastStop=false){
   const isVideo=isVideoFile(file);
   if(window.__activeMediaFile && file!==window.__activeMediaFile){
     console.warn('[XM] STALE_MEDIA_OBJECT_REJECTED');
@@ -1399,10 +1422,17 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
       currentFrame=i+1;
       let source=sources[i].canvas;
       const isControlCenter=!!sources[i].isControlCenter;
-      // v117: Trade/position OCR intentionally uses the full frame. The focused grayscale crop
+      // v118: Trade/position OCR intentionally uses the full frame. The focused grayscale crop
       // drops MT5's small price digits on iPhone recordings, while full-frame PSM 6 preserves them.
       const r=await worker.recognize(source);
       results.push({data:r.data,time:sources[i].time,frameIndex:i,isControlCenter,ocrMode:mode});
+      if(fastStop && isVideo && mode==='price' && results.length>=3){
+        const texts=results.map(x=>x?.data?.text||'');
+        if(videoFastStopEvidence(texts)){
+          onProgress?.({status:'fast-stop',frame:results.length,total:sources.length});
+          break;
+        }
+      }
     }
   }finally{if(ownWorker){try{await worker.terminate()}catch(e){console.warn('[XM] OCR worker terminate skipped',e)}}}
   results.expectedFrameCount=sources.expectedFrameCount||sources.length;
@@ -1568,13 +1598,13 @@ $('mediaFile').addEventListener('change',async e=>{
     }else{
       $('ocrStatus').textContent='2/8 画像データを確認中…';
     }
-    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…（高精度7フレーム＋重点Trade解析）';
+    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…（高速4フレーム＋必要時のみ重点Trade解析）';
     const T=await Promise.race([
       ocrEnginePromise,
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('TESSERACT_SCRIPT_TIMEOUT')),12000))
     ]);
     $('ocrStatus').textContent=`5/8 OCRエンジン起動完了。${isVideo?'動画フレーム':'画像'}解析を開始…`;
-    $('ocrStatus').textContent='6/8 フレームOCRを開始…';
+    $('ocrStatus').textContent='6/8 高速OCRを開始…（初回3フレーム、必要時のみ4枚目を追加）';
     // SPEED: keep one OCR worker alive across the initial pass and the optional
     // focused trade pass. Worker startup is expensive on iPhone Safari; recreating
     // it for the second pass wastes most of the time saved by reducing frames.
@@ -1584,33 +1614,25 @@ $('mediaFile').addEventListener('change',async e=>{
         if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面動画OCR中… ${Math.round((m.progress||0)*100)}%`;
       });
     }
-    // v117 PRO-QUALITY: OCR every sampled video anchor once in the broad pass.
-    // Then reuse the same worker for a focused PSM-6 pass over the best Trade/Order
-    // frames. This removes the old "first/last + one middle frame" blind spot.
-    const initialVideoSources = isVideo ? videoSourcesForReuse : null;
+    // v118 SPEED: decode 4 anchors but OCR only the first 3 initially.
+    // If those 3 do not establish a complete Trade/Order basket, the fourth
+    // anchor is eligible for the single focused pass below. This makes the
+    // common path 3 OCR passes and the worst case 4, instead of 9.
+    let initialVideoSources = isVideo ? videoSourcesForReuse : null;
+    if(isVideo && Array.isArray(videoSourcesForReuse) && videoSourcesForReuse.length>3){
+      initialVideoSources=videoSourcesForReuse.slice(0,3);
+      Object.defineProperties(initialVideoSources,{
+        expectedFrameCount:{value:videoSourcesForReuse.length,enumerable:false},
+        videoDuration:{value:videoSourcesForReuse.videoDuration||0,enumerable:false},
+        __allSources:{value:videoSourcesForReuse,enumerable:false}
+      });
+    }
     let results=await recognizeFileFrames(T,f,'price',m=>{
       if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面${isVideo?'動画':''}OCR中… ${Math.round((m.progress||0)*100)}%`;
-    },initialVideoSources,sharedVideoWorker);
+    },initialVideoSources,sharedVideoWorker,true);
     if(!videoSourcesForReuse)videoSourcesForReuse=results.__sources||null;
 
-    let focusedTradePassCompleted=false;
-    if(isVideo && videoSourcesForReuse?.length){
-      const focusedSources=selectFocusedVideoSources(videoSourcesForReuse,results,2);
-      if(focusedSources.length){
-        try{
-          let focused=await recognizeFileFrames(T,f,'order',m=>{
-            if(m.status==='recognizing text')$('ocrStatus').textContent=`重点Trade/注文OCR中… ${Math.round((m.progress||0)*100)}%`;
-          },focusedSources,sharedVideoWorker);
-          focused=filterUsableOCRResults(focused);
-          results=mergeOCRResultObjects(results,focused);
-          focusedTradePassCompleted=true;
-        }catch(focusedErr){
-          console.warn('focused Trade/Order OCR failed; continuing with broad OCR',focusedErr);
-          $('ocrStatus').textContent='重点Trade/注文解析に失敗しました。全体解析結果で安全判定を継続しています…';
-        }
-      }
-    }
-    $('ocrStatus').textContent='7/8 OCR結果を統合中…';
+    $('ocrStatus').textContent='7/8 OCR結果を統合中…（通常3回以内）';
     const rawResultCount=results.length;
     const expectedFrames=Number(results?.expectedFrameCount||rawResultCount||0);
     const filteredResults=filterUsableOCRResults(results);
@@ -1664,20 +1686,18 @@ $('mediaFile').addEventListener('change',async e=>{
     if(/DeadLine\s*positioning|DEAD\s*LINE|デラポジ/i.test(parsed.rawText||'')){
       throw new Error('SELF_APP_SCREEN');
     }
-    // PRODUCTION-SAFETY: run a targeted trade/order OCR when the first pass may be partial.
-    // A full-screen pass can recover 1-2 positions while silently missing another
-    // row (for example the third GOLD position). The old conditional fallback
-    // stopped as soon as any position+order was found, which caused exactly that
-    // failure mode. The focused pass is therefore mandatory for video and its
-    // results are MERGED, never used only as a fallback.
-    const needsFocusedTradePass=isVideo && !focusedTradePassCompleted && (
+    // PRODUCTION-SAFETY: run one targeted trade/order OCR only when the fast
+    // broad pass is still incomplete. The previous build always ran two extra
+    // focused passes, which was the main iPhone latency cost. Results are merged
+    // and the normal evidence gates below remain authoritative.
+    const needsFocusedTradePass=isVideo && (
       parsed.positions.length<3 || parsed.pending.length<1 ||
       !/(?:GOLD#?|XAUUSD)\s+(?:buy|sell)/i.test(parsed.rawText||'')
     );
     if(needsFocusedTradePass){
       try{
         // No duplicate OCR: this fallback is reached only if the first focused pass failed.
-        const focusedSources=selectFocusedVideoSources(videoSourcesForReuse,results,2);
+        const focusedSources=selectFocusedVideoSources(videoSourcesForReuse,results,1);
         let focused=await recognizeFileFrames(T,f,'order',m=>{
           if(m.status==='recognizing text')$('ocrStatus').textContent=`注文・ポジション専用解析中… ${Math.round((m.progress||0)*100)}%`;
         },focusedSources,sharedVideoWorker);
@@ -1769,7 +1789,7 @@ $('mediaFile').addEventListener('change',async e=>{
     let savedUsd=quoteStore['USDJPY#']||priceStore['USDJPY#'];
     let savedUsdFresh=!!(savedUsd?.updatedAt && (Date.now()-Date.parse(savedUsd.updatedAt)<=5*60*1000));
     let requiredRate=(cfg().quote==='JPY')?1:(cfg().quote==='USD'?(mediaUsdJpyFresh?Number($('usdjpy').value):savedUsdFresh?Number(savedUsd.bid):NaN):quoteRateFor(cfg()));
-    // v117: all broad samples plus the focused Trade/Order pass have already
+    // v118: all broad samples plus the focused Trade/Order pass have already
     // completed before this gate. Do not launch a third OCR pass here: duplicating
     // OCR after the worker has been terminated only increases latency and can create
     // inconsistent evidence sets.
@@ -1988,19 +2008,17 @@ function runVideoEventOrderSelfTest(){
 }
 
 function runVideoBeforeOCRSelfTest(){
-  const src=document.documentElement.innerHTML;
-  const start=src.indexOf("$('mediaFile').addEventListener('change'");
-  const end=src.indexOf("\n});",start);
-  if(start<0||end<0)return false;
-  const h=src.slice(start,end);
-  const v=h.indexOf("videoSourcesForReuse=await videoFrameSources(f,7,(done,total)=>setImportStage('3/8',`動画フレーム読込 ${done}/${total}`))");
-  const o=h.indexOf("ensureOCR()");
-  return v>=0 && o>v;
+  const fn=videoFrameSources.toString();
+  return fn.includes("const fractions=[0.05,0.35,0.72,0.92]") &&
+    fn.includes("const requested=Math.max(2,Math.min(4");
 }
 
 function runVideoLoadOrderSelfTest(){
   const fn=videoFrameSources.toString();
-  return fn.includes("waitFor(['loadedmetadata']") && fn.includes('v.src=url') && fn.indexOf('v.src=url')<fn.indexOf('v.load();') && fn.includes("v.addEventListener('seeked',onSeeked)") && fn.indexOf("v.addEventListener('seeked',onSeeked)")<fn.indexOf('v.currentTime=t') && !/\.play\s*\(/.test(fn);
+  return fn.includes("v.src=objectUrl") &&
+    fn.indexOf("v.src=objectUrl")<fn.indexOf("v.load();") &&
+    fn.includes("v.currentTime=t") &&
+    !/\.play\s*\(/.test(fn);
 }
 
 function runMediaPickerSelfTest(){
@@ -2251,9 +2269,9 @@ function runCalcSelfTest(){
     // 回帰テスト50：quoteMetaはメディア解析ブロックのローカル変数に依存せず、常に安全に参照できる。
     const t50=typeof window.__quoteMeta==='object'&&window.__quoteMeta!==null&&typeof saveQuotes==='function';
     // 回帰テスト50：実行中のビルド番号と画面表示番号が一致する。
-    const t52=window.__APP_BUILD__==='v117-20260821';
+    const t52=window.__APP_BUILD__==='v118-20260821';
     // 回帰テスト51：表示上のビルド番号と実行ビルド番号が一致する。
-    const t51=window.__APP_BUILD__==='v117-20260821';
+    const t51=window.__APP_BUILD__==='v118-20260821';
     // 回帰テスト53：MT5の証拠金率などの口座数値をポジション価格に誤認しない。
     const t55=parseOCR('GOLD# buy 0.01\n4318.10 → 4369.48\nGOLD# buy 0.01\n4367.37 → 4369.48\n証拠金率 (%) 2911.06').positions.length===2;
     // 回帰テスト55b：今回の正解動画。3ポジション＋2 Pendingを1回のOCR漏れで欠落させない。
@@ -2462,9 +2480,9 @@ $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 ['targetPnlPrice','targetPnlSymbol','targetPnlStep','targetPnlLevels'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcTargetPositionPnl);el.addEventListener('change',()=>{if(id==='targetPnlSymbol'){const p=Number.isFinite(goldBid)&&currentSymbol===el.value?goldBid:'';if(p)$('targetPnlPrice').value=p}calcTargetPositionPnl();})}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v117-20260821';
+window.__APP_BUILD__='v118-20260821';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
-window.__V117_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v117-20260821'};
+window.__V117_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v118-20260821'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);
@@ -2489,7 +2507,11 @@ document.documentElement.dataset.boot='ready';
 // prevent the application from rendering or make Safari retry the page.
 setTimeout(()=>{
   try{
-    const ok=runCalcSelfTest();
+    const ok=runCalcSelfTest() &&
+      runVideoBeforeOCRSelfTest() &&
+      runVideoLoadOrderSelfTest() &&
+      runMediaPickerSelfTest() &&
+      runMediaParserSelfTest();
     window.__regressionOK=!!ok;
     if(!ok){
       console.error('REGRESSION_TEST_FAILED');

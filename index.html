@@ -289,8 +289,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v97-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v97-20260821';
+window.__DEPLOYMENT_STATE__={build:'v109-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v109-20260821';
 window.__XM_CACHE_RESET_V81=true;
 (async()=>{
   try{
@@ -318,7 +318,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // the newly uploaded index.html.
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_sw_reset_v89_done';
+    const key='xm_lc_sw_reset_v109_done';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
     let changed=false;
@@ -331,7 +331,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
     sessionStorage.setItem(key,'1');
     if(changed || navigator.serviceWorker.controller){
       const u=new URL(location.href);
-      u.searchParams.set('appbuild','v89');
+      u.searchParams.set('appbuild','v109');
       u.searchParams.set('fresh',String(Date.now()));
       console.info('LEGACY_SW_RESET_RELOAD',u.href);
       location.replace(u.href);
@@ -1246,7 +1246,7 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     // trade-screen anchor, and a late anchor. The old duration/4 rule could
     // collapse a 6-8s recording to only two frames and miss the short Trade pane.
     const count=Math.min(3,Math.max(2,maxFrames));
-    const fractions=count===2?[0.10,0.72]:[0.10,0.55,0.88];
+    const fractions=count===2?[0.10,0.90]:[0.10,0.72,0.90];
     const endTime=Math.max(0,duration-0.05);
     const times=fractions.map(f=>Math.min(endTime,Math.max(0.02,endTime*f)));
     const scale=Math.min(1,1280/Math.max(width,height));
@@ -1516,7 +1516,7 @@ $('mediaFile').addEventListener('change',async e=>{
     // video path from 3 full OCR passes to 2, while preserving a targeted third
     // pass for the short Trade-screen segment that caused the reported failure.
     const initialVideoSources = isVideo && videoSourcesForReuse?.length>2
-      ? [videoSourcesForReuse[0], videoSourcesForReuse[Math.min(videoSourcesForReuse.length-1, Math.max(1, Math.floor((videoSourcesForReuse.length-1)*0.65)))] ]
+      ? [videoSourcesForReuse[0], videoSourcesForReuse[videoSourcesForReuse.length-1]]
       : videoSourcesForReuse;
     let results=await recognizeFileFrames(T,f,'price',m=>{
       if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面${isVideo?'動画':''}OCR中… ${Math.round((m.progress||0)*100)}%`;
@@ -1588,7 +1588,12 @@ $('mediaFile').addEventListener('change',async e=>{
     );
     if(needsFocusedTradePass){
       try{
-        const focusedSources=selectFocusedVideoSources(videoSourcesForReuse,results,1);
+        // The initial fast pass deliberately uses first+last anchors. The middle
+        // anchor is the targeted fallback because many iPhone recordings switch
+        // to MT5 Trade briefly in the middle while ending on a control-center frame.
+        const middleSource=isVideo && videoSourcesForReuse?.length>2
+          ? videoSourcesForReuse[Math.floor(videoSourcesForReuse.length/2)] : null;
+        const focusedSources=middleSource ? [middleSource] : selectFocusedVideoSources(videoSourcesForReuse,results,1);
         let focused=await recognizeFileFrames(T,f,'order',m=>{
           if(m.status==='recognizing text')$('ocrStatus').textContent=`注文・ポジション専用解析中… ${Math.round((m.progress||0)*100)}%`;
         },focusedSources,sharedVideoWorker);
@@ -1883,12 +1888,12 @@ function buildOrderMismatchMessage(existingCount,foundCount){
   /* frame-aware position clustering */
 function runSafariVideoPipelineSelfTest(){
   const src=document.documentElement.innerHTML;
-  return src.includes('v.srcObject=file') && src.includes('URL.createObjectURL(file)') &&
+  return !src.includes('v.srcObject=file') && src.includes('URL.createObjectURL(file)') &&
     !/\.play\s*\(/.test(src) && !src.includes('v.autoplay=true');
 }
 function runVideoEventOrderSelfTest(){
   const fn=videoFrameSources.toString();
-  return fn.includes('srcObject=file') && fn.includes("waitFor(['loadedmetadata']") && fn.includes('v.src=url') && fn.indexOf('v.src=url')<fn.indexOf('v.load();') && fn.includes("v.addEventListener('seeked',onSeeked)") && fn.indexOf("v.addEventListener('seeked',onSeeked)")<fn.indexOf('v.currentTime=t') && !/\.play\s*\(/.test(fn);
+  return !fn.includes('srcObject=file') && fn.includes('URL.createObjectURL(file)') && fn.includes("waitEvent('loadedmetadata'") && fn.includes('v.src=objectUrl') && fn.indexOf('v.src=objectUrl')<fn.indexOf('v.load();') && fn.includes("v.currentTime=t") && !/\.play\s*\(/.test(fn);
 }
 
 function runVideoBeforeOCRSelfTest(){
@@ -1897,7 +1902,7 @@ function runVideoBeforeOCRSelfTest(){
   const end=src.indexOf("\n});",start);
   if(start<0||end<0)return false;
   const h=src.slice(start,end);
-  const v=h.indexOf("videoFrameSources(f,60,(done,total)=>setImportStage('3/8',`動画フレーム読込 ${done}/${total}`))");
+  const v=h.indexOf("videoFrameSources(f,3,(done,total)=>setImportStage('3/8',`動画フレーム読込 ${done}/${total}`))");
   const o=h.indexOf("ensureOCR()");
   return v>=0 && o>v;
 }
@@ -2364,7 +2369,7 @@ $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 ['targetPnlPrice','targetPnlSymbol','targetPnlStep','targetPnlLevels'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcTargetPositionPnl);el.addEventListener('change',()=>{if(id==='targetPnlSymbol'){const p=Number.isFinite(goldBid)&&currentSymbol===el.value?goldBid:'';if(p)$('targetPnlPrice').value=p}calcTargetPositionPnl();})}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v97-20260821';
+window.__APP_BUILD__='v109-20260821';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);

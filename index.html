@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v105-20260821">
+<meta name="build-id" content="v106-20260821">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v105</title>
+<title>Stop Out positioning｜デラポジ Pro v106</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -75,42 +75,51 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 .compactCard{padding:11px 13px}.compactCard .row{padding:3px 0}.compactDetails{padding:10px 13px}.compactDetails summary{cursor:pointer;list-style:none}.compactDetails summary::-webkit-details-marker{display:none}.compactDetails summary:after{content:"＋";float:right;color:var(--muted)}.compactDetails[open] summary:after{content:"−"}.compactDetails .footer{margin-top:8px}.page#pageLC > .card{margin:8px 0}.page#pageLC .alert,.page#pageLC .danger{padding:9px 11px}.page#pageLC .small{line-height:1.4}
 
-/* v105 compact mobile UI */
+/* v106 compact mobile UI */
 .app{padding:9px 10px}h1{font-size:21px;margin:1px 0}.sub{font-size:11px;margin-bottom:8px}.nav{margin-bottom:7px}.nav button{padding:9px 10px;font-size:13px}.card,.hero{border-radius:14px;padding:10px;margin:6px 0}.grid{gap:7px}label{font-size:11px;margin:3px 0}input,select{padding:8px 9px;font-size:15px}.small{font-size:11px;line-height:1.35}.row{padding:5px 0;gap:7px}.toolbar{gap:5px}.toolbar button{padding:8px 10px;font-size:12px}.drop{padding:10px;border-radius:12px}.deadlineHero{padding:12px 10px 10px}.deadlineKicker{font-size:12px;letter-spacing:2px;padding:5px 10px}.deadlineSub{font-size:10px;margin-bottom:2px}.deadlineHero .price{font-size:44px;margin:2px 0 4px}.deadlineRule{margin-top:7px;padding-top:6px;font-size:10px}.compactInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.compactInfoGrid .row{display:block;padding:4px 0}.compactInfoGrid .row span,.compactInfoGrid .row b{display:block}.compactInfoGrid .row b{margin-top:1px;font-size:13px}.compactCard{padding:8px 10px}.compactDetails{padding:8px 10px}.alert,.danger{padding:7px 9px;font-size:11px;line-height:1.35}.page#pageLC > .card{margin:6px 0}.page#pageLC .alert,.page#pageLC .danger{padding:7px 9px}.mediaDone{margin-top:7px;padding:9px 10px}.mediaDone .title{font-size:13px;margin-bottom:5px}.mediaDone .item{font-size:11px}.mediaDone .item b{font-size:12px}.resultBox{padding:12px;border-radius:12px;margin-top:7px}.resultBig{font-size:31px}.targetPnlRow{padding:7px 0}.targetPnlRow .amount{font-size:16px}.subcard{padding:8px!important;margin-top:8px!important}.page#pagePnl .card{padding:10px;margin:6px 0}.page#pagePnl .grid{gap:6px}
+
+/* v106 ultra-compact layout: keep positions/orders visible and move them up */
+.posOrderCard{padding:9px 10px;margin:6px 0}.posOrderHead{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:900}.posOrderHead .count{font-size:11px;color:var(--muted);font-weight:700}.posOrderRows{margin-top:5px}.posOrderRows .grid{gap:5px}.posOrderRows input{padding:6px 7px;font-size:14px}.posOrderRows label{margin:1px 0;font-size:10px}.posOrderRows .wide.small{padding-top:1px}.posOrderTools{display:flex;gap:5px;margin-top:5px}.posOrderTools button{padding:6px 9px;font-size:11px}.compactInfoGrid{gap:0 8px}.compactInfoGrid .row{padding:3px 0}.page#pageLC>.card{margin:4px 0}.page#pageLC .footer{line-height:1.25}.hideOnMobile{display:none!important}
+
+/* v106 density pass 2 */
+.posOrderRows .grid{grid-template-columns:.75fr .75fr 1.5fr;gap:4px}.posOrderRows .grid>.wide:not(.small){grid-column:auto}.posOrderRows .grid>.wide.small{grid-column:1/-1;font-size:10px;line-height:1.2}.posOrderCard{padding:7px 9px}.posOrderTools{margin-top:4px}.posOrderTools button{padding:5px 8px}
+.compactInfoGrid .row span{font-size:10px}.compactInfoGrid .row b{font-size:12px}
 </style>
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v105</span></h1>
-<div id="buildMarker" class="small" style="text-align:right;margin-top:-6px;margin-bottom:8px;color:#8b95a5">build v105</div><div class="sub">XM画面を読み込み → ポジション・注文を自動判定 → 推定Stop Outを計算</div>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v106</span></h1>
+<div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
-<div class="card">
+<div class="card compactCard">
   <div class="grid">
-    <div class="wide"><label>計算する銘柄</label><select id="symbol"></select><div id="symbolHint" class="small" style="margin-top:6px"></div></div>
-    <div><label>銘柄レバレッジ</label><input id="symbolLeverage" type="number" min="1" step="1"></div>
-    <div><label>契約サイズ（1 lot）</label><input id="contractSize" type="number" min="0.000001" step="any"></div>
-    <div class="wide"><label id="priceLabel">XM画面読み込み</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 XM画面を読み込む</button></div>
+    <div><label>銘柄</label><select id="symbol"></select></div>
+    <div><label>レバレッジ</label><input id="symbolLeverage" type="number" min="1" step="1"></div>
+    <div><label>契約サイズ</label><input id="contractSize" type="number" min="0.000001" step="any"></div>
+    <div><label id="priceLabel">XM画面</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 読み込む</button></div>
   </div>
-  <div id="specStatus" class="small" style="margin-top:10px"></div>
-  <div class="toolbar" style="margin-top:10px"><span id="rateStatus" class="small">保存されたXM価格を確認しています…</span><span class="small" style="margin-left:auto;opacity:.55">build v105</span></div><div class="small" style="margin-top:6px">必要データ不足時は安全停止。</div>
+  <div id="symbolHint" class="small" style="margin-top:4px"></div><div id="specStatus" class="small"></div>
+  <div class="small" id="rateStatus">保存XM価格を確認中…</div>
 </div>
 
-<div class="card"><div class="drop"><div id="ocrStatus" class="small">XMの気配値または注文画面のスクショ/動画を選択してください。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
+<div class="card compactCard"><div class="drop"><div id="ocrStatus" class="small">XMの気配値・ポジション・注文を読み込み。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
 
-<div class="card"><div class="grid">
+<div class="card posOrderCard"><div class="posOrderHead"><span>現在ポジション</span><span class="count" id="positionCount">0件</span></div><div id="positions" class="posOrderRows"></div><div class="posOrderTools"><button class="secondary" onclick="addPosition()">＋ 追加</button><button class="secondary" onclick="resetPositions()">リセット</button></div></div>
+<div class="card posOrderCard"><div class="posOrderHead"><span>未約定注文</span><span class="count" id="count">0件 / 追加0件</span></div><div id="orders" class="posOrderRows"></div><div class="posOrderTools"><button class="secondary" onclick="addOrder()">＋ 追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></div>
+<div class="card compactCard"><div class="grid">
 <div><label>口座残高（JPY）</label><input id="balance" type="number" value="50000"></div>
 <div><label>口座レバレッジ（参考）</label><input id="leverage" type="number" value="1000"></div>
 <div><label>XM Stop Out（%）</label><input id="stopout" type="number" value="20"></div>
 <div><label>USD/JPY（保存価格）</label><input id="usdjpy" type="number" step="0.001" value="159.427"></div>
-<div><label>MT5実測含み損益（検証用OCR）</label><input id="brokerPnl" type="number" step="1" placeholder="スクショから自動取得"></div>
-<div><label>損益補正</label><span id="pnlAdjustStatus" class="small">自動補正なし</span></div>
+<div><label>MT5含み損益</label><input id="brokerPnl" type="number" step="1" placeholder="自動"></div>
+<div><label>損益補正</label><span id="pnlAdjustStatus" class="small">なし</span></div>
 </div></div>
 
 <div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">現在保有分を表示。Pending後は下落シナリオへ。</div></div>
 
-<div class="card" id="scenarioCard"><div class="row"><b>下落シナリオ</b><span id="scenarioStatus" class="small">—</span></div><div id="scenarioSteps" class="small">現在 → Pending約定 → Stop Out の順で表示</div></div><div class="card compactCard">
+<div class="card compactCard" id="scenarioCard"><div class="row"><b>下落シナリオ</b><span id="scenarioStatus" class="small">—</span></div><div id="scenarioSteps" class="small">現在 → Pending → Stop Out</div></div><div class="card compactCard">
 <div class="compactInfoGrid">
 <div class="row"><span id="bidLabel">XM Bid</span><b id="goldBid">—</b></div>
 <div class="row"><span id="askLabel">XM Ask</span><b id="goldAsk">—</b></div>
@@ -124,23 +133,17 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div class="row"><span>合計数量</span><b id="qty">—</b></div>
 <div class="row"><span>Stop Out時 総ポジション</span><b id="lcTotalPositions">—</b></div>
 <div class="row"><span>USD/JPY</span><b id="usedRate">—</b></div>
-<div class="row"><span>価格更新</span><b id="priceUpdated">—</b></div>
+<div class="row"><span>価格更新</span><b id="priceUpdated">—</b></div><div class="row"><span id="pipLabel">1 point / pip</span><b id="pipValue">—</b></div>
 </div></div>
 
-<div class="card"><div class="row"><b>1 pip / 1 point の変動額</b><span>0.01 lot基準</span></div><div class="row"><span id="pipLabel">現在の銘柄</span><b id="pipValue">—</b></div><div class="small" id="pipNote">—</div><div class="small" style="margin-top:6px">※LC時含み損は概算。実際は約定・スプレッド・スワップ等で変動します。</div></div>
 
-<details class="card compactDetails" id="calcBasisCard"><summary><b>計算根拠</b> <span id="basisStatus" class="small">現在の入力状態</span></summary><div id="calcBasis" class="footer">ポジション・注文・換算レート確定後に表示</div></details>
-<details class="card compactDetails"><summary><b>現在ポジション</b> <span id="positionCount">0件</span></summary><div id="positions"></div><div class="toolbar" style="margin-top:7px"><button class="secondary" onclick="addPosition()">＋ 追加</button><button class="secondary" onclick="resetPositions()">リセット</button></div></details>
+<details class="card compactDetails" id="calcBasisCard"><summary><b>計算根拠</b> <span id="basisStatus" class="small">—</span></summary><div id="calcBasis" class="footer">XM画面のBid/Ask・ポジション・注文を使用。Stop Outは推定値。</div></details>
 
-<details class="card compactDetails"><summary><b>注文 / 下落シナリオ</b> <span id="count">0件 / 追加0件</span></summary><div id="orders"></div><div class="toolbar" style="margin-top:7px"><button class="secondary" onclick="addOrder()">＋ 追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></details>
 
-<details class="card compactDetails"><summary><b>価格ソース</b> <span class="small">XM画面</span></summary><div class="footer">読み込んだBid/Askを銘柄別に保存。</div></details>
-
-<div class="alert"><b>計算：</b>現在ポジション＋下落時のBuy Limitを到達順に反映。Stop Outは段階決済。データ不整合時は停止。</div>
 <div id="specWarning" class="danger" style="display:none"></div>
 
 <div id="diagnosticPanel" class="card" style="display:none"><div class="row"><b>開発者診断：計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">本番画面には表示せず、?debug=1 または診断モードでのみ表示します。回帰テストは開発者向け監視です。NGでも本番の入力データ検証には影響しません。</div></div>
-<details class="card compactDetails"><summary><b>計算モデル・注意点</b></summary><div class="footer">候補価格ごとに必要証拠金を再計算し、Stop Out開始点を推定。Buy LimitはAsk、含み損はBidで評価し、JPYへ換算します。スワップ・手数料・ヘッジ等は別途影響するため、結果は推定値です。</div></details>
+<details class="card compactDetails"><summary><b>計算モデル</b></summary><div class="footer">Buy Limit＝Ask、含み損＝Bid。手数料・スワップ等は別途。</div></details>
 </div>
 
 <div id="pagePnl" class="page">

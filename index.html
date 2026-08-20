@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v112-20260821">
+<meta name="build-id" content="v114-20260821">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v112</title>
+<title>Stop Out positioning｜デラポジ Pro v114</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -19,7 +19,7 @@ input,select{width:100%;padding:11px;border:1px solid #d9dde3;border-radius:10px
 .small{font-size:12px;color:#667085;line-height:1.55}.ok{color:#087443}.warn{color:#b45309}.err{color:#b42318}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}
 .alert{border-radius:14px;padding:12px;background:#fff7ed;color:#9a3412;font-size:12px;line-height:1.5}.danger{border-radius:14px;padding:12px;background:#fff1f2;color:#9f1239;font-size:12px;line-height:1.5}.footer{font-size:11px;color:#667085;line-height:1.6}.nav{display:flex;gap:8px;margin:0 0 12px}.nav button{flex:1}.nav .active{background:#111;color:#fff}.page{display:none}.page.active{display:block}.resultBox{background:#f8fafc;border-radius:16px;padding:18px;text-align:center;margin-top:12px}.resultBig{font-size:38px;font-weight:850;letter-spacing:-1px}.muted{color:#667085}.calcHint{background:#f8fafc;border-radius:12px;padding:10px;font-size:12px;color:#667085;line-height:1.5}
 
-/* v112 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
+/* v114 — pro trader build: trade-screen current-price inference, conservative market-price confidence, dense video OCR, frame-aware dedupe, stale-data isolation */
 :root{
   color-scheme:dark;
   --bg:#050607;--panel:#0b0e12;--panel2:#10141a;--line:#20262e;
@@ -88,7 +88,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v112</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v114</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
@@ -289,8 +289,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v112-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v112-20260821';
+window.__DEPLOYMENT_STATE__={build:'v114-20260821',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v114-20260821';
 window.__XM_CACHE_RESET_V81=true;
 (async()=>{
   try{
@@ -318,7 +318,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // the newly uploaded index.html.
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_sw_reset_v112_done';
+    const key='xm_lc_sw_reset_v114_done';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
     let changed=false;
@@ -331,7 +331,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
     sessionStorage.setItem(key,'1');
     if(changed || navigator.serviceWorker.controller){
       const u=new URL(location.href);
-      u.searchParams.set('appbuild','v112');
+      u.searchParams.set('appbuild','v114');
       u.searchParams.set('fresh',String(Date.now()));
       console.info('LEGACY_SW_RESET_RELOAD',u.href);
       location.replace(u.href);
@@ -1378,10 +1378,8 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
       currentFrame=i+1;
       let source=sources[i].canvas;
       const isControlCenter=!!sources[i].isControlCenter;
-      // Order/position OCR gets a dedicated high-resolution crop. MT5 trade rows
-      // are small and colored, while the quote screen contains many unrelated
-      // numbers; isolating the trade pane materially reduces cross-row mistakes.
-      if(isVideo && mode==='order') source=makeTradeFocusCanvas(source);
+      // v114: Trade/position OCR intentionally uses the full frame. The focused grayscale crop
+      // drops MT5's small price digits on iPhone recordings, while full-frame PSM 6 preserves them.
       const r=await worker.recognize(source);
       results.push({data:r.data,time:sources[i].time,frameIndex:i,isControlCenter});
     }
@@ -2153,7 +2151,7 @@ function runCalcSelfTest(){
 
 
     // 回帰テスト29：動画解析は最大16フレーム、短時間でも最低6フレームを使う。
-    const t29=videoFrameSources.toString().includes('Math.max(36') && videoFrameSources.toString().includes('Math.ceil(dur/0.16)') && recognizeFileFrames.toString().includes('videoFrameSources(file,48)') && ocrWorkerOptions.toString().includes('workerBlobURL:true');
+    const t29=videoFrameSources.toString().includes('fractions=count===2?[0.10,0.90]:[0.10,0.73,0.90]') && recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source") && ocrWorkerOptions.toString().includes('workerBlobURL:true');
     // 回帰テスト29b：MT5フレーム割合では計算可否をブロックしない。短いトレード区間を正解データとして扱う。
     const t29b=!/VIDEO_TOO_FEW_VALID_MT5_FRAMES/.test(document.documentElement.innerHTML) && /validity is decided from confirmed trading data/i.test(document.documentElement.innerHTML);
     // 回帰テスト29c：専用OCR失敗を理由に動画全体を中断しない。
@@ -2171,7 +2169,7 @@ function runCalcSelfTest(){
     const t32=s31.length===1&&s31[0].symbol==='GOLD#';
     // 回帰テスト33：動画OCRはフレームごとにworkerを作り直さず、1 workerを再利用する。
     const t33=(recognizeFileFrames.toString().match(/createOCRWorker/g)||[]).length===1;
-    const t39v=/URL\.createObjectURL\(file\)/.test(videoFrameSources.toString()) && !/v\.srcObject=file/.test(videoFrameSources.toString()) && /fractions=count===2\?\[0\.10,0\.72\]:\[0\.10,0\.55,0\.88\]/.test(videoFrameSources.toString());
+    const t39v=/URL\.createObjectURL\(file\)/.test(videoFrameSources.toString()) && !/v\.srcObject=file/.test(videoFrameSources.toString()) && /fractions=count===2\?\[0\.10,0\.90\]:\[0\.10,0\.73,0\.90\]/.test(videoFrameSources.toString()) && recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source");
     // 回帰テスト34：注文数不一致でconfirmを使わず、古い注文を計算へ残さない。
     const forbiddenConfirm='confirm'+'('; const t34=!document.documentElement.innerHTML.includes(forbiddenConfirm) && /orderDataInvalid/.test(document.documentElement.innerHTML);
     // 回帰テスト35：完全なポジション画面＋単一Pending注文でも注文を確定できる。
@@ -2449,8 +2447,9 @@ $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 ['targetPnlPrice','targetPnlSymbol','targetPnlStep','targetPnlLevels'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcTargetPositionPnl);el.addEventListener('change',()=>{if(id==='targetPnlSymbol'){const p=Number.isFinite(goldBid)&&currentSymbol===el.value?goldBid:'';if(p)$('targetPnlPrice').value=p}calcTargetPositionPnl();})}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v112-20260821';
+window.__APP_BUILD__='v114-20260821';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
+window.__V114_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v114-20260821'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

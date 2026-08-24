@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v127-20260824">
+<meta name="build-id" content="v128-20260824">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v127</title>
+<title>Stop Out positioning｜デラポジ Pro v128</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -88,7 +88,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v127</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v128</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
@@ -206,7 +206,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v127-20260824';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v128-20260824';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -289,8 +289,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v127-20260824',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v127-20260824';
+window.__DEPLOYMENT_STATE__={build:'v128-20260824',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v128-20260824';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -306,7 +306,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // the newly uploaded index.html.
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_sw_reset_v126_done';
+    const key='xm_lc_sw_reset_v128_done';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
     let changed=false;
@@ -319,7 +319,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
     sessionStorage.setItem(key,'1');
     if(changed || navigator.serviceWorker.controller){
       const u=new URL(location.href);
-      u.searchParams.set('appbuild','v126');
+      u.searchParams.set('appbuild','v128');
       u.searchParams.set('fresh',String(Date.now()));
       console.info('LEGACY_SW_RESET_RELOAD',u.href);
       location.replace(u.href);
@@ -333,9 +333,10 @@ const $=id=>document.getElementById(id);
 const PRICE_KEY='xm_saved_prices_multi_v6', ORDER_KEY='xm_orders_by_symbol_v6', POSITION_KEY='xm_positions_by_symbol_v3', SPEC_KEY='xm_specs_v6', QUOTE_KEY='xm_quote_snapshot_all_v3';
 let quoteStore={}, priceStore={}, orderStore={}, positionStore={}, specStore={};
 let mediaSessionActive=false;let positionDataValid=false;let positionDataSource='none';let positionImportError='起動直後は保存済みポジションを信頼しません。現在のMT5ポジション画面を再読込してください。'; let orderDataInvalid=false;let orderImportError='';
-const VERIFIED_POSITION_SESSION_KEY='xm_verified_position_session_v126';
-const VERIFIED_POSITION_PERSIST_KEY='xm_verified_position_persist_v126';
-const LEGACY_VERIFIED_POSITION_SESSION_KEYS=['xm_verified_position_session_v125'];
+const VERIFIED_POSITION_SESSION_KEY='xm_verified_position_session_v128';
+const VERIFIED_POSITION_PERSIST_KEY='xm_verified_position_persist_v128';
+const LEGACY_VERIFIED_POSITION_SESSION_KEYS=['xm_verified_position_session_v126','xm_verified_position_session_v125'];
+const LEGACY_VERIFIED_POSITION_PERSIST_KEYS=['xm_verified_position_persist_v126'];
 const VERIFIED_POSITION_MAX_AGE_MS=6*60*60*1000;
 // Current positions are time-sensitive. Persist only for the same six-hour safety window.
 const VERIFIED_POSITION_PERSIST_MAX_AGE_MS=6*60*60*1000;
@@ -414,13 +415,36 @@ function restoreVerifiedPositionState(){
     if(hasVerifiedPositionSession()){
       positionDataValid=true; positionDataSource=migrated?'ocr-session-migrated':'ocr-session'; positionImportError=''; return true;
     }
-    const persisted=readPersistedVerifiedPosition()[currentSymbol];
+    let persisted=readPersistedVerifiedPosition()[currentSymbol];
+    // v127 stored verified baskets under the v126 persistence key. Migrate that
+    // record without changing verifiedAt so upgrading the app never turns a
+    // confirmed open basket into an artificial 0-position state.
+    if(!verifiedRecordMatches(persisted,VERIFIED_POSITION_PERSIST_MAX_AGE_MS)){
+      for(const key of LEGACY_VERIFIED_POSITION_PERSIST_KEYS){
+        let all={}; try{all=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(e){}
+        const rec=all[currentSymbol];
+        if(verifiedRecordMatches(rec,VERIFIED_POSITION_PERSIST_MAX_AGE_MS)){
+          const next=readPersistedVerifiedPosition(); next[currentSymbol]={...rec,source:String(rec.source||'ocr-persisted-legacy')};
+          localStorage.setItem(VERIFIED_POSITION_PERSIST_KEY,JSON.stringify(next));
+          delete all[currentSymbol]; localStorage.setItem(key,JSON.stringify(all));
+          persisted=next[currentSymbol]; break;
+        }
+      }
+    }
     if(verifiedRecordMatches(persisted,VERIFIED_POSITION_PERSIST_MAX_AGE_MS)){
       // Promote to session WITHOUT changing verifiedAt. Order-only imports must not
       // extend the age of a position basket that was not re-observed on MT5.
       const all=readVerifiedPositionSession(); all[currentSymbol]={...persisted,source:String(persisted.source||'ocr-persisted')};
       sessionStorage.setItem(VERIFIED_POSITION_SESSION_KEY,JSON.stringify(all));
       positionDataValid=true; positionDataSource='ocr-persisted'; positionImportError=''; return true;
+    }
+    // Core state rule: a saved open-position basket is application state, not a
+    // disposable OCR cache. Keep it active across reloads until MT5 position OCR,
+    // manual editing, or Reset explicitly replaces it. This is what allows an
+    // order-only video to update Pending orders without deleting live positions.
+    const saved=getPositions().filter(o=>/^(buy|sell)$/i.test(String(o?.side||''))&&Number(o?.lot)>0&&Number(o?.price)>0);
+    if(saved.length){
+      positionDataValid=true; positionDataSource='saved-state'; positionImportError=''; return true;
     }
   }catch(e){console.warn('[XM] POSITION_STATE_RESTORE_SKIPPED',e)}
   return false;
@@ -429,6 +453,7 @@ function clearVerifiedPositionSession(){
   try{const all=readVerifiedPositionSession();delete all[currentSymbol];sessionStorage.setItem(VERIFIED_POSITION_SESSION_KEY,JSON.stringify(all))}catch(e){}
   try{const all=readPersistedVerifiedPosition();delete all[currentSymbol];localStorage.setItem(VERIFIED_POSITION_PERSIST_KEY,JSON.stringify(all))}catch(e){}
   for(const key of LEGACY_VERIFIED_POSITION_SESSION_KEYS){try{const all=JSON.parse(sessionStorage.getItem(key)||'{}')||{};delete all[currentSymbol];sessionStorage.setItem(key,JSON.stringify(all))}catch(e){}}
+  for(const key of LEGACY_VERIFIED_POSITION_PERSIST_KEYS){try{const all=JSON.parse(localStorage.getItem(key)||'{}')||{};delete all[currentSymbol];localStorage.setItem(key,JSON.stringify(all))}catch(e){}}
 }
 try{quoteStore=JSON.parse(localStorage.getItem(QUOTE_KEY)||'{}')||{}}catch(e){}
 try{priceStore=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}')||{}}catch(e){}
@@ -537,7 +562,7 @@ function conversionGraph(){const g={};const add=(a,b,r)=>{if(!a||!b||!Number.isF
 function getRateToJPY(currency){if(currency==='JPY')return 1;const g=conversionGraph();if(currency==='USD'&&+$('usdjpy').value>0)return +$('usdjpy').value;const q=[[currency,1]],seen=new Set();while(q.length){const [cur,r]=q.shift();if(cur==='JPY')return r;if(seen.has(cur))continue;seen.add(cur);for(const [n,m] of (g[cur]||[]))if(!seen.has(n))q.push([n,r*m])}return null}
 function baseRateFor(c){return getRateToJPY(c.base)}
 function quoteRateFor(c){if(window.__testRate&&c.quote==='USD')return window.__testRate;return getRateToJPY(c.quote)}
-function renderPositions(lc=null,c=cfg()){const arr=getPositions();$('positionCount').textContent=`${arr.length}件`;if(!positionDataValid){$('positions').innerHTML='<div class="dataLock"><strong>⚠ 保存済みポジションは現在の計算には使用していません。</strong><br>今回のスクショで現在ポジションを確定できるまでDEAD LINEを表示しません。</div>';return}if(!arr.length){$('positions').innerHTML='<div class="small">現在の約定済みポジションはまだありません。注文スクショから自動認識します。</div>';return}$('positions').innerHTML=arr.map((o,i)=>{const px=Number(o.price),lot=Number(o.lot),qr=quoteRateFor(c);let nowPnl=null;if(Number.isFinite(goldBid)&&Number.isFinite(px)&&Number.isFinite(lot)&&qr){if(/^buy$/i.test(String(o.side||'')))nowPnl=(goldBid-px)*lot*c.contract*qr;else if(/^sell$/i.test(String(o.side||'')))nowPnl=(px-goldBid)*lot*c.contract*qr;}const lcLoss=lc!==null?lossAtLCJPY(o,lc,c):null;return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editPosition(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editPosition(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>約定価格</label><input type="number" step="any" value="${o.price}" onchange="editPosition(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small">現在評価損益（概算）：${nowPnl!==null?formatJPYLoss(nowPnl):'—'}　／　LC時想定含み損：${lcLoss!==null?formatJPYLoss(lcLoss):'—'}</div></div>`}).join('')}
+function renderPositions(lc=null,c=cfg()){const arr=getPositions();const retained=/^(?:saved-state|ocr-session|ocr-session-migrated|ocr-persisted)$/.test(String(positionDataSource||''));$('positionCount').textContent=`${arr.length}件${retained&&arr.length?'（継続）':''}`;if(!positionDataValid){$('positions').innerHTML='<div class="dataLock"><strong>⚠ 保存済みポジションは現在の計算には使用していません。</strong><br>今回のスクショで現在ポジションを確定できるまでDEAD LINEを表示しません。</div>';return}if(!arr.length){$('positions').innerHTML='<div class="small">現在の約定済みポジションはまだありません。注文スクショから自動認識します。</div>';return}$('positions').innerHTML=arr.map((o,i)=>{const px=Number(o.price),lot=Number(o.lot),qr=quoteRateFor(c);let nowPnl=null;if(Number.isFinite(goldBid)&&Number.isFinite(px)&&Number.isFinite(lot)&&qr){if(/^buy$/i.test(String(o.side||'')))nowPnl=(goldBid-px)*lot*c.contract*qr;else if(/^sell$/i.test(String(o.side||'')))nowPnl=(px-goldBid)*lot*c.contract*qr;}const lcLoss=lc!==null?lossAtLCJPY(o,lc,c):null;return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editPosition(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editPosition(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>約定価格</label><input type="number" step="any" value="${o.price}" onchange="editPosition(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small">現在評価損益（概算）：${nowPnl!==null?formatJPYLoss(nowPnl):'—'}　／　LC時想定含み損：${lcLoss!==null?formatJPYLoss(lcLoss):'—'}</div></div>`}).join('')}
 window.editPosition=function(i,k,v){const a=getPositions();a[i][k]=v;setPositions(a);renderPositions();calc()}
 window.addPosition=function(){const a=getPositions();a.push({side:'Buy',lot:.01,price:Number.isFinite(goldBid)?goldBid:0});setPositions(a);renderPositions();calc()}
 window.resetPositions=function(){setPositions([]);renderPositions();calc()}
@@ -1660,12 +1685,16 @@ $('mediaFile').addEventListener('change',async e=>{
   // an order-only import never refreshes its verification timestamp.
   const sessionPositionTrusted=hasVerifiedPositionSession();
   const persistedPositionTrusted=hasPersistedVerifiedPosition();
+  const savedPositionBasketAvailable=getPositions().some(o=>/^(buy|sell)$/i.test(String(o?.side||''))&&Number(o?.lot)>0&&Number(o?.price)>0);
   const priorPositionState={
-    valid:(positionDataValid && getPositions().length>0 && positionDataSource!=='none') || sessionPositionTrusted || persistedPositionTrusted,
-    source:(positionDataValid && positionDataSource!=='none')?positionDataSource:(sessionPositionTrusted?'ocr-session':(persistedPositionTrusted?'ocr-persisted':'none')),
+    // Saved open positions remain authoritative app state until explicitly replaced
+    // by position OCR/manual edits/reset. Order-only media must never zero them.
+    valid:savedPositionBasketAvailable,
+    source:(positionDataValid && positionDataSource!=='none')?positionDataSource:(sessionPositionTrusted?'ocr-session':(persistedPositionTrusted?'ocr-persisted':'saved-state')),
     count:getPositions().length,
     sessionTrusted:sessionPositionTrusted,
-    persistedTrusted:persistedPositionTrusted
+    persistedTrusted:persistedPositionTrusted,
+    savedState:savedPositionBasketAvailable
   };
   mediaSessionActive=true;
   positionDataValid=false; positionDataSource='none';
@@ -2223,7 +2252,7 @@ function runCalcSelfTest(){
 
     const noFalsePosition=parseOCR('GOLD# buy 0.01\n2911.06\n証拠金率 (%) 2911.06').positions.length===0;
     const controlCenter=isControlCenterFrameText('再生停止中 集中モード 明るさ 音量')&&!isControlCenterFrameText('GOLD# buy 0.01 4367.37 -> 4425.27');
-    const buildOk=window.__APP_BUILD__==='v127-20260824'&&document.querySelector('meta[name="build-id"]')?.content==='v127-20260824'&&/v127/.test(document.querySelector('h1')?.textContent||'');
+    const buildOk=window.__APP_BUILD__==='v128-20260824'&&document.querySelector('meta[name="build-id"]')?.content==='v128-20260824'&&/v128/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -2408,7 +2437,7 @@ $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 ['targetPnlPrice','targetPnlSymbol','targetPnlStep','targetPnlLevels'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcTargetPositionPnl);el.addEventListener('change',()=>{if(id==='targetPnlSymbol'){const p=Number.isFinite(goldBid)&&currentSymbol===el.value?goldBid:'';if(p)$('targetPnlPrice').value=p}calcTargetPositionPnl();})}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v127-20260824';
+window.__APP_BUILD__='v128-20260824';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -2417,8 +2446,8 @@ window.__V125_PENDING_ORDER_TEST__=(()=>{
   const prices=uniq.map(x=>x.price).sort((a,b)=>a-b);
   return {count:uniq.length,prices,pass:uniq.length===3&&prices.join(',')==='4528.25,4577.9,4603.95'};
 })();
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v127-20260824'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v127-20260824'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v128-20260824'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v128-20260824'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);
@@ -2433,9 +2462,9 @@ populateSymbols();
 populatePnlSymbols();
 if(![...$('symbol').options].some(o=>o.value===currentSymbol))ensureSymbolOption(currentSymbol);
 $('symbol').value=currentSymbol;
-// Restore only a fingerprint-matching, recently verified basket before first calc.
-// This also migrates the v125 same-tab session so upgrading the file does not
-// falsely turn a previously confirmed 4-position basket into "0 current positions".
+// Restore the last open-position basket before first calc. Verified records are
+// preferred, but the saved basket itself remains app state until position OCR,
+// manual editing, or Reset replaces it. Order-only updates must never erase it.
 restoreVerifiedPositionState();
 switchSymbol(false);
 renderDataLock();

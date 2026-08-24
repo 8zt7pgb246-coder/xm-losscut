@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v130-20260824">
+<meta name="build-id" content="v200-20260824">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v130</title>
+<title>Stop Out positioning｜デラポジ Pro v200</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -88,7 +88,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v130</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v200</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
@@ -105,7 +105,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </div>
 
 <div class="card compactCard"><div class="drop"><div id="ocrStatus" class="small">XMの気配値・ポジション・注文を読み込み。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
-<div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">現在保有分。Pending後は下落シナリオへ。</div></div>
+<div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">現在保有＋到達前に約定するPendingを反映。</div></div>
 
 
 <div class="card posOrderCard"><div class="posOrderHead"><span>現在ポジション</span><span class="count" id="positionCount">0件</span></div><div id="positions" class="posOrderRows"></div><div class="posOrderTools"><button class="secondary" onclick="addPosition()">＋ 追加</button><button class="secondary" onclick="resetPositions()">リセット</button></div></div>
@@ -206,7 +206,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v130-20260824';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v200-20260824';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -289,8 +289,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v130-20260824',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v130-20260824';
+window.__DEPLOYMENT_STATE__={build:'v200-20260824',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v200-20260824';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -306,7 +306,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // the newly uploaded index.html.
   try{
     if(!('serviceWorker' in navigator)) return;
-    const key='xm_lc_sw_reset_v130_done';
+    const key='xm_lc_sw_reset_v200_done';
     if(sessionStorage.getItem(key)) return;
     const regs=await navigator.serviceWorker.getRegistrations();
     let changed=false;
@@ -319,7 +319,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
     sessionStorage.setItem(key,'1');
     if(changed || navigator.serviceWorker.controller){
       const u=new URL(location.href);
-      u.searchParams.set('appbuild','v130');
+      u.searchParams.set('appbuild','v200');
       u.searchParams.set('fresh',String(Date.now()));
       console.info('LEGACY_SW_RESET_RELOAD',u.href);
       location.replace(u.href);
@@ -523,27 +523,24 @@ function solveLC(bal,stop,filled,c,lev,contract,adjustment=0){
   for(let i=0;i<180;i++){const mid=(lo+hi)/2;if(f(mid)>0)hi=mid;else lo=mid} return (lo+hi)/2;
 }
 function simulateLC(bal,stop,pending,positions,c,lev,contract,currentAsk,adjustment=0){
-  // adjustment is retained only for backward-compatible callers; it is intentionally ignored.
+  // v200 CORE RESET: DEAD LINE is the first reachable Stop Out price on a falling-price path.
   adjustment=0;
-  const base=[...positions],buys=[...pending].filter(o=>/^buy\s*limit$/i.test(String(o.side||''))).sort((a,b)=>b.price-a.price);
+  const base=(Array.isArray(positions)?positions:[]).filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0).map(o=>({...o,lot:Number(o.lot),price:Number(o.price)}));
+  const buys=(Array.isArray(pending)?pending:[]).filter(o=>/^buy\s*limit$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0).map(o=>({...o,lot:Number(o.lot),price:Number(o.price)})).sort((a,b)=>b.price-a.price);
+  const currentLc=base.length?solveLC(bal,stop,base,c,lev,contract,0):null;
+  const allFilledLc=[...base,...buys].length?solveLC(bal,stop,[...base,...buys],c,lev,contract,0):null;
   const inconsistent=buys.filter(o=>Number.isFinite(currentAsk)&&currentAsk<=o.price);
-  if(inconsistent.length)return {filled:base,lc:solveLC(bal,stop,base,c,lev,contract,adjustment),added:[],initialPending:[],inconsistent};
-  let filled=[...base],lc=filled.length?solveLC(bal,stop,filled,c,lev,contract,adjustment):null; const added=[];
-  for(const next of buys){
-    // Price falls from currentAsk. If Stop Out is reached at/above the next Buy Limit,
-    // liquidation starts before that pending order can become a live position.
-    if(filled.length && (lc===null || lc>=next.price-1e-9))break;
-    filled.push(next);added.push(next);
-    const recomputed=solveLC(bal,stop,filled,c,lev,contract,adjustment);
-    if(recomputed===null){lc=null;break}
-    // If adding the order makes the theoretical LC jump above its own trigger price,
-    // the account would be under the Stop Out threshold immediately at execution.
-    // The reachable liquidation price is therefore the trigger itself, never a price
-    // that the market already passed before this position existed.
-    if(recomputed>=next.price-1e-9){lc=next.price;break}
-    lc=recomputed;
+  if(inconsistent.length)return {filled:base,lc:currentLc,currentLc,allFilledLc,added:[],skipped:buys,events:[],initialPending:buys,inconsistent,reason:'pending_above_ask'};
+  let filled=[...base],lc=currentLc; const added=[],skipped=[],events=[];
+  for(let i=0;i<buys.length;i++){
+    const next=buys[i],beforeLc=filled.length?solveLC(bal,stop,filled,c,lev,contract,0):null;
+    if(filled.length&&(!Number.isFinite(beforeLc)||beforeLc>=next.price-1e-9)){lc=beforeLc;skipped.push(...buys.slice(i));events.push({type:'stopout_before_order',price:beforeLc,order:next});break;}
+    filled.push(next);added.push(next);const afterLc=solveLC(bal,stop,filled,c,lev,contract,0);events.push({type:'fill',price:next.price,order:next,lcAfter:afterLc,positionsAfter:filled.length});
+    if(!Number.isFinite(afterLc)){lc=null;skipped.push(...buys.slice(i+1));break;}
+    if(afterLc>=next.price-1e-9){lc=next.price;skipped.push(...buys.slice(i+1));events.push({type:'immediate_stopout_on_fill',price:next.price,theoreticalLc:afterLc});break;}
+    lc=afterLc;
   }
-  return {filled,lc,added,initialPending:[],inconsistent:[]};
+  return {filled,lc,currentLc,allFilledLc,added,skipped,events,initialPending:buys,inconsistent:[],reason:'ok'};
 }
 window.__regressionOK=null;
 function diagnosticsEnabled(){return /(?:^|\?)debug=1(?:&|$)/.test(location.search)||localStorage.getItem('delapoji_debug')==='1'}
@@ -570,84 +567,32 @@ function renderCalcBasis(currentPositions,pending,filled,lc,c){
   try{sessionStorage.setItem('delapoji_last_calc_v51',JSON.stringify(current))}catch(e){}
 }
 
-function renderScenarioSteps(positions,pending,filled,added,lc){
-  const el=$('scenarioSteps'), st=$('scenarioStatus'); if(!el||!st)return;
-  const curLots=positions.reduce((a,o)=>a+Number(o.lot||0),0);
-  const lines=[];
+function renderScenarioSteps(positions,pending,filled,added,lc,simMeta=null){
+  const el=$('scenarioSteps'),st=$('scenarioStatus');if(!el||!st)return;const curLots=positions.reduce((a,o)=>a+Number(o.lot||0),0),lines=[];
   lines.push(`<div class="row"><span>現在</span><b>${positions.length}件 / ${curLots.toFixed(2)} lot</b></div>`);
-  if(added.length){
-    added.forEach((o,i)=>{
-      const lots=positions.reduce((a,x)=>a+Number(x.lot||0),0)+added.slice(0,i+1).reduce((a,x)=>a+Number(x.lot||0),0);
-      lines.push(`<div class="row"><span>下落して ${formatPrice(Number(o.price))} 到達</span><b>${i+1}件目 約定 → ${lots.toFixed(2)} lot</b></div>`);
-    });
-  }else if(pending.length){
-    lines.push(`<div class="row"><span>Pending</span><b>Stop Out到達前の追加約定なし</b></div>`);
-  }
-  if(Number.isFinite(lc)){
-    lines.push(`<div class="row"><span>Stop Out開始予測</span><b style="color:#ff6b63">${formatPrice(lc)}</b></div>`);
-    st.textContent=`現在 ${positions.length}件 → Stop Out時 ${filled.length}件`;
-  }else{
-    st.textContent='計算未確定';
-  }
-  el.innerHTML=lines.join('');
+  added.forEach((o,i)=>{const lots=curLots+added.slice(0,i+1).reduce((a,x)=>a+Number(x.lot||0),0);lines.push(`<div class="row"><span>下落して ${formatPrice(Number(o.price))} 到達</span><b>${i+1}件目 約定 → ${lots.toFixed(2)} lot</b></div>`)});
+  if(!added.length&&pending.length)lines.push(`<div class="row"><span>Pending</span><b>Stop Out到達前の追加約定なし</b></div>`);
+  if(simMeta?.skipped?.length){const px=simMeta.skipped.map(o=>formatPrice(Number(o.price))).join(' / ');lines.push(`<div class="row"><span>Stop Outより下の未到達注文</span><b>${simMeta.skipped.length}件：${px}</b></div>`);if(Number.isFinite(simMeta.allFilledLc))lines.push(`<div class="row"><span>全注文を仮約定した理論LC</span><b>${formatPrice(simMeta.allFilledLc)}（実際には到達不能）</b></div>`);}
+  if(Number.isFinite(lc)){lines.push(`<div class="row"><span>実際の下落経路でStop Out開始予測</span><b style="color:#ff6b63">${formatPrice(lc)}</b></div>`);st.textContent=`Pending反映 ${added.length}/${pending.length}件 / Stop Out時 ${filled.length}件`}else st.textContent='計算未確定';el.innerHTML=lines.join('');
 }
 function calc(){
-  // Developer diagnostics must never freeze media processing or block a valid
-  // production calculation. Production safety is enforced by the actual evidence
-  // checks below (position/order/price/rate completeness and consistency).
-  if(window.__regressionOK===false && $('rateStatus') && diagnosticsEnabled()){
-    $('rateStatus').innerHTML='<span class="warn">⚠ 開発者診断：内部回帰テストNG。入力データの安全判定を優先しています。</span>';
-  }
+  if(window.__regressionOK===false&&$('rateStatus')&&diagnosticsEnabled())$('rateStatus').innerHTML='<span class="warn">⚠ 開発者診断：内部回帰テストNG。入力データの安全判定を優先しています。</span>';
   const bal=+$('balance').value||0,stop=+$('stopout').value||20,c=cfg(),lev=+$('symbolLeverage').value||0,contract=+$('contractSize').value||0;
-  const pending=getOrders().filter(o=>/buy\s*limit/i.test(o.side)&&o.lot>0&&o.price>0).sort((a,b)=>b.price-a.price);
-  const positions=getPositions().filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&o.lot>0&&o.price>0);
-  const qr=quoteRateFor(c);
-  renderDataLock();
-  if(!positionDataValid){
-    $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcAvg').textContent='—';$('lcLots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';
-    $('distance').textContent='ポジション認識未確定のため計算停止';
-    $('count').textContent=`${pending.length}件 / 現在ポジション未確認`;
-    renderOrderStatus([],pending,null);
-    return;
-  }
-  if(orderDataInvalid){
-    $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcAvg').textContent='—';$('lcLots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';
-    $('distance').textContent='注文認識未確定のため計算停止';
-    $('count').textContent=`${pending.length}件 / 下落時の想定追加約定 —`;
-    renderOrderStatus([],pending,null);
-    renderOrderDataLock();
-    return;
-  }
-  if((!pending.length&&!positions.length)||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!lev||!contract){
-    $('result').textContent='—';$('avg').textContent='—';$('lots').textContent='—';$('lcAvg').textContent='—';$('lcLots').textContent='—';$('currentPnl').textContent='—';$('lcLoss').textContent='—';$('qty').textContent='—';$('lcTotalPositions').textContent='—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);$('distance').textContent=(pending.length||positions.length)?'換算レートまたは気配値が不足しています':'注文・ポジションを読み込んでください';renderOrderStatus([],pending,null);return}
-  const modelCurrentPnl=positions.reduce((s,o)=>s+(lossAtLCJPY(o,/^sell$/i.test(String(o.side||''))?goldAsk:goldBid,c)||0),0);
-  const brokerRaw=$('brokerPnl').value.trim(); const brokerPnl=brokerRaw===''?NaN:Number(brokerRaw); const hasBrokerPnl=Number.isFinite(brokerPnl);
-  // SAFETY: broker OCR is verification-only. Never feed an OCR P/L number back into the LC equation.
-  // A misread amount (e.g. an unrelated JPY number) must not move DEAD LINE.
-  const pnlAdjustment=0;
-  const currentPnl=modelCurrentPnl;
-  if(hasBrokerPnl){
-    const diff=brokerPnl-modelCurrentPnl;
-    const tolerance=Math.max(300,Math.abs(modelCurrentPnl)*0.25);
-    $('pnlAdjustStatus').textContent=`自動補正なし / MT5 OCR ${formatJPYLoss(brokerPnl)} / モデル ${formatJPYLoss(modelCurrentPnl)}${Math.abs(diff)>tolerance?' / ⚠ 差異あり':''}`;
-  }else $('pnlAdjustStatus').textContent='MT5実測なし / 自動補正なし';
-  const currentLc=positions.length?solveLC(bal,stop,positions,c,lev,contract,0):null;
-  const sim=simulateLC(bal,stop,pending,positions,c,lev,contract,goldAsk,0);const filled=sim.filled,scenarioLc=sim.lc,added=sim.added;
-  const lc=currentLc;
-  renderCalcBasis(positions,pending,filled,scenarioLc,c); renderScenarioSteps(positions,pending,filled,added,scenarioLc);
-  if(sim.inconsistent?.length){$('result').textContent='—';$('distance').textContent='⚠ 現在Askが未約定Buy Limit価格を下回っています。スクショの時系列を再確認してください。';$('currentPnl').textContent=formatJPYLoss(currentPnl);$('lcLoss').textContent='—';$('lcTotalPositions').textContent='—';$('count').textContent=`${pending.length}件 / 下落時の想定追加約定 —`;renderOrderStatus([],pending,null);return;}
-  const currentLots=positions.reduce((s,o)=>s+Number(o.lot),0),currentQty=currentLots*contract,currentEntry=positions.reduce((s,o)=>s+Number(o.price)*Number(o.lot)*contract,0);
-  const lots=filled.reduce((s,o)=>s+o.lot,0),qty=lots*contract,entry=filled.reduce((s,o)=>s+o.price*o.lot*contract,0);
-  const totalLcLoss=scenarioLc!==null?filled.reduce((s,o)=>s+(lossAtLCJPY(o,scenarioLc,c)||0),0):null;
-  const dp=Math.min(5,Math.max(2,decimalPlacesFor(goldBid)));
-  $('lots').textContent=currentLots.toFixed(2);$('currentPnl').textContent=Number.isFinite(currentPnl)?formatJPYLoss(currentPnl):'—';$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=currentQty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('lcTotalPositions').textContent=filled.length+'件';$('avg').textContent=currentQty?(currentEntry/currentQty).toFixed(dp):'—';$('lcLots').textContent=lots.toFixed(2);$('lcAvg').textContent=qty?(entry/qty).toFixed(dp):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
-  if(lc!==null){
-    $('result').textContent=lc.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid))));
-    const d=goldBid-lc;
-    const scen=(Number.isFinite(scenarioLc)&&Math.abs(scenarioLc-lc)>1e-6)?` / Pending反映後 ${formatPrice(scenarioLc)}`:'';
-    $('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → 現在のStop Out ${formatPrice(lc)}${scen}`;
-  }else{$('result').textContent='—';$('distance').textContent='銘柄仕様・換算レート・注文を確認してください'}
-  $('count').textContent=`${pending.length}件 / 下落時の想定追加約定 ${added.length}件`;renderOrderStatus(added,pending,scenarioLc);renderPositions(lc,c)
+  const pending=getOrders().filter(o=>/^buy\s*limit$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0).sort((a,b)=>b.price-a.price);
+  const positions=getPositions().filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0),qr=quoteRateFor(c);renderDataLock();
+  const blank=(msg,count)=>{['result','avg','lots','lcAvg','lcLots','currentPnl','lcLoss','qty','lcTotalPositions'].forEach(id=>{if($(id))$(id).textContent='—'});$('distance').textContent=msg;if(count)$('count').textContent=count};
+  if(!positionDataValid){blank('ポジション認識未確定のため計算停止',`${pending.length}件 / 現在ポジション未確認`);renderOrderStatus([],pending,null);return}
+  if(orderDataInvalid){blank('注文認識未確定のため計算停止',`${pending.length}件 / 下落時の想定追加約定 —`);renderOrderStatus([],pending,null);renderOrderDataLock();return}
+  if(!positions.length||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!lev||!contract||!bal||!stop){blank('換算レート・気配値・口座条件を確認してください');$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);renderOrderStatus([],pending,null);return}
+  const modelCurrentPnl=positions.reduce((sum,o)=>sum+(lossAtLCJPY(o,/^sell$/i.test(String(o.side||''))?goldAsk:goldBid,c)||0),0),brokerRaw=$('brokerPnl').value.trim(),brokerPnl=brokerRaw===''?NaN:Number(brokerRaw);
+  if(Number.isFinite(brokerPnl)){const diff=brokerPnl-modelCurrentPnl,tol=Math.max(300,Math.abs(modelCurrentPnl)*0.25);$('pnlAdjustStatus').textContent=`自動補正なし / MT5 OCR ${formatJPYLoss(brokerPnl)} / モデル ${formatJPYLoss(modelCurrentPnl)}${Math.abs(diff)>tol?' / ⚠ 差異あり':''}`}else $('pnlAdjustStatus').textContent='MT5実測なし / 自動補正なし';
+  const sim=simulateLC(bal,stop,pending,positions,c,lev,contract,goldAsk,0);if(sim.inconsistent?.length){blank('⚠ 現在Askが未約定Buy Limit価格を下回っています。動画の時系列または注文状態を再確認してください。',`${pending.length}件 / 下落時の想定追加約定 —`);$('currentPnl').textContent=formatJPYLoss(modelCurrentPnl);renderOrderStatus([],pending,null);return}
+  const lc=sim.lc,filled=sim.filled,added=sim.added;renderCalcBasis(positions,pending,filled,lc,c);renderScenarioSteps(positions,pending,filled,added,lc,sim);
+  const currentLots=positions.reduce((s,o)=>s+Number(o.lot),0),currentQty=currentLots*contract,currentEntry=positions.reduce((s,o)=>s+Number(o.price)*Number(o.lot)*contract,0),lots=filled.reduce((s,o)=>s+Number(o.lot),0),qty=lots*contract,entry=filled.reduce((s,o)=>s+Number(o.price)*Number(o.lot)*contract,0),totalLcLoss=Number.isFinite(lc)?filled.reduce((s,o)=>s+(lossAtLCJPY(o,lc,c)||0),0):null,dp=Math.min(5,Math.max(2,decimalPlacesFor(goldBid)));
+  $('lots').textContent=currentLots.toFixed(2);$('currentPnl').textContent=formatJPYLoss(modelCurrentPnl);$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=currentQty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('lcTotalPositions').textContent=filled.length+'件';$('avg').textContent=currentQty?(currentEntry/currentQty).toFixed(dp):'—';$('lcLots').textContent=lots.toFixed(2);$('lcAvg').textContent=qty?(entry/qty).toFixed(dp):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
+  if(Number.isFinite(lc)){ $('result').textContent=lc.toFixed(dp);const moved=Number.isFinite(sim.currentLc)&&Math.abs(lc-sim.currentLc)>1e-6,pendingText=pending.length?(added.length?`Pending ${added.length}/${pending.length}件反映`:`Pending 0/${pending.length}件。Stop Outが先`):'Pendingなし',skipped=sim.skipped?.length&&Number.isFinite(sim.allFilledLc)?` / 未到達${sim.skipped.length}件。全${pending.length}件を仮約定なら ${formatPrice(sim.allFilledLc)}`:'';$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → 推定Stop Out ${formatPrice(lc)} / ${pendingText}${moved?` / 現在保有のみ ${formatPrice(sim.currentLc)}`:''}${skipped}`;}else{$('result').textContent='—';$('distance').textContent='Stop Out価格を解けません。銘柄仕様・換算レート・口座条件を確認してください。'}
+  $('count').textContent=`${pending.length}件 / 下落時の想定追加約定 ${added.length}件`;renderOrderStatus(added,pending,lc);renderPositions(lc,c);
+  const orderFp=pending.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`).join(';');try{const prev=JSON.parse(sessionStorage.getItem('delapoji_v200_last_headline')||'null'),now={orderFp,lc:Number.isFinite(lc)?lc:null,added:added.length,total:pending.length,allFilledLc:sim.allFilledLc};if(prev&&prev.orderFp!==orderFp&&Number.isFinite(prev.lc)&&Number.isFinite(now.lc)&&Math.abs(prev.lc-now.lc)<1e-7)console.info('[XM] ORDER_CHANGED_HEADLINE_SAME',{previous:prev,current:now,reason:sim.skipped?.length?'changed_orders_below_reachable_stopout':'same_math'});sessionStorage.setItem('delapoji_v200_last_headline',JSON.stringify(now))}catch(e){}
 }
 function lossAtLCJPY(o,lc,c){if(!Number.isFinite(lc)||!o||!Number.isFinite(+o.price)||!Number.isFinite(+o.lot))return null;const qr=quoteRateFor(c);if(!qr||!Number.isFinite(+c.contract))return null;if(/^buy/i.test(String(o.side||'')))return (lc-(+o.price))*(+o.lot)*(+c.contract)*qr;if(/^sell/i.test(String(o.side||'')))return ((+o.price)-lc)*(+o.lot)*(+c.contract)*qr;return null}
 function formatJPYLoss(v){if(!Number.isFinite(v))return '—';const sign=v<0?'−':'+';return `${sign}${Math.round(Math.abs(v)).toLocaleString('ja-JP')} 円`}
@@ -2204,13 +2149,21 @@ function runCalcSelfTest(){
     const orderPrices=new Set(mergedOrder.map(o=>Number(o.price).toFixed(2)));
     const orderParse=mergedOrder.length===3&&orderPrices.has('4577.90')&&orderPrices.has('4528.25')&&orderPrices.has('4603.95');
 
+    const orderText5='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed\nGOLD# buy limit\n0.03 / 0 at 4334.46 placed\nGOLD# buy limit\n0.03 / 0 at 4474.22 placed';
+    const parsed5=mergeParsedResults([{frameIndex:1,data:{text:orderText5}}]).pending;
+    const exactVideoOrders=parsed5.length===5&&new Set(parsed5.map(o=>Number(o.price).toFixed(2))).size===5;
+    const userVideo3=[4577.90,4528.25,4603.95].map(price=>({side:'Buy Limit',lot:.03,price}));
+    const userVideo5=[4577.90,4528.25,4603.95,4334.46,4474.22].map(price=>({side:'Buy Limit',lot:.03,price}));
+    const userSim3=simulateLC(50000,20,userVideo3,fourPos,c,1000,100,4637.33,0),userSim5=simulateLC(50000,20,userVideo5,fourPos,c,1000,100,4637.33,0);
+    const exactReportedScenario=Number.isFinite(userSim3.lc)&&Number.isFinite(userSim5.lc)&&Math.abs(userSim3.lc-userSim5.lc)<0.01&&userSim3.added.length===3&&userSim5.added.length===3&&userSim5.skipped.length===2&&Number.isFinite(userSim5.allFilledLc)&&Math.abs(userSim5.allFilledLc-userSim3.allFilledLc)>1;
+
     const noFalsePosition=parseOCR('GOLD# buy 0.01\n2911.06\n証拠金率 (%) 2911.06').positions.length===0;
     const controlCenter=isControlCenterFrameText('再生停止中 集中モード 明るさ 音量')&&!isControlCenterFrameText('GOLD# buy 0.01 4367.37 -> 4425.27');
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v130-20260824$/.test(buildId)&&/v130/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v200-20260824$/.test(buildId)&&/v200/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
-    const named={calcFixture,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,noFalsePosition,controlCenter,buildOk,apiOk,domOk};
+    const named={calcFixture,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,exactReportedScenario,noFalsePosition,controlCenter,buildOk,apiOk,domOk};
     const failed=Object.entries(named).filter(([,ok])=>!ok).map(([k])=>k);
     const ok=failed.length===0;
     window.__regressionOK=ok;
@@ -2391,7 +2344,7 @@ $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSide','pnlUsdjpy','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
 ['targetPnlPrice','targetPnlSymbol','targetPnlStep','targetPnlLevels'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcTargetPositionPnl);el.addEventListener('change',()=>{if(id==='targetPnlSymbol'){const p=Number.isFinite(goldBid)&&currentSymbol===el.value?goldBid:'';if(p)$('targetPnlPrice').value=p}calcTargetPositionPnl();})}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
-window.__APP_BUILD__='v130-20260824';
+window.__APP_BUILD__='v200-20260824';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -2400,8 +2353,9 @@ window.__V125_PENDING_ORDER_TEST__=(()=>{
   const prices=uniq.map(x=>x.price).sort((a,b)=>a-b);
   return {count:uniq.length,prices,pass:uniq.length===3&&prices.join(',')==='4528.25,4577.9,4603.95'};
 })();
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v130-20260824'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v130-20260824'};
+window.__V200_VIDEO_ORDER_TEST__=(()=>{const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed\nGOLD# buy limit\n0.03 / 0 at 4334.46 placed\nGOLD# buy limit\n0.03 / 0 at 4474.22 placed';const p=mergeParsedResults([{frameIndex:1,data:{text:t}}]).pending;return {count:p.length,pass:p.length===5,prices:p.map(o=>o.price).sort((a,b)=>b-a)}})();
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v200-20260824'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v200-20260824'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

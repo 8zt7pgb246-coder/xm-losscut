@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v216-20260826">
+<meta name="build-id" content="v217-20260826">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v216</title>
+<title>Stop Out positioning｜デラポジ Pro v217</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -71,6 +71,10 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .targetPnlProfit{color:#39e58c!important}.targetPnlLoss{color:#ff6b63!important}.targetPnlFlat{color:#fff!important}
 .targetPnlRow{padding:11px 0;border-top:1px solid var(--line)}
 .targetPnlRow:first-child{border-top:0}
+.targetPnlMode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px}
+.targetPnlMode button{padding:10px 8px;border-radius:11px;border:1px solid var(--line);background:#111820;color:#aeb8c6;font-weight:850;font-size:13px}
+.targetPnlMode button.active{background:#eef1f4;color:#0b0f13;border-color:#eef1f4}
+.targetPnlPendingTag{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:rgba(255,174,0,.12);color:#ffbd3e;font-size:10px;font-weight:900}
 .targetPnlRow .name{font-weight:800;color:#fff}.targetPnlRow .meta{font-size:12px;color:var(--muted);margin-top:3px}.targetPnlRow .amount{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
 
 .compactCard{padding:11px 13px}.compactCard .row{padding:3px 0}.compactDetails{padding:10px 13px}.compactDetails summary{cursor:pointer;list-style:none}.compactDetails summary::-webkit-details-marker{display:none}.compactDetails summary:after{content:"＋";float:right;color:var(--muted)}.compactDetails[open] summary:after{content:"−"}.compactDetails .footer{margin-top:8px}.page#pageLC > .card{margin:8px 0}.page#pageLC .alert,.page#pageLC .danger{padding:9px 11px}.page#pageLC .small{line-height:1.4}
@@ -85,7 +89,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .posOrderRows .grid{grid-template-columns:.75fr .75fr 1.5fr;gap:4px}.posOrderRows .grid>.wide:not(.small){grid-column:auto}.posOrderRows .grid>.wide.small{grid-column:1/-1;font-size:10px;line-height:1.2}.posOrderCard{padding:7px 9px}.posOrderTools{margin-top:4px}.posOrderTools button{padding:5px 8px}
 .compactInfoGrid .row span{font-size:10px}.compactInfoGrid .row b{font-size:12px}
 
-/* v216: critical unreachable-order warning. Intentionally impossible to miss on mobile. */
+/* v217: critical unreachable-order warning. Intentionally impossible to miss on mobile. */
 #pendingDeadlineWarning.deadlineCritical{
   position:relative;display:block;margin:8px 0 12px!important;padding:16px 14px!important;
   border:3px solid #ff453a!important;border-radius:16px!important;
@@ -104,9 +108,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v216</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v217</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v216 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v217 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -165,13 +169,17 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 <div id="pagePnl" class="page">
   <div class="card" id="targetPositionPnlCard">
-    <div class="row"><b>保有ポジション｜指定価格の含み損益</b><span id="targetPnlStatus" class="small">現在の保有ポジションを使用</span></div>
+    <div class="row"><b>指定価格の含み損益</b><span id="targetPnlStatus" class="small">現在の保有ポジションを使用</span></div>
     <div class="grid">
       <div class="wide"><label>銘柄</label><select id="targetPnlSymbol"></select></div>
       <div class="wide"><label>この価格まで行ったら？</label><input id="targetPnlPrice" type="number" step="any" placeholder="例：4300.00"></div>
     </div>
+    <div class="targetPnlMode" role="group" aria-label="計算対象">
+      <button type="button" id="targetPnlModeCurrent" class="active">現在保有のみ</button>
+      <button type="button" id="targetPnlModeAll">未約定も全部約定した仮定</button>
+    </div>
     <div class="resultBox" style="margin-top:12px">
-      <div class="muted">保有ポジション合計の想定含み損益</div>
+      <div class="muted">合計の想定含み損益</div>
       <div class="resultBig" id="targetPnlTotal">—</div>
       <div class="row" style="margin-top:8px"><span id="targetPnlUnitLabel">獲得ポイント（Lot加重平均）</span><b id="targetPnlPips">—</b></div>
       <div class="small" id="targetPnlSummary">価格を入力すると、現在保有中の全ポジションをまとめて計算します。</div>
@@ -185,7 +193,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
       </div>
       <div id="targetPnlTable" style="margin-top:10px"></div>
     </div>
-    <div class="small" style="margin-top:10px">※ 現在ポジションのみ。手数料・スワップ・スプレッド等を除く概算。</div>
+    <div class="small" style="margin-top:10px">※ 「未約定も全部約定した仮定」は、現在保有＋全未約定注文が注文価格で約定済みになったものとして計算します。手数料・スワップ等を除く概算。</div>
   </div>
 
   <div class="card">
@@ -221,7 +229,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v216-20260826';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v217-20260826';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -300,8 +308,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===3&&pos>=2};
 }
-window.__DEPLOYMENT_STATE__={build:'v216-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v216-20260826';
+window.__DEPLOYMENT_STATE__={build:'v217-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v217-20260826';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -315,7 +323,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v216-20260826', SHORT='v216';
+  const BUILD='v217-20260826', SHORT='v217';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -604,7 +612,7 @@ function solveLC(bal,stop,filled,c,lev,contract,adjustment=0,startBid=null,sprea
   return (a+b)/2;
 }
 function simulateLC(bal,stop,pending,positions,c,lev,contract,currentAsk,adjustment=0,currentBid=null){
-  // v216: first reachable Stop Out on a falling BID path. Buy Limits trigger on ASK,
+  // v217: first reachable Stop Out on a falling BID path. Buy Limits trigger on ASK,
   // so their BID trigger is order price minus the observed stable spread.
   const base=(Array.isArray(positions)?positions:[]).filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0).map(o=>({...o,lot:Number(o.lot),price:Number(o.price)}));
   const buys=(Array.isArray(pending)?pending:[]).filter(o=>/^buy\s*limit$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0).map(o=>({...o,lot:Number(o.lot),price:Number(o.price)})).sort((a,b)=>b.price-a.price);
@@ -642,7 +650,7 @@ function renderCalcBasis(currentPositions,pending,filled,lc,c){
   const pos=currentPositions.map(o=>`${String(o.side).toUpperCase()} ${Number(o.lot).toFixed(2)} @ ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}`).join(' / ')||'なし';
   const pend=pending.map(o=>`${String(o.side).toUpperCase()} ${Number(o.lot).toFixed(2)} @ ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}`).join(' / ')||'なし';
   const fill=filled.map(o=>`${String(o.side).toUpperCase()} ${Number(o.lot).toFixed(2)} @ ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}`).join(' / ')||'なし';
-  let prev=null; try{prev=JSON.parse(sessionStorage.getItem('delapoji_last_calc_v216')||'null')}catch(e){}
+  let prev=null; try{prev=JSON.parse(sessionStorage.getItem('delapoji_last_calc_v217')||'null')}catch(e){}
   const current={symbol:currentSymbol,positions:currentPositions.map(o=>[String(o.side),Number(o.lot),Number(o.price)]),pending:pending.map(o=>[String(o.side),Number(o.lot),Number(o.price)]),bid:Number(goldBid),ask:Number(goldAsk),rate:Number($('usdjpy').value||0),lc:lc===null?null:Number(lc)};
   let delta='今回がこのセッションの最初の確定計算です。';
   if(prev&&prev.symbol===current.symbol){
@@ -655,7 +663,7 @@ function renderCalcBasis(currentPositions,pending,filled,lc,c){
   }
   st.textContent=`現在 ${currentPositions.length}ポジション / 注文 ${pending.length}件`;
   el.innerHTML=`<div><b>現在ポジション：</b>${pos}</div><div style="margin-top:4px"><b>未約定注文：</b>${pend}</div><div style="margin-top:4px"><b>LC時に成立する想定：</b>${fill}</div><div style="margin-top:4px"><b>現在Bid / Ask：</b>${Number.isFinite(goldBid)?formatPrice(goldBid):'—'} / ${Number.isFinite(goldAsk)?formatPrice(goldAsk):'—'}　<b>USD/JPY：</b>${Number($('usdjpy').value||0).toFixed(3)}</div><div style="margin-top:6px"><b>変動理由：</b>${delta}</div>`;
-  try{sessionStorage.setItem('delapoji_last_calc_v216',JSON.stringify(current))}catch(e){}
+  try{sessionStorage.setItem('delapoji_last_calc_v217',JSON.stringify(current))}catch(e){}
 }
 
 function pendingDeadlineRisk(pending,lc,spread=0){
@@ -709,7 +717,7 @@ function calc(){
   $('lots').textContent=currentLots.toFixed(2);$('currentPnl').textContent=formatJPYLoss(modelCurrentPnl);$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=currentQty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('lcTotalPositions').textContent=filled.length+'件';$('avg').textContent=currentQty?(currentEntry/currentQty).toFixed(dp):'—';$('lcLots').textContent=lots.toFixed(2);$('lcAvg').textContent=qty?(entry/qty).toFixed(dp):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
   if(Number.isFinite(lc)){ $('result').textContent=lc.toFixed(dp);const moved=Number.isFinite(sim.currentLc)&&Math.abs(lc-sim.currentLc)>1e-6,pendingText=pending.length?(added.length?`Pending ${added.length}/${pending.length}件反映`:`Pending 0/${pending.length}件。Stop Outが先`):'Pendingなし',skipped=sim.skipped?.length&&Number.isFinite(sim.allFilledLc)?` / 未到達${sim.skipped.length}件。全${pending.length}件を仮約定なら ${formatPrice(sim.allFilledLc)}`:'';$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → 推定Stop Out ${formatPrice(lc)} / ${pendingText}${moved?` / 現在保有のみ ${formatPrice(sim.currentLc)}`:''}${skipped}`;}else{$('result').textContent='—';$('distance').textContent='Stop Out価格を解けません。銘柄仕様・換算レート・口座条件を確認してください。'}
   $('count').textContent=`${pending.length}件 / 下落時の想定追加約定 ${added.length}件`;renderOrderStatus(added,pending,lc);renderPositions(lc,c);
-  const orderFp=pending.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`).join(';');try{const prev=JSON.parse(sessionStorage.getItem('delapoji_v216_last_headline')||'null'),now={orderFp,lc:Number.isFinite(lc)?lc:null,added:added.length,total:pending.length,allFilledLc:sim.allFilledLc};if(prev&&prev.orderFp!==orderFp&&Number.isFinite(prev.lc)&&Number.isFinite(now.lc)&&Math.abs(prev.lc-now.lc)<1e-7)console.info('[XM] ORDER_CHANGED_HEADLINE_SAME',{previous:prev,current:now,reason:sim.skipped?.length?'changed_orders_below_reachable_stopout':'same_math'});sessionStorage.setItem('delapoji_v216_last_headline',JSON.stringify(now))}catch(e){}
+  const orderFp=pending.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`).join(';');try{const prev=JSON.parse(sessionStorage.getItem('delapoji_v217_last_headline')||'null'),now={orderFp,lc:Number.isFinite(lc)?lc:null,added:added.length,total:pending.length,allFilledLc:sim.allFilledLc};if(prev&&prev.orderFp!==orderFp&&Number.isFinite(prev.lc)&&Number.isFinite(now.lc)&&Math.abs(prev.lc-now.lc)<1e-7)console.info('[XM] ORDER_CHANGED_HEADLINE_SAME',{previous:prev,current:now,reason:sim.skipped?.length?'changed_orders_below_reachable_stopout':'same_math'});sessionStorage.setItem('delapoji_v217_last_headline',JSON.stringify(now))}catch(e){}
 }
 function lossAtLCJPY(o,lc,c){if(!Number.isFinite(lc)||!o||!Number.isFinite(+o.price)||!Number.isFinite(+o.lot))return null;const qr=quoteRateFor(c);if(!qr||!Number.isFinite(+c.contract))return null;const spread=Number.isFinite(goldAsk)&&Number.isFinite(goldBid)?Math.max(0,goldAsk-goldBid):0;if(/^buy/i.test(String(o.side||'')))return (lc-(+o.price))*(+o.lot)*(+c.contract)*qr;if(/^sell/i.test(String(o.side||'')))return ((+o.price)-(lc+spread))*(+o.lot)*(+c.contract)*qr;return null}
 function formatJPYLoss(v){if(!Number.isFinite(v))return '—';const sign=v<0?'−':'+';return `${sign}${Math.round(Math.abs(v)).toLocaleString('ja-JP')} 円`}
@@ -1994,7 +2002,7 @@ $('mediaFile').addEventListener('change',async e=>{
     }
 
     let quoteNote='';
-    // v216: A still image may contain only the MT5 Trade/Order pane and therefore
+    // v217: A still image may contain only the MT5 Trade/Order pane and therefore
     // no quote board. In image mode only, carry forward the last successfully
     // saved quote for the selected symbol. Do NOT refresh its timestamp and do
     // NOT apply this fallback to videos: videos must establish their own live quote.
@@ -2479,7 +2487,7 @@ function runCalcSelfTest(){
     const staleQuoteDoesNotBlockNew=quoteSanity('BTCUSD#',{bid:150,ask:150.1},oldQuote)===true;
     const freshQuoteStillGuardsJump=quoteSanity('BTCUSD#',{bid:150,ask:150.1},freshQuote)===false;
     const controlCenter=isControlCenterFrameText('再生停止中 集中モード 明るさ 音量')&&!isControlCenterFrameText('GOLD# buy 0.01 4367.37 -> 4425.27');
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v216-20260826$/.test(buildId)&&/v216/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v217-20260826$/.test(buildId)&&/v217/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -2589,19 +2597,33 @@ function targetPnlRateToJPY(c){
   if(c.quote==='USD'){const r=+$('usdjpy')?.value||0;return r>0?r:0}
   return getRateToJPY(c.quote);
 }
+let targetPnlMode='current';
+function getTargetPnlPositions(sym){
+  const current=Array.isArray(positionStore?.[sym])?positionStore[sym].filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0).map(o=>({...o,_targetSource:'current'})):[];
+  if(targetPnlMode!=='all')return current;
+  const pending=Array.isArray(orderStore?.[sym])?orderStore[sym].filter(o=>/^(buy|sell)\s*(?:limit|stop)?$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0).map(o=>({side:/^buy/i.test(String(o.side||''))?'buy':'sell',lot:Number(o.lot),price:Number(o.price),_targetSource:'pending',_pendingSide:String(o.side||'')})):[];
+  return current.concat(pending);
+}
+function setTargetPnlMode(mode){
+  targetPnlMode=mode==='all'?'all':'current';
+  const a=$('targetPnlModeCurrent'),b=$('targetPnlModeAll');
+  if(a)a.classList.toggle('active',targetPnlMode==='current');
+  if(b)b.classList.toggle('active',targetPnlMode==='all');
+  calcTargetPositionPnl();
+}
 function calcTargetPositionPnl(){
   const sym=$('targetPnlSymbol')?.value||currentSymbol;
   const c=ensureSpec(sym);
   const target=+$('targetPnlPrice')?.value;
-  const positions=Array.isArray(positionStore?.[sym])?positionStore[sym].filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0):[];
+  const positions=getTargetPnlPositions(sym);
   const qr=targetPnlRateToJPY(c);
   const rows=$('targetPnlRows'),totalEl=$('targetPnlTotal'),pipsEl=$('targetPnlPips'),summary=$('targetPnlSummary'),status=$('targetPnlStatus');
-  if(status)status.textContent=positions.length?`${positions.length}件の現在ポジションを使用`:'現在ポジションなし';
+  if(status){const pc=positions.filter(o=>o._targetSource==='pending').length,cc=positions.length-pc;status.textContent=targetPnlMode==='all'?`現在${cc}件＋未約定${pc}件を仮約定`:(cc?`${cc}件の現在ポジションを使用`:'現在ポジションなし');}
   if(pipsEl)pipsEl.textContent='—';
   if(!Number.isFinite(target)||target<=0){
     if(totalEl){totalEl.textContent='—';totalEl.className='resultBig targetPnlFlat'}
     if(summary)summary.textContent=`${sym} の価格を入力してください。`
-    if(rows)rows.innerHTML=positions.length?positions.map((o,i)=>`<div class="targetPnlRow"><div class="name">${String(o.side)} ${Number(o.lot).toFixed(2)} lot</div><div class="meta">約定価格 ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(o.price))))}</div></div>`).join(''):'<div class="small">現在保有中のポジションがありません。先にXM画面を読み込んでください。</div>';
+    if(rows)rows.innerHTML=positions.length?positions.map((o,i)=>`<div class="targetPnlRow"><div class="name">${String(o.side)} ${Number(o.lot).toFixed(2)} lot${o._targetSource==='pending'?'<span class="targetPnlPendingTag">仮約定</span>':''}</div><div class="meta">約定価格 ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(o.price))))}</div></div>`).join(''):`<div class="small">${targetPnlMode==='all'?'現在保有・未約定注文がありません。':'現在保有中のポジションがありません。先にXM画面を読み込んでください。'}</div>`;
     renderTargetPnlTable();
     return;
   }
@@ -2634,7 +2656,7 @@ function calcTargetPositionPnl(){
     const sign=pnl>0?'+':pnl<0?'−':'';
     const pipSign=pips>0?'+':pips<0?'−':'';
     const pipText=`${pipSign}${Math.abs(pips).toFixed(1)} ${moveUnit}`;
-    return `<div class="targetPnlRow"><div class="row" style="padding:0;border:0"><div><div class="name">${String(o.side)} ${lot.toFixed(2)} lot</div><div class="meta">約定価格 ${entry.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(entry))))} → 指定価格 ${target.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(target))))} ／ <span class="${pipCls}">${pipText}</span></div></div><div class="amount ${cls}">${sign}${Math.round(Math.abs(pnl)).toLocaleString('ja-JP')} 円</div></div></div>`;
+    return `<div class="targetPnlRow"><div class="row" style="padding:0;border:0"><div><div class="name">${String(o.side)} ${lot.toFixed(2)} lot${o._targetSource==='pending'?'<span class="targetPnlPendingTag">仮約定</span>':''}</div><div class="meta">約定価格 ${entry.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(entry))))} → 指定価格 ${target.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(target))))} ／ <span class="${pipCls}">${pipText}</span></div></div><div class="amount ${cls}">${sign}${Math.round(Math.abs(pnl)).toLocaleString('ja-JP')} 円</div></div></div>`;
   });
   const avgPips=totalLots>0?weightedPips/totalLots:0;
   if(pipsEl){
@@ -2645,13 +2667,13 @@ function calcTargetPositionPnl(){
   const totalSign=total>0?'+':total<0?'−':'';
   totalEl.textContent=`${totalSign}${Math.round(Math.abs(total)).toLocaleString('ja-JP')} 円`;
   totalEl.className=`resultBig ${total>0?'targetPnlProfit':total<0?'targetPnlLoss':'targetPnlFlat'}`;
-  summary.textContent=`${sym} ${target.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(target))))} 到達時 / ${positions.length}ポジション合計 / ${c.quote}→JPY換算 ${qr.toFixed(3)}`;
+  {const pc=positions.filter(o=>o._targetSource==='pending').length,cc=positions.length-pc;summary.textContent=`${sym} ${target.toFixed(Math.min(5,Math.max(2,decimalPlacesFor(target))))} 到達時 / ${targetPnlMode==='all'?`現在${cc}件＋仮約定${pc}件`:`現在${cc}件`} / ${c.quote}→JPY換算 ${qr.toFixed(3)}`;}
   rows.innerHTML=details.join('');
   renderTargetPnlTable();
 }
 function calcTargetPnlForPrice(sym,target){
   const c=ensureSpec(sym);
-  const positions=Array.isArray(positionStore?.[sym])?positionStore[sym].filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0):[];
+  const positions=getTargetPnlPositions(sym);
   const qr=targetPnlRateToJPY(c);
   if(!(Number.isFinite(target)&&target>0&&qr>0&&c.contract>0))return null;
   let total=0;
@@ -2712,11 +2734,13 @@ function switchPage(which){
 $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 ['pnlLots','pnlMove','pnlSymbol'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcPnl);el.addEventListener('change',calcPnl)}});
+$('targetPnlModeCurrent')?.addEventListener('click',()=>setTargetPnlMode('current'));
+$('targetPnlModeAll')?.addEventListener('click',()=>setTargetPnlMode('all'));
 ['targetPnlPrice','targetPnlSymbol','targetPnlStep','targetPnlLevels'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcTargetPositionPnl);el.addEventListener('change',()=>{if(id==='targetPnlSymbol'){const p=Number.isFinite(goldBid)&&currentSymbol===el.value?goldBid:'';if(p)$('targetPnlPrice').value=p}calcTargetPositionPnl();})}});
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
 
 renderBalanceStatus();
-window.__APP_BUILD__='v216-20260826';
+window.__APP_BUILD__='v217-20260826';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -2726,8 +2750,8 @@ window.__V125_PENDING_ORDER_TEST__=(()=>{
   return {count:uniq.length,prices,pass:uniq.length===3&&prices.join(',')==='4528.25,4577.9,4603.95'};
 })();
 window.__V200_VIDEO_ORDER_TEST__=(()=>{const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed\nGOLD# buy limit\n0.03 / 0 at 4334.46 placed\nGOLD# buy limit\n0.03 / 0 at 4474.22 placed';const p=mergeParsedResults([{frameIndex:1,data:{text:t}}]).pending;return {count:p.length,pass:p.length===5,prices:p.map(o=>o.price).sort((a,b)=>b-a)}})();
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v216-20260826'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v216-20260826'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v217-20260826'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v217-20260826'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

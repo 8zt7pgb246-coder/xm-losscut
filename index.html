@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v211-20260825">
+<meta name="build-id" content="v212-20260825">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v211</title>
+<title>Stop Out positioning｜デラポジ Pro v212</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -85,7 +85,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .posOrderRows .grid{grid-template-columns:.75fr .75fr 1.5fr;gap:4px}.posOrderRows .grid>.wide:not(.small){grid-column:auto}.posOrderRows .grid>.wide.small{grid-column:1/-1;font-size:10px;line-height:1.2}.posOrderCard{padding:7px 9px}.posOrderTools{margin-top:4px}.posOrderTools button{padding:5px 8px}
 .compactInfoGrid .row span{font-size:10px}.compactInfoGrid .row b{font-size:12px}
 
-/* v211: critical unreachable-order warning. Intentionally impossible to miss on mobile. */
+/* v212: critical unreachable-order warning. Intentionally impossible to miss on mobile. */
 #pendingDeadlineWarning.deadlineCritical{
   position:relative;display:block;margin:8px 0 12px!important;padding:16px 14px!important;
   border:3px solid #ff453a!important;border-radius:16px!important;
@@ -104,9 +104,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v211</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v212</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v211 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v212 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LCシミュレーター</button><button id="navPnl" class="secondary" type="button">損益計算</button></div>
 <div id="pageLC" class="page active">
 
@@ -223,7 +223,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v211-20260825';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v212-20260825';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -306,8 +306,8 @@ function videoSamplingRegressionTest(){
   const cc=times.filter(t=>t>=f.controlCenterWindow[0]&&t<=f.controlCenterWindow[1]).length;
   return {count,pos,cc,pass:pos>=10&&cc>=1};
 }
-window.__DEPLOYMENT_STATE__={build:'v211-20260825',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v211-20260825';
+window.__DEPLOYMENT_STATE__={build:'v212-20260825',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v212-20260825';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -321,7 +321,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v211-20260825', SHORT='v211';
+  const BUILD='v212-20260825', SHORT='v212';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -610,7 +610,7 @@ function solveLC(bal,stop,filled,c,lev,contract,adjustment=0,startBid=null,sprea
   return (a+b)/2;
 }
 function simulateLC(bal,stop,pending,positions,c,lev,contract,currentAsk,adjustment=0,currentBid=null){
-  // v211: first reachable Stop Out on a falling BID path. Buy Limits trigger on ASK,
+  // v212: first reachable Stop Out on a falling BID path. Buy Limits trigger on ASK,
   // so their BID trigger is order price minus the observed stable spread.
   const base=(Array.isArray(positions)?positions:[]).filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0).map(o=>({...o,lot:Number(o.lot),price:Number(o.price)}));
   const buys=(Array.isArray(pending)?pending:[]).filter(o=>/^buy\s*limit$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0).map(o=>({...o,lot:Number(o.lot),price:Number(o.price)})).sort((a,b)=>b.price-a.price);
@@ -685,8 +685,8 @@ function renderPendingDeadlineWarning(pending,lc,simMeta=null){
   el.style.display='block';
   el.classList.add('deadlineCritical');
   const deadText=formatPrice(Number(lc));
-  const blockedLabel=allBlocked?'予約注文は1件も間に合いません':'この予約注文は間に合いません';
-  el.innerHTML=`<div class="riskEyebrow">🚨 STOP OUT 警告 🚨</div><div class="riskTitle">${blockedLabel}</div><div class="riskCore">DEAD LINE <span class="dead">${deadText}</span> に先に到達します</div><div>価格が下落すると、下記の予約注文まで届く前に<strong>Stop Outが発生</strong>します。</div><div class="riskOrders">未約定のまま：${prices}</div><div class="riskAction">⚠ この注文が約定する前提で資金計画を立てないでください。</div>`;
+  const blockedLabel=allBlocked?'この予約注文は全部 約定しません':'この予約注文は 約定しません';
+  el.innerHTML=`<div class="riskEyebrow">🚨 ロスカット注意 🚨</div><div class="riskTitle">${blockedLabel}</div><div class="riskCore"><div>予約注文より先にロスカットされる予測です</div><div style="margin-top:5px">ロスカット予測 <span class="dead">${deadText}</span></div></div><div class="riskOrders">❌ 約定しない予約注文：${prices}</div><div style="margin:10px 0 4px;font-weight:900">価格が下がる順番</div><div style="font-size:16px;font-weight:1000;line-height:1.65">現在価格<br>↓<br><span style="color:#ff8a83">${deadText}　💥 ロスカット</span><br>↓<br><span style="color:#ffdb57">${prices}　予約注文</span></div><div class="riskAction">⚠ ${prices} まで耐えられません。<br>この予約注文が約定する前提で資金計画を立てないでください。</div>`;
 }
 
 function renderScenarioSteps(positions,pending,filled,added,lc,simMeta=null){
@@ -715,7 +715,7 @@ function calc(){
   $('lots').textContent=currentLots.toFixed(2);$('currentPnl').textContent=formatJPYLoss(modelCurrentPnl);$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=currentQty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('lcTotalPositions').textContent=filled.length+'件';$('avg').textContent=currentQty?(currentEntry/currentQty).toFixed(dp):'—';$('lcLots').textContent=lots.toFixed(2);$('lcAvg').textContent=qty?(entry/qty).toFixed(dp):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
   if(Number.isFinite(lc)){ $('result').textContent=lc.toFixed(dp);const moved=Number.isFinite(sim.currentLc)&&Math.abs(lc-sim.currentLc)>1e-6,pendingText=pending.length?(added.length?`Pending ${added.length}/${pending.length}件反映`:`Pending 0/${pending.length}件。Stop Outが先`):'Pendingなし',skipped=sim.skipped?.length&&Number.isFinite(sim.allFilledLc)?` / 未到達${sim.skipped.length}件。全${pending.length}件を仮約定なら ${formatPrice(sim.allFilledLc)}`:'';$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → 推定Stop Out ${formatPrice(lc)} / ${pendingText}${moved?` / 現在保有のみ ${formatPrice(sim.currentLc)}`:''}${skipped}`;}else{$('result').textContent='—';$('distance').textContent='Stop Out価格を解けません。銘柄仕様・換算レート・口座条件を確認してください。'}
   $('count').textContent=`${pending.length}件 / 下落時の想定追加約定 ${added.length}件`;renderOrderStatus(added,pending,lc);renderPositions(lc,c);
-  const orderFp=pending.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`).join(';');try{const prev=JSON.parse(sessionStorage.getItem('delapoji_v211_last_headline')||'null'),now={orderFp,lc:Number.isFinite(lc)?lc:null,added:added.length,total:pending.length,allFilledLc:sim.allFilledLc};if(prev&&prev.orderFp!==orderFp&&Number.isFinite(prev.lc)&&Number.isFinite(now.lc)&&Math.abs(prev.lc-now.lc)<1e-7)console.info('[XM] ORDER_CHANGED_HEADLINE_SAME',{previous:prev,current:now,reason:sim.skipped?.length?'changed_orders_below_reachable_stopout':'same_math'});sessionStorage.setItem('delapoji_v211_last_headline',JSON.stringify(now))}catch(e){}
+  const orderFp=pending.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`).join(';');try{const prev=JSON.parse(sessionStorage.getItem('delapoji_v212_last_headline')||'null'),now={orderFp,lc:Number.isFinite(lc)?lc:null,added:added.length,total:pending.length,allFilledLc:sim.allFilledLc};if(prev&&prev.orderFp!==orderFp&&Number.isFinite(prev.lc)&&Number.isFinite(now.lc)&&Math.abs(prev.lc-now.lc)<1e-7)console.info('[XM] ORDER_CHANGED_HEADLINE_SAME',{previous:prev,current:now,reason:sim.skipped?.length?'changed_orders_below_reachable_stopout':'same_math'});sessionStorage.setItem('delapoji_v212_last_headline',JSON.stringify(now))}catch(e){}
 }
 function lossAtLCJPY(o,lc,c){if(!Number.isFinite(lc)||!o||!Number.isFinite(+o.price)||!Number.isFinite(+o.lot))return null;const qr=quoteRateFor(c);if(!qr||!Number.isFinite(+c.contract))return null;if(/^buy/i.test(String(o.side||'')))return (lc-(+o.price))*(+o.lot)*(+c.contract)*qr;if(/^sell/i.test(String(o.side||'')))return ((+o.price)-lc)*(+o.lot)*(+c.contract)*qr;return null}
 function formatJPYLoss(v){if(!Number.isFinite(v))return '—';const sign=v<0?'−':'+';return `${sign}${Math.round(Math.abs(v)).toLocaleString('ja-JP')} 円`}
@@ -2467,7 +2467,7 @@ function runCalcSelfTest(){
 
     const noFalsePosition=parseOCR('GOLD# buy 0.01\n2911.06\n証拠金率 (%) 2911.06').positions.length===0;
     const controlCenter=isControlCenterFrameText('再生停止中 集中モード 明るさ 音量')&&!isControlCenterFrameText('GOLD# buy 0.01 4367.37 -> 4425.27');
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v211-20260825$/.test(buildId)&&/v211/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v212-20260825$/.test(buildId)&&/v212/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -2696,7 +2696,7 @@ $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
 
 renderBalanceStatus();
-window.__APP_BUILD__='v211-20260825';
+window.__APP_BUILD__='v212-20260825';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -2706,8 +2706,8 @@ window.__V125_PENDING_ORDER_TEST__=(()=>{
   return {count:uniq.length,prices,pass:uniq.length===3&&prices.join(',')==='4528.25,4577.9,4603.95'};
 })();
 window.__V200_VIDEO_ORDER_TEST__=(()=>{const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed\nGOLD# buy limit\n0.03 / 0 at 4334.46 placed\nGOLD# buy limit\n0.03 / 0 at 4474.22 placed';const p=mergeParsedResults([{frameIndex:1,data:{text:t}}]).pending;return {count:p.length,pass:p.length===5,prices:p.map(o=>o.price).sort((a,b)=>b-a)}})();
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v211-20260825'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v211-20260825'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v212-20260825'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v212-20260825'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

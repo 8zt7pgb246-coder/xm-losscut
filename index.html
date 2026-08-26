@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v224-20260826">
+<meta name="build-id" content="v225-20260826">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v220</title>
+<title>Stop Out positioning｜デラポジ Pro v225</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -112,6 +112,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 @media(max-width:520px){input,select,.posOrderRows input{font-size:16px!important}#pendingDeadlineWarning .riskTitle{font-size:20px}#pendingDeadlineWarning.deadlineCritical{padding:14px 11px!important}}
 
 /* v224: MT5 symbol-spec importer + XM account cost comparison prototype */
+/* v225: Standard/KIWAMI quote-board auto-detection layered on latest base */
 .specImportBox{margin:8px 0 10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#090c10}
 .specImportBox button{width:100%}
 #cmpSpecResult{margin-top:8px}
@@ -125,9 +126,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v224</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v225</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v220 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v225 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -314,7 +315,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v224-20260826';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v225-20260826';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -393,8 +394,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===3&&pos>=2};
 }
-window.__DEPLOYMENT_STATE__={build:'v224-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v224-20260826';
+window.__DEPLOYMENT_STATE__={build:'v225-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v225-20260826';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -408,7 +409,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v224-20260826', SHORT='v224';
+  const BUILD='v225-20260826', SHORT='v225';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -819,8 +820,39 @@ function renderOrderStatus(added,all,lc){
 function pointStepFor(sym,c){if(c.type==='fx')return /JPY#$/.test(sym)?0.01:0.0001;return Number.isFinite(+c.point)&&+c.point>0?+c.point:(c.type==='index'?1:0.01)}
 function updatePipValue(){const c=cfg(),lots=.01,step=pointStepFor(currentSymbol,c),label=c.type==='fx'?'1 pip':'1 point';const qr=quoteRateFor(c),value=qr?step*lots*c.contract*qr:null;const pipLabel=$('pipLabel'),pipValue=$('pipValue'),pipNote=$('pipNote');if(pipLabel)pipLabel.textContent=`${currentSymbol} ${label} / 0.01 lot`;if(pipValue)pipValue.textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';if(pipNote)pipNote.textContent=c.type==='fx'?`${step} ${label} × 0.01 lot（${(lots*c.contract).toLocaleString()} ${c.unit}）をJPY換算`:`${step} ${label} × 0.01 lot（契約サイズ ${c.contract} ${c.unit} / lot）をJPY換算`}
 function normalizeOcrNumber(s){if(s==null)return null;let x=String(s).trim().replace(/[,$]/g,'').replace(/[Oo]/g,'0').replace(/[Il|]/g,'1').replace(/[^0-9.]/g,'');if((x.match(/\./g)||[]).length>1){const parts=x.split('.');x=parts.shift()+'.'+parts.join('')}const n=Number(x);return Number.isFinite(n)?n:null}
-function symbolFromText(s){const raw=String(s||'').toUpperCase().replace(/\s+/g,'');const aliases={'GOLD':'GOLD#','GOLDE':'GOLD#','G0LD':'GOLD#','G0LD#':'GOLD#','XAUUSD':'GOLD#','XAUUSD#':'GOLD#','BTCUSD':'BTCUSD#','BTCUSD#':'BTCUSD#','OILCASH':'OILCash#','OILCASH#':'OILCash#','JP225CASH':'JP225Cash#','JP225CASH#':'JP225Cash#'};if(aliases[raw])return aliases[raw];const m=raw.match(/^([A-Z0-9]+(?:CASH)?#)$/);return m?m[1]:null}
-function normalizeSymbol(s){let x=String(s).toUpperCase().replace(/\s+/g,'');const aliases={'GOLD':'GOLD#','GOLDE':'GOLD#','G0LD':'GOLD#','G0LD#':'GOLD#','XAUUSD':'GOLD#','XAUUSD#':'GOLD#','BTCUSD':'BTCUSD#','BTCUSD#':'BTCUSD#','OILCASH':'OILCash#','OILCASH#':'OILCash#','JP225CASH':'JP225Cash#','JP225CASH#':'JP225Cash#'};if(aliases[x])return aliases[x];x=x.replace(/CASH#/,'Cash#');if(x==='GOLD#')return'GOLD#';return x}
+// v225: Standard/KIWAMI auto-detection. Raw MT5 suffix is kept only as account evidence;
+// the calculation core still normalizes both account types to the existing canonical symbols.
+const XM_ACCOUNT_TYPE_KEY='xm_detected_account_type_v1';
+let xmAccountType=(()=>{try{return localStorage.getItem(XM_ACCOUNT_TYPE_KEY)||'unknown'}catch(e){return 'unknown'}})();
+function accountTypeLabel(t=xmAccountType){return t==='standard'?'Standard':t==='kiwami'?'KIWAMI極':'未判定'}
+function setXMAccountType(t){if(!/^(standard|kiwami|unknown)$/.test(String(t)))return;xmAccountType=t;try{localStorage.setItem(XM_ACCOUNT_TYPE_KEY,t)}catch(e){}}
+function detectXMAccountTypeFromText(text){
+  const lines=String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const evidence=[];
+  const tokenRe=/\b(?:GOLD|XAUUSD|SILVER|BTCUSD|USDJPY|EURUSD|GBPUSD|AUDJPY|AUDUSD|GBPAUD)#?(?=\s|$)/i;
+  for(const line of lines){
+    if(/\b(?:buy|sell)\b|\b(?:limit|stop)\b|\bplaced\b|\bat\s*\d/i.test(line))continue;
+    const m=line.match(tokenRe); if(!m)continue;
+    const nums=(line.match(/\d[\d,]*(?:\.\d+)?/g)||[]).map(normalizeOcrNumber).filter(n=>Number.isFinite(n)&&n>0);
+    if(nums.length<2)continue; // quote-board row, not a symbol label/order row
+    const raw=String(m[0]).toUpperCase();
+    evidence.push({symbol:raw.replace(/#$/,''),suffix:raw.endsWith('#')?'hash':'plain'});
+  }
+  const unique=[];const seen=new Set();for(const e of evidence){const k=e.symbol+'|'+e.suffix;if(!seen.has(k)){seen.add(k);unique.push(e)}}
+  const suffixes=new Set(unique.map(e=>e.suffix));
+  if(unique.length<2)return {type:'unknown',reason:'insufficient',evidence:unique};
+  if(suffixes.size>1)return {type:'unknown',reason:'mixed',evidence:unique};
+  return {type:[...suffixes][0]==='hash'?'kiwami':'standard',reason:'quote-board',evidence:unique};
+}
+function symbolFromText(s){
+  const raw=String(s||'').toUpperCase().replace(/\s+/g,'');
+  const aliases={'GOLD':'GOLD#','GOLDE':'GOLD#','G0LD':'GOLD#','G0LD#':'GOLD#','XAUUSD':'GOLD#','XAUUSD#':'GOLD#','BTCUSD':'BTCUSD#','BTCUSD#':'BTCUSD#','OILCASH':'OILCash#','OILCASH#':'OILCash#','JP225CASH':'JP225Cash#','JP225CASH#':'JP225Cash#'};
+  if(aliases[raw])return aliases[raw];
+  const fx=raw.match(/^([A-Z]{3})([A-Z]{3})(#?)$/);
+  if(fx&&CURRENCIES.has(fx[1])&&CURRENCIES.has(fx[2]))return `${fx[1]}${fx[2]}#`;
+  const m=raw.match(/^([A-Z0-9]+(?:CASH)?#)$/);return m?m[1]:null;
+}
+function normalizeSymbol(s){let x=String(s).toUpperCase().replace(/\s+/g,'');const aliases={'GOLD':'GOLD#','GOLDE':'GOLD#','G0LD':'GOLD#','G0LD#':'GOLD#','XAUUSD':'GOLD#','XAUUSD#':'GOLD#','BTCUSD':'BTCUSD#','BTCUSD#':'BTCUSD#','OILCASH':'OILCash#','OILCASH#':'OILCash#','JP225CASH':'JP225Cash#','JP225CASH#':'JP225Cash#'};if(aliases[x])return aliases[x];const fx=x.match(/^([A-Z]{3})([A-Z]{3})#?$/);if(fx&&CURRENCIES.has(fx[1])&&CURRENCIES.has(fx[2]))return `${fx[1]}${fx[2]}#`;x=x.replace(/CASH#/,'Cash#');if(x==='GOLD#')return'GOLD#';return x}
 function extractQuotesFromWords(words){
   const all=(words||[]).map(w=>{
     const t=String(w.text||'').trim();
@@ -867,12 +899,12 @@ function extractAllQuotesText(text){
   const out={};
   const clean=String(text||'').replace(/\r/g,'\n');
   const lines=clean.split(/\n+/).map(x=>x.trim()).filter(Boolean);
-  const symbolRe=/([A-Z0-9]+(?:Cash)?#)/i;
+  const symbolRe=/(GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{6}#?)/i;
   const looksLikePrice=n=>Number.isFinite(n)&&n>0;
   for(let i=0;i<lines.length;i++){
     const sm=lines[i].match(symbolRe);
     if(!sm)continue;
-    let sym=normalizeSymbol(sm[1]);
+    let sym=symbolFromText(sm[1]);
     // Common Tesseract character confusion seen on MT5's blue BTC row.
     if(String(sm[1]).toUpperCase()==='BICUSD#')sym='BTCUSD#';
     if(!sym)continue;
@@ -2077,6 +2109,12 @@ $('mediaFile').addEventListener('change',async e=>{
       if(results.length && !mt5Now)throw new Error('VIDEO_NO_VALID_MT5_FRAME');
     }
 
+    // Account type is determined only from actual quote-board rows. Order/position-only
+    // media never flips the account type, preventing an OCR-dropped '#' from changing profiles.
+    const accountTypeDetection=detectXMAccountTypeFromText(parsed.rawText||'');
+    if(accountTypeDetection.type==='standard'||accountTypeDetection.type==='kiwami')setXMAccountType(accountTypeDetection.type);
+    else if(accountTypeDetection.reason==='mixed')setXMAccountType('unknown');
+
     // 気配値は動画なら安定スプレッド帯から採用。スクショなら通常のBid/Ask検証。
     let quotes={}, usdjpy=null; window.__quoteMeta={};
     if(isVideo){
@@ -2395,14 +2433,18 @@ $('mediaFile').addEventListener('change',async e=>{
       : (deadlineReady?'<span class="ok">✓ DEAD LINE計算開始</span>':(()=>{const miss=[];if(!positionDataValid)miss.push('現在ポジション');if(orderDataInvalid)miss.push('注文');if(!accountBalanceUsable())miss.push('口座残高');if(!(Number.isFinite(goldBid)&&Number.isFinite(goldAsk)))miss.push('Bid・Ask');if(!quoteRateFor(cfg()))miss.push('換算レート');if(window.__regressionOK===false)miss.push('内部回帰テスト');return '<span class="warn">⚠ 8/8 読み込み・解析完了。ただし計算前提が揃っていないためDEAD LINEは安全停止中です。</span><br><span class="small">不足データ：'+(miss.join(' / ')||'計算条件')+'</span>'})());
     const excludedText=isVideo?` / 無効フレーム除外 ${mediaQuality.excluded}件${mediaQuality.controlExcluded?`（コントロールセンター${mediaQuality.controlExcluded}件）`:''}`:'';
     const qualityText=isVideo?`有効 ${mediaQuality.usable}/${mediaQuality.expected}フレーム${excludedText}`:'スクショ1フレーム';
-    $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">気配値 <b>${quoteCount}銘柄</b></div><div class="item">解析フレーム <b>${qualityText}</b></div><div class="item">現在ポジション <b>${effectivePositionCount}件${retainedPositionOnly?'（継続）':''}</b></div><div class="item">今回のポジション証拠 <b>${positionEvidenceCount}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item">口座残高 <b>${Number.isFinite(accountSnapshot.balance)?Math.round(accountSnapshot.balance).toLocaleString('ja-JP')+'円':'未取得'}</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${mediaState}</div></div></div>${orderUpdateNote}`;
+    const selectedPriceOk=Number.isFinite(goldBid)&&Number.isFinite(goldAsk);
+    const usdJpyOk=Number($('usdjpy')?.value||0)>0;
+    const selectedLabel=currentSymbol.replace(/#$/,'');
+    const acctClass=xmAccountType==='unknown'?'warn':'ok';
+    $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">${selectedLabel}価格 <b>${selectedPriceOk?'✓':'未取得'}</b></div><div class="item">USDJPY換算 <b>${usdJpyOk?'✓':'未取得'}</b></div><div class="item">口座タイプ <b class="${acctClass}">${accountTypeLabel()}</b></div><div class="item">解析フレーム <b>${qualityText}</b></div><div class="item">現在ポジション <b>${effectivePositionCount}件${retainedPositionOnly?'（継続）':''}</b></div><div class="item">今回のポジション証拠 <b>${positionEvidenceCount}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item">口座残高 <b>${Number.isFinite(accountSnapshot.balance)?Math.round(accountSnapshot.balance).toLocaleString('ja-JP')+'円':'未取得'}</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${mediaState}</div></div></div>${orderUpdateNote}`;
     const carriedAt=priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'取得時刻不明';
     $('rateStatus').innerHTML=carriedPreviousQuote
       ? `<span class="warn">↪ 写真に気配値がないため前回値を持ち越し：${formatPrice(goldBid)} / ${formatPrice(goldAsk)}</span><span class="small"><br>前回取得：${carriedAt}（時刻は更新していません）</span>`
       : freshTradePriceForStill
       ? `<span class="warn">⚠ 写真内のトレード画面から現在価格 ${formatPrice(goldBid)} を取得。Bid/Ask差は未取得のためAskは推定値です。</span>`
       : Object.keys(quotes).length
-      ? `<span class="ok">✓ 気配値 ${quoteCount}銘柄を更新。動画は安定スプレッド帯から採用。</span>`
+      ? `<span class="ok">✓ ${currentSymbol.replace(/#$/,'')}価格 / USDJPY換算を更新。口座タイプ：${accountTypeLabel()}</span>`
       : `<span class="warn">今回の媒体から現在のBid/Askを確定できませんでした。古い価格は計算に使用しません。</span>`;
     renderPositions(); renderOrders(); calc();
     const donePreview=$('preview'); if(donePreview){donePreview.removeAttribute('src');donePreview.style.display='none';}
@@ -2580,7 +2622,7 @@ function runCalcSelfTest(){
     const staleQuoteDoesNotBlockNew=quoteSanity('BTCUSD#',{bid:150,ask:150.1},oldQuote)===true;
     const freshQuoteStillGuardsJump=quoteSanity('BTCUSD#',{bid:150,ask:150.1},freshQuote)===false;
     const controlCenter=isControlCenterFrameText('再生停止中 集中モード 明るさ 音量')&&!isControlCenterFrameText('GOLD# buy 0.01 4367.37 -> 4425.27');
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v224-20260826$/.test(buildId)&&/v224/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v225-20260826$/.test(buildId)&&/v225/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3047,7 +3089,16 @@ $('targetPnlModeAll')?.addEventListener('click',()=>setTargetPnlMode('all'));
 // Startup hardening: expose the API, clear stale service-worker registrations, and publish the exact build.
 
 renderBalanceStatus();
-window.__APP_BUILD__='v224-20260826';
+window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
+  const std='GOLD 4619.75 4620.29\nUSDJPY 159.070 159.093\nSILVER 52.11 52.17';
+  const kiwa='GOLD# 4639.36 4639.61\nUSDJPY# 159.180 159.190\nEURUSD# 1.17010 1.17025';
+  const mixed='GOLD# 4639.36 4639.61\nUSDJPY 159.180 159.190';
+  const orderOnly='GOLD buy limit\n0.02 / 0 at 4570.43 placed';
+  const a=detectXMAccountTypeFromText(std),b=detectXMAccountTypeFromText(kiwa),c=detectXMAccountTypeFromText(mixed),d=detectXMAccountTypeFromText(orderOnly);
+  const standardQuote=extractAllQuotesText(std);
+  return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
+})();
+window.__APP_BUILD__='v225-20260826';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -3058,8 +3109,8 @@ window.__V125_PENDING_ORDER_TEST__=(()=>{
 })();
 window.__V200_VIDEO_ORDER_TEST__=(()=>{const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed\nGOLD# buy limit\n0.03 / 0 at 4334.46 placed\nGOLD# buy limit\n0.03 / 0 at 4474.22 placed';const p=mergeParsedResults([{frameIndex:1,data:{text:t}}]).pending;return {count:p.length,pass:p.length===5,prices:p.map(o=>o.price).sort((a,b)=>b-a)}})();
 window.__V218_TARGET_PNL_TOGGLE_TEST__={toggleFn:typeof toggleTargetPnlPosition==='function',keyFn:typeof targetPnlKey==='function',excludedSet:targetPnlExcluded instanceof Set};
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v224-20260826'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v224-20260826'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v225-20260826'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v225-20260826'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

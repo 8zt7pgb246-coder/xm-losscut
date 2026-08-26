@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v233-20260826">
+<meta name="build-id" content="v234-20260826">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v233</title>
+<title>Stop Out positioning｜デラポジ Pro v234</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -126,7 +126,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v233</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v234</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v233 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
@@ -315,7 +315,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v233-20260826';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v234-20260826';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -394,8 +394,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2};
 }
-window.__DEPLOYMENT_STATE__={build:'v233-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v233-20260826';
+window.__DEPLOYMENT_STATE__={build:'v234-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v234-20260826';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -409,7 +409,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v233-20260826', SHORT='v233';
+  const BUILD='v234-20260826', SHORT='v234';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1133,6 +1133,33 @@ function parseAccountMoneyToken(s){
   const n=Number(m[1].replace(/\s+/g,''));
   return Number.isFinite(n)&&Math.abs(n)<1e12?n:null;
 }
+function extractAccountHeaderIntegers(head){
+  const rows=String(head||'').replace(/\r/g,'\n').split(/\n+/).map(x=>String(x||'').trim()).filter(Boolean);
+  const nums=[];
+  const push=n=>{if(Number.isFinite(n)&&n>=0&&n<1e12)nums.push(n)};
+  for(let i=0;i<rows.length;i++){
+    const row=rows[i];
+    // One complete grouped JPY amount per visual row, e.g. `154 646` or `50,000`.
+    const grouped=row.match(/^\s*(-?\d{1,3}(?:[ ,]\d{3})+)\s*$/);
+    if(grouped){push(Number(grouped[1].replace(/[ ,]/g,'')));continue;}
+    // OCR may split one amount into two pure-number rows: `50` then `000`.
+    // Join only when BOTH rows are otherwise empty; never join an already grouped
+    // value to the next account value.
+    if(/^\d{1,3}$/.test(row) && i+1<rows.length && /^\d{3}$/.test(rows[i+1])){
+      push(Number(row+rows[i+1]));i++;continue;
+    }
+    // Accept a standalone 4-12 digit integer row. Short 1-3 digit values are kept
+    // only for checksum sequences (credit/margin) and are never enough alone to
+    // become Balance because callers require accounting relations.
+    if(/^\d{4,12}$/.test(row)){push(Number(row));continue;}
+    if(/^\d{1,3}$/.test(row)){push(Number(row));continue;}
+    // Labels may survive on the same row. Extract exactly one grouped/integer amount
+    // from that row, but never consume across whitespace into a second amount.
+    const labeled=row.match(/(?:^|[^\d.])(-?\d{1,3}(?:[ ,]\d{3})+|-?\d{4,12})(?![\d.])/);
+    if(labeled)push(Number(labeled[1].replace(/[ ,]/g,'')));
+  }
+  return nums;
+}
 function parseMt5AccountSummaryFallback(text){
   const raw=String(text||'').replace(/\r/g,'\n');
   // Fallback is allowed only on an unmistakable MT5 Trade/Orders frame. Japanese
@@ -1149,19 +1176,11 @@ function parseMt5AccountSummaryFallback(text){
   const start=jpy>=0?jpy+3:0;
   let end=raw.length;
   for(const x of [orderHeader,firstTradeRow])if(x>=start&&x<end)end=x;
-  let head=raw.slice(start,end);
-  // iPhone OCR occasionally splits a visually grouped JPY amount as `154` + newline + `646`.
-  // Merge only 1-3 digit + exactly 3 digit groups inside the account-summary header region.
-  // This region ends before the first trade row, so market prices cannot be joined here.
-  head=head.replace(/(^|[^\d.])(\d{1,3})\s*\n\s*(\d{3})(?!\d|\s*\.\d)/gm,(m,p,a,b)=>`${p}${a} ${b}`);
-  // Account summary values on MT5 are whole JPY amounts. Decimal market prices are
-  // intentionally excluded. Preserve visual digit grouping such as "154 646".
-  const nums=[];
-  const re=/(?:^|[^\d.])(-?\d{1,3}(?:[ ,]\d{3})+|-?\d{4,12}|-?\d{1,3})(?![\d.]|\s*\.\d)/gm;
-  let m; while((m=re.exec(head))){
-    const n=Number(m[1].replace(/[ ,]/g,''));
-    if(Number.isFinite(n)&&n>=0&&n<1e12)nums.push(n);
-  }
+  const head=raw.slice(start,end);
+  // Preserve account values as separate rows. The old regex could greedily turn
+  // `154 646\n154 646\n154 646` into one giant integer, which made a perfectly
+  // readable FLAT account fail the internal regression test and blocked DEAD LINE.
+  const nums=extractAccountHeaderIntegers(head);
   if(!nums.length)return {balance:null,equity:null,credit:null,free:null,evidence:[]};
   // Professional fail-closed rule: an unlabeled single integer can be an account ID,
   // clock artefact, ticket number, or other UI number. Never promote it to Balance.
@@ -1278,11 +1297,8 @@ function recoverAccountSnapshotFromTradeHeader(text){
   if(!/(?:残高|balance)/i.test(raw)||!/(?:有効額|equity)/i.test(raw)||!/(?:オーダー|orders?)/i.test(raw))return {balance:null,equity:null,credit:null,free:null,evidence:[]};
   const endCandidates=[raw.search(/(?:オーダー|orders?)/i),raw.search(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)/i)].filter(x=>x>=0);
   const end=endCandidates.length?Math.min(...endCandidates):raw.length;
-  let head=raw.slice(0,end);
-  head=head.replace(/(^|[^\d.])(\d{1,3})\s*\n\s*(\d{3})(?!\d|\s*\.\d)/gm,(m,p,a,b)=>`${p}${a} ${b}`);
-  const vals=[];
-  const re=/(?:^|[^\d.])(-?\d{1,3}(?:[ ,]\d{3})+|-?\d{4,12})(?![\d.]|\s*\.\d)/gm; let m;
-  while((m=re.exec(head))){const n=Number(m[1].replace(/[ ,]/g,''));if(Number.isFinite(n)&&n>=0&&n<1e9)vals.push(n)}
+  const head=raw.slice(0,end);
+  const vals=extractAccountHeaderIntegers(head).filter(n=>n<1e9);
   // Known MT5 JPY summary layouts: B,E,F or B,E,C,F. Require exact accounting relation.
   for(let i=0;i+3<vals.length;i++){const [b,e,c,f]=vals.slice(i,i+4);if(Math.abs((b+c)-e)<=1&&Math.abs(e-f)<=1)return {balance:b,equity:e,credit:c,free:f,evidence:['header-recovery-credit']}}
   for(let i=0;i+2<vals.length;i++){const [b,e,f]=vals.slice(i,i+3);if(Math.abs(b-e)<=1&&Math.abs(e-f)<=1)return {balance:b,equity:e,credit:0,free:f,evidence:['header-recovery-flat']}}
@@ -2991,7 +3007,7 @@ placed
     const singlePositionParsed=parseOCR(singlePositionRaw);
     const singlePositionCandidate=sanitizeRecognizedPositions(singlePositionParsed.positions.filter(o=>normalizeSymbol(o.symbol)===currentSymbol));
     const singlePositionVideoAccepted=singlePositionCandidate.length===1&&shouldAcceptVideoPositionBasket({isVideo:true,positionEvidenceCount:1,positionsCandidate:singlePositionCandidate,rawText:singlePositionRaw})===true;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v233-20260826$/.test(buildId)&&/v233/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v234-20260826$/.test(buildId)&&/v234/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3495,7 +3511,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v233-20260826';
+window.__APP_BUILD__='v234-20260826';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -3533,8 +3549,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v233-20260826'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v233-20260826'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v234-20260826'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v234-20260826'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

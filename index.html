@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v263-20260827">
+<meta name="build-id" content="v264-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v263</title>
+<title>Stop Out positioning｜デラポジ Pro v264</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -123,7 +123,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .compareWinner{font-size:29px;font-weight:1000;line-height:1.15;margin:6px 0}.compareWinner.good{color:#39e58c}.compareWinner.warn{color:#ffb15c}
 .compareTable{width:100%;border-collapse:collapse;margin-top:8px;font-variant-numeric:tabular-nums}.compareTable th,.compareTable td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:right;font-size:11px}.compareTable th:first-child,.compareTable td:first-child{text-align:left}.compareTable th{color:#8b95a5;font-weight:850}.compareTable td b{color:#fff}.scenarioPills{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px}.scenarioPills button{padding:8px 5px;font-size:11px;background:#111820;color:#aeb8c6;border:1px solid var(--line)}.scenarioPills button.active{background:#eef1f4;color:#0b0f13}.meter{height:8px;border-radius:99px;background:#1a2028;overflow:hidden;margin:6px 0}.meter>i{display:block;height:100%;background:#eef1f4;border-radius:99px}.compareNote{font-size:10px;color:#8b95a5;line-height:1.45;margin-top:6px}
 
-/* v263: account strategy UI + compact layout; calculation behavior preserved. */
+/* v264: account strategy UI + compact layout; calculation behavior preserved. */
 .compareDecisionGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
 .compareDecisionBox{border:1px solid var(--line);border-radius:12px;padding:10px;background:#0b1015}
 .compareDecisionBox .k{font-size:10px;color:var(--muted);font-weight:850}
@@ -151,8 +151,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .cmpHeadline{font-size:13px;color:#aeb7c4;margin-top:4px}.cmpAdvantage{font-size:18px;font-weight:1000;color:#39e58c;margin-top:4px}
 .cmpPeriodList{display:grid;gap:3px;margin-top:5px}.cmpPeriodHead,.cmpPeriodRow{display:grid;grid-template-columns:48px minmax(0,1fr) minmax(0,1fr);gap:5px;align-items:center}.cmpPeriodHead{padding:0 6px 2px;color:var(--muted);font-size:10px;font-weight:900;text-align:center}.cmpPeriodHead>div:first-child{text-align:left}.cmpPeriodRow{padding:5px 7px;border-bottom:1px solid var(--line);background:transparent}.cmpPeriodRow:last-child{border-bottom:0}.cmpPeriodRow .d{font-size:10px;color:var(--muted);font-weight:900}.cmpPeriodRow .w{text-align:center;font-size:11px;font-weight:950;line-height:1.15}.cmpPeriodRow .w.good{color:#39e58c}.cmpPeriodRow .w.warn{color:#4ca3ff}
 
-/* v263: denser account-comparison layout for iPhone. Visual-only; calculation/OCR state is unchanged. */
-/* v263: account identity colors are fixed everywhere in account comparison.
+/* v264: denser account-comparison layout for iPhone. Visual-only; calculation/OCR state is unchanged. */
+/* v264: account identity colors are fixed everywhere in account comparison.
    KIWAMI = green / Standard = blue. Amber is reserved for XMP/reversal notices. */
 #pageCompare{--cmp-kiwami:#39e58c;--cmp-standard:#4ca3ff;--cmp-xmp:#ffd451;--cmp-reversal:#ffb34d}
 #pageCompare .compareDecisionBox .v.good,#pageCompare .cmpAccountKiwami{color:var(--cmp-kiwami)!important}
@@ -203,7 +203,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .cmpDataLine{display:grid;grid-template-columns:1fr auto;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:11px}.cmpDataLine:last-child{border-bottom:0}.cmpDataLine b{color:#fff;text-align:right}.cmpSourceTag{font-size:9px;border:1px solid #34404d;border-radius:999px;padding:2px 6px;color:#aeb7c4;margin-left:4px;white-space:nowrap}
 .cmpHiddenCompat{display:none!important}
 
-/* v263: compact XMP wording + explicit spread gap */
+/* v264: compact XMP wording + explicit spread gap */
 #pageCompare .cmpSpreadGapHero{margin:5px 0 6px;padding:7px 9px;border:1px solid #29486b;border-radius:10px;background:linear-gradient(90deg,rgba(76,163,255,.08),rgba(57,229,140,.07))}
 #pageCompare .cmpSpreadGapTitle{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;font-weight:950;color:#d8e6f7}
 #pageCompare .cmpSpreadGapValues{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;margin-top:4px;font-size:10px;font-weight:900;text-align:center}
@@ -214,9 +214,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v263</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v264</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v263 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v264 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -416,7 +416,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v263-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v264-20260827';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -496,8 +496,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===6&&pos>=2&&fractions.includes(.73)&&fractions.includes(.90)};
 }
-window.__DEPLOYMENT_STATE__={build:'v263-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v263-20260827';
+window.__DEPLOYMENT_STATE__={build:'v264-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v264-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -511,7 +511,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v263-20260827', SHORT='v263';
+  const BUILD='v264-20260827', SHORT='v264';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -2554,7 +2554,7 @@ $('mediaFile').addEventListener('change',async e=>{
       // actual iPhone recordings consistently place the Trade pane here; relying on
       // PSM11 text to decide whether to run PSM3 is circular and caused the failure.
       const verifySrc=(scored[0]&&scored[0].score>=5)?scored[0].src:temporal;
-      // v263 SPEED: PSM3 is a costly extra OCR pass. Skip it only when the first
+      // v264 SPEED: PSM3 is a costly extra OCR pass. Skip it only when the first
       // pass already contains a coherent explicit open-position basket AND a real
       // account balance. Zero/uncertain/partial position states still get the proven
       // 0.73 verification, preserving the fail-closed position safety gate.
@@ -3040,7 +3040,18 @@ $('mediaFile').addEventListener('change',async e=>{
   }catch(err){
     if(sharedVideoWorker){try{await sharedVideoWorker.terminate()}catch(_){} sharedVideoWorker=null;}
     if(!stillCurrent())return;
+    // v264: a newly selected movie must never appear to have "not updated" by
+    // silently restoring the previous movie as current trading truth. Keep stored
+    // values only as history, but fail closed until this new import succeeds.
     restoreImportSnapshot(importSnapshot);
+    if(isVideo){
+      mediaPriceFresh=false; mediaUsdJpyFresh=false; mediaPriceEvidence=null;
+      invalidatePositionData('新しい動画の解析に失敗しました。前の動画のポジションは現在値として使用していません。もう一度この動画を読み込んでください。');
+      invalidateOrderData('新しい動画の解析に失敗しました。前の動画の注文は現在値として使用していません。');
+      invalidateAccountData('新しい動画の解析に失敗したため、前回の口座残高ではDEAD LINEを計算しません。');
+      goldBid=null; goldAsk=null; priceSource='none'; marketAskInferred=false;
+      renderDataLock(); renderOrderDataLock(); updatePriceUI(); renderPositions(); renderOrders();
+    }
     console.error(err);
     $('ocrStatus').innerHTML=err.message==='OCR_ENGINE_UNAVAILABLE'
       ? '<span class="warn">OCRエンジンを読み込めませんでした。通信を確認して再度お試しください。</span>'
@@ -3061,6 +3072,13 @@ $('mediaFile').addEventListener('change',async e=>{
     if(stillCurrent()){
       if(sharedVideoWorker){try{await sharedVideoWorker.terminate()}catch(_){} sharedVideoWorker=null;}
       if(importSnapshot)restoreImportSnapshot(importSnapshot);
+      // v264: do not let a failed second movie leave the first movie looking current.
+      mediaPriceFresh=false; mediaUsdJpyFresh=false; mediaPriceEvidence=null;
+      invalidatePositionData('新しい動画の読み込みに失敗しました。前回ポジションは現在値として使用していません。');
+      invalidateOrderData('新しい動画の読み込みに失敗しました。前回注文は現在値として使用していません。');
+      invalidateAccountData('新しい動画の読み込みに失敗したため、前回残高では計算しません。');
+      goldBid=null; goldAsk=null; priceSource='none'; marketAskInferred=false;
+      renderDataLock(); renderOrderDataLock(); updatePriceUI(); renderPositions(); renderOrders();
       console.error('[XM] MEDIA_IMPORT_TOP_LEVEL_FAILED',topErr);
       const msg=topErr?.message||'メディア読み込みに失敗しました。';
       if($('ocrStatus'))$('ocrStatus').textContent=`読み込み停止：${msg}`;
@@ -3310,7 +3328,7 @@ placed
     const realTwoSellSim=chooseLCScenario(54935,20,realTwoSellPending,realTwoSellTrusted.rows,c,1000,100,4622.19,0,4621.64);
     const realTwoSellDeadline=realTwoSellSim.direction==='up'&&realTwoSellSim.added.length===3&&realTwoSellSim.filled.length===5&&Number.isFinite(realTwoSellSim.lc)&&Math.abs(realTwoSellSim.lc-4714.26)<0.20;
     window.__testRate=159.53;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v263-20260827$/.test(buildId)&&/v263/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v264-20260827$/.test(buildId)&&/v264/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3972,7 +3990,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v263-20260827';
+window.__APP_BUILD__='v264-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -4010,8 +4028,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v263-20260827'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v263-20260827'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v264-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v264-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

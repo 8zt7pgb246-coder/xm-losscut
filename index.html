@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v230-20260826">
+<meta name="build-id" content="v232-20260826">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v230</title>
+<title>Stop Out positioning｜デラポジ Pro v232</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -126,7 +126,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v230</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v232</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v227 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
@@ -315,7 +315,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v230-20260826';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v232-20260826';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -394,8 +394,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2};
 }
-window.__DEPLOYMENT_STATE__={build:'v230-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v230-20260826';
+window.__DEPLOYMENT_STATE__={build:'v232-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v232-20260826';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -409,7 +409,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v230-20260826', SHORT='v230';
+  const BUILD='v232-20260826', SHORT='v232';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -801,7 +801,7 @@ function renderCalcBasis(currentPositions,pending,filled,lc,c){
   const pos=currentPositions.map(o=>`${String(o.side).toUpperCase()} ${Number(o.lot).toFixed(2)} @ ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}`).join(' / ')||'なし';
   const pend=pending.map(o=>`${String(o.side).toUpperCase()} ${Number(o.lot).toFixed(2)} @ ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}`).join(' / ')||'なし';
   const fill=filled.map(o=>`${String(o.side).toUpperCase()} ${Number(o.lot).toFixed(2)} @ ${Number(o.price).toFixed(Math.min(5,Math.max(2,decimalPlacesFor(goldBid||o.price))))}`).join(' / ')||'なし';
-  let prev=null; try{prev=JSON.parse(sessionStorage.getItem('delapoji_last_calc_v230')||'null')}catch(e){}
+  let prev=null; try{prev=JSON.parse(sessionStorage.getItem('delapoji_last_calc_v232')||'null')}catch(e){}
   const current={symbol:currentSymbol,positions:currentPositions.map(o=>[String(o.side),Number(o.lot),Number(o.price)]),pending:pending.map(o=>[String(o.side),Number(o.lot),Number(o.price)]),bid:Number(goldBid),ask:Number(goldAsk),rate:Number($('usdjpy').value||0),lc:lc===null?null:Number(lc)};
   let delta='今回がこのセッションの最初の確定計算です。';
   if(prev&&prev.symbol===current.symbol){
@@ -814,7 +814,7 @@ function renderCalcBasis(currentPositions,pending,filled,lc,c){
   }
   st.textContent=`現在 ${currentPositions.length}ポジション / 注文 ${pending.length}件`;
   el.innerHTML=`<div><b>現在ポジション：</b>${pos}</div><div style="margin-top:4px"><b>未約定注文：</b>${pend}</div><div style="margin-top:4px"><b>LC時に成立する想定：</b>${fill}</div><div style="margin-top:4px"><b>現在Bid / Ask：</b>${Number.isFinite(goldBid)?formatPrice(goldBid):'—'} / ${Number.isFinite(goldAsk)?formatPrice(goldAsk):'—'}　<b>USD/JPY：</b>${Number($('usdjpy').value||0).toFixed(3)}</div><div style="margin-top:6px"><b>変動理由：</b>${delta}</div>`;
-  try{sessionStorage.setItem('delapoji_last_calc_v230',JSON.stringify(current))}catch(e){}
+  try{sessionStorage.setItem('delapoji_last_calc_v232',JSON.stringify(current))}catch(e){}
 }
 
 function pendingDeadlineRisk(pending,lc,spread=0,direction='down'){
@@ -861,7 +861,7 @@ function calc(){
   $('lots').textContent=currentLots.toFixed(2);$('currentPnl').textContent=formatJPYLoss(modelCurrentPnl);$('lcLoss').textContent=totalLcLoss!==null?formatJPYLoss(totalLcLoss):'—';$('qty').textContent=currentQty.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');$('lcTotalPositions').textContent=filled.length+'件';$('avg').textContent=currentQty?(currentEntry/currentQty).toFixed(dp):'—';$('lcLots').textContent=lots.toFixed(2);$('lcAvg').textContent=qty?(entry/qty).toFixed(dp):'—';$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);updatePriceUI();
   if(Number.isFinite(lc)){ $('result').textContent=lc.toFixed(dp);const moved=Number.isFinite(sim.currentLc)&&Math.abs(lc-sim.currentLc)>1e-6,pendingText=pending.length?(added.length?`Pending ${added.length}/${pending.length}件反映`:`Pending 0/${pending.length}件。Stop Outが先`):'Pendingなし',skipped=sim.skipped?.length&&Number.isFinite(sim.allFilledLc)?` / 未到達${sim.skipped.length}件。全${pending.length}件を仮約定なら ${formatPrice(sim.allFilledLc)}`:'';$('distance').textContent=`${currentSymbol} Bid ${formatPrice(goldBid)} → ${sim.direction==='up'?'上昇':'下落'}時 推定Stop Out ${formatPrice(lc)} / ${pendingText}${moved?` / 現在保有のみ ${formatPrice(sim.currentLc)}`:''}${skipped}`;}else{$('result').textContent='—';$('distance').textContent='Stop Out価格を解けません。銘柄仕様・換算レート・口座条件を確認してください。'}
   $('count').textContent=`${pending.length}件 / ${sim.direction==='up'?'上昇':'下落'}時の想定追加約定 ${added.length}件`;renderOrderStatus(added,pending,lc);renderPositions(lc,c);
-  const orderFp=pending.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`).join(';');try{const prev=JSON.parse(sessionStorage.getItem('delapoji_v230_last_headline')||'null'),now={orderFp,lc:Number.isFinite(lc)?lc:null,added:added.length,total:pending.length,allFilledLc:sim.allFilledLc};if(prev&&prev.orderFp!==orderFp&&Number.isFinite(prev.lc)&&Number.isFinite(now.lc)&&Math.abs(prev.lc-now.lc)<1e-7)console.info('[XM] ORDER_CHANGED_HEADLINE_SAME',{previous:prev,current:now,reason:sim.skipped?.length?'changed_orders_below_reachable_stopout':'same_math'});sessionStorage.setItem('delapoji_v230_last_headline',JSON.stringify(now))}catch(e){}
+  const orderFp=pending.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`).join(';');try{const prev=JSON.parse(sessionStorage.getItem('delapoji_v232_last_headline')||'null'),now={orderFp,lc:Number.isFinite(lc)?lc:null,added:added.length,total:pending.length,allFilledLc:sim.allFilledLc};if(prev&&prev.orderFp!==orderFp&&Number.isFinite(prev.lc)&&Number.isFinite(now.lc)&&Math.abs(prev.lc-now.lc)<1e-7)console.info('[XM] ORDER_CHANGED_HEADLINE_SAME',{previous:prev,current:now,reason:sim.skipped?.length?'changed_orders_below_reachable_stopout':'same_math'});sessionStorage.setItem('delapoji_v232_last_headline',JSON.stringify(now))}catch(e){}
 }
 function lossAtLCJPY(o,lc,c){if(!Number.isFinite(lc)||!o||!Number.isFinite(+o.price)||!Number.isFinite(+o.lot))return null;const qr=quoteRateFor(c);if(!qr||!Number.isFinite(+c.contract))return null;const spread=Number.isFinite(goldAsk)&&Number.isFinite(goldBid)?Math.max(0,goldAsk-goldBid):0;if(/^buy/i.test(String(o.side||'')))return (lc-(+o.price))*(+o.lot)*(+c.contract)*qr;if(/^sell/i.test(String(o.side||'')))return ((+o.price)-(lc+spread))*(+o.lot)*(+c.contract)*qr;return null}
 function formatJPYLoss(v){if(!Number.isFinite(v))return '—';const sign=v<0?'−':'+';return `${sign}${Math.round(Math.abs(v)).toLocaleString('ja-JP')} 円`}
@@ -876,7 +876,7 @@ function renderOrderStatus(added,all,lc){
 function pointStepFor(sym,c){if(c.type==='fx')return /JPY#$/.test(sym)?0.01:0.0001;return Number.isFinite(+c.point)&&+c.point>0?+c.point:(c.type==='index'?1:0.01)}
 function updatePipValue(){const c=cfg(),lots=.01,step=pointStepFor(currentSymbol,c),label=c.type==='fx'?'1 pip':'1 point';const qr=quoteRateFor(c),value=qr?step*lots*c.contract*qr:null;const pipLabel=$('pipLabel'),pipValue=$('pipValue'),pipNote=$('pipNote');if(pipLabel)pipLabel.textContent=`${currentSymbol} ${label} / 0.01 lot`;if(pipValue)pipValue.textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';if(pipNote)pipNote.textContent=c.type==='fx'?`${step} ${label} × 0.01 lot（${(lots*c.contract).toLocaleString()} ${c.unit}）をJPY換算`:`${step} ${label} × 0.01 lot（契約サイズ ${c.contract} ${c.unit} / lot）をJPY換算`}
 function normalizeOcrNumber(s){if(s==null)return null;let x=String(s).trim().replace(/[,$]/g,'').replace(/[Oo]/g,'0').replace(/[Il|]/g,'1').replace(/[^0-9.]/g,'');if((x.match(/\./g)||[]).length>1){const parts=x.split('.');x=parts.shift()+'.'+parts.join('')}const n=Number(x);return Number.isFinite(n)?n:null}
-// v230: Standard/KIWAMI auto-detection. Raw MT5 suffix is kept only as account evidence;
+// v232: Standard/KIWAMI auto-detection. Raw MT5 suffix is kept only as account evidence;
 // the calculation core still normalizes both account types to the existing canonical symbols.
 const XM_ACCOUNT_TYPE_KEY='xm_detected_account_type_v1';
 let xmAccountType=(()=>{try{return localStorage.getItem(XM_ACCOUNT_TYPE_KEY)||'unknown'}catch(e){return 'unknown'}})();
@@ -1157,7 +1157,7 @@ function parseMt5AccountSummaryFallback(text){
   // Account summary values on MT5 are whole JPY amounts. Decimal market prices are
   // intentionally excluded. Preserve visual digit grouping such as "154 646".
   const nums=[];
-  const re=/(?:^|[^\d.])(-?\d{1,3}(?:[ ,]\d{3})+|-?\d{4,12})(?![\d.]|\s*\.\d)/gm;
+  const re=/(?:^|[^\d.])(-?\d{1,3}(?:[ ,]\d{3})+|-?\d{4,12}|-?\d{1,3})(?![\d.]|\s*\.\d)/gm;
   let m; while((m=re.exec(head))){
     const n=Number(m[1].replace(/[ ,]/g,''));
     if(Number.isFinite(n)&&n>=0&&n<1e12)nums.push(n);
@@ -1172,6 +1172,47 @@ function parseMt5AccountSummaryFallback(text){
   }
   if(nums.length>=3&&Math.abs(nums[0]-nums[1])<=1&&Math.abs(nums[0]-nums[2])<=1){
     return {balance:nums[0],equity:nums[1],credit:0,free:nums[2],evidence:[`fallback-balance:${nums[0]}`,'fallback-flat-summary']};
+  }
+  // v232: PSM11 usually preserves the complete five-number JPY account sequence
+  // even when every Japanese label is garbled: Balance, Equity, Credit, Used Margin, Free.
+  // Require the accounting identity Equity - Free == Used Margin before accepting it.
+  for(let i=0;i+4<nums.length;i++){
+    const b=nums[i], e=nums[i+1], c=nums[i+2], margin=nums[i+3], free=nums[i+4];
+    const tol=Math.max(2,Math.abs(margin)*0.01);
+    if(b>=1000&&e>=1000&&c>=0&&margin>=0&&margin<e&&free>=0&&Math.abs((e-free)-margin)<=tol){
+      return {balance:b,equity:e,credit:c,free,evidence:[`fallback-balance:${b}`,`fallback-credit:${c}`,'fallback-live-margin-identity']};
+    }
+  }
+  // v232: live-position Trade headers can lose every Japanese label under ENG OCR.
+  // Recover only when the numeric sequence itself proves the MT5 accounting layout:
+  // Balance, Equity, Credit, Used Margin, ... Margin Level.  Margin level is a very
+  // strong checksum because Equity / Margin * 100 must match it. Free margin can then
+  // be derived as Equity - Used Margin even if OCR misreads its leading digit.
+  for(let i=0;i+4<nums.length;i++){
+    const b=nums[i], e=nums[i+1], c=nums[i+2], margin=nums[i+3];
+    if(!(b>=1000&&e>=1000&&c>=0&&margin>0&&margin<e))continue;
+    const expectedLevel=e/margin*100;
+    let levelOk=false;
+    for(let j=i+4;j<Math.min(nums.length,i+8);j++){
+      const levelCandidates=[nums[j]];
+      // OCR can split `7 477.55%` into `7` + `47755`. Rejoin only adjacent
+      // integer fragments for this checksum test; no value is accepted unless it
+      // matches Equity/Margin mathematically within 2.5%.
+      if(j+1<Math.min(nums.length,i+8) && nums[j]>=0 && nums[j]<100 && nums[j+1]>=1000){
+        levelCandidates.push(Number(String(Math.trunc(nums[j]))+String(Math.trunc(nums[j+1]))));
+      }
+      for(const rawLevel of levelCandidates){
+        for(const scale of [1,10,100,1000]){
+          const lv=rawLevel/scale;
+          if(lv>=100&&Math.abs(lv-expectedLevel)/expectedLevel<=0.025){levelOk=true;break}
+        }
+        if(levelOk)break;
+      }
+      if(levelOk)break;
+    }
+    if(!levelOk)continue;
+    const free=Math.max(0,e-margin);
+    return {balance:b,equity:e,credit:c,free,evidence:[`fallback-balance:${b}`,`fallback-credit:${c}`,'fallback-live-margin-checksum']};
   }
   return {balance:null,equity:null,credit:null,free:null,evidence:[]};
 }
@@ -1288,11 +1329,27 @@ function isAuthoritativeFlatStillOrderSnapshot({isVideo=false,accountSnapshot=nu
 function shouldAcceptStillOrderSnapshot(existingCount,foundCount,authoritative){
   return !!authoritative || Number(existingCount||0)===0 || Number(existingCount||0)===Number(foundCount||0);
 }
+function detectTradeSideFromLine(line){
+  const raw=String(line||'');
+  const exact=raw.match(/\b(buy|sell)\b/i);
+  if(exact)return exact[1].toLowerCase();
+  // English-only OCR on iPhone commonly reads `sell` as `sel!`, `se11`, `selI`.
+  // Accept a fuzzy side token ONLY when it sits directly after an MT5 symbol and
+  // directly before a plausible lot number. The caller still requires entry→current,
+  // so this cannot turn pending/account text into an open position by itself.
+  const m=raw.match(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+([A-Za-z!|1]{3,5})\s+(0?\.\d+|\d+(?:\.\d+)?)/i);
+  if(!m)return null;
+  let t=String(m[1]||'').toLowerCase().replace(/[!|1i]/g,'l').replace(/[^a-z]/g,'');
+  if(t==='sell'||t==='sel')return 'sell';
+  if(t==='buy'||t==='buv')return 'buy';
+  return null;
+}
 function hasStrongOpenPositionRowText(text){
   const lines=String(text||'').replace(/\r/g,'').split(/\n+/).map(normalizeOcrLine).filter(Boolean);
   const sym=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i;
   for(let i=0;i<lines.length;i++){
-    if(!sym.test(lines[i])||!/\b(?:buy|sell)\b/i.test(lines[i]))continue;
+    const side=detectTradeSideFromLine(lines[i]);
+    if(!sym.test(lines[i])||!side)continue;
     const chunk=lines.slice(i,Math.min(lines.length,i+3)).join(' ');
     // Pending-order language wins. `at PRICE`, `placed`, limit/stop are never open positions.
     if(/\b(?:buy|sell)\s*(?:limit|stop)\b|\bplaced\b|\bat\s*\d/i.test(chunk))continue;
@@ -1328,7 +1385,7 @@ function isExplicitFlatTradeSnapshot(text,snapshot,positionRows){
   const explicitOpenRow=hasStrongOpenPositionRowText(raw);
   // Strongest proof: numeric account summary says used margin is zero.
   if(accountFlat&&(hasOrderHeader||hasTradeRows)&&(hasAccountLabels||hasFlatFallback)&&!explicitOpenRow)return true;
-  // v230 recovery: if OCR lost only account digits but still captured the MT5 account
+  // v232 recovery: if OCR lost only account digits but still captured the MT5 account
   // labels + Orders header + explicit pending rows, absence of a *strong* open-position
   // entry→current row proves the screen is the flat Orders pane. This prevents one
   // hallucinated parser row from blocking a valid zero-position account.
@@ -1367,13 +1424,18 @@ function parseTradeRowsByLinePair(text){
   const numRe=/\d[\d,.]*\.\d+/g;
   for(let i=0;i<lines.length;i++){
     const sm=lines[i].match(symRe); const sideM=lines[i].match(sideRe);
-    if(!sm||!sideM)continue;
+    if(!sm)continue;
     const sym=symbolFromText(sm[0]); if(!sym)continue;
-    const sideRaw=sideM[1].replace(/\s+/g,' ');
-    const isPending=/limit$/i.test(sideRaw);
+    const fuzzySide=!sideM?detectTradeSideFromLine(lines[i]):null;
+    if(!sideM&&!fuzzySide)continue;
+    const sideRaw=sideM?sideM[1].replace(/\s+/g,' '):fuzzySide;
+    const isPending=!!sideM&&/limit$/i.test(sideRaw);
     const chunk=lines.slice(i,i+4).join(' ');
     const lotM=lines[i].match(/\b(?:buy\s*limit|sell\s*limit|buy|sell)\s*(?:#?\s*)(0?\.\d+|\d+(?:\.\d+)?)/i);
     let lot=lotM?Number(lotM[1]):null;
+    if(!Number.isFinite(lot)&&fuzzySide){
+      const lm=lines[i].match(/\b(0?\.\d+)\b/); lot=lm?Number(lm[1]):null;
+    }
     if(!Number.isFinite(lot)){
       const lm=chunk.match(/\b(0?\.\d+)\s*\/\s*0\b/i); lot=lm?Number(lm[1]):null;
     }
@@ -1413,9 +1475,10 @@ function parseOCR(text){
 
     const low=line.toLowerCase();
     const sideMatch=low.match(/\b(buy\s*limit|sell\s*limit|buy|sell)\b/);
-    if(!sideMatch) continue;
-    const sideRaw=sideMatch[1].replace(/\s+/g,' ');
-    const isPending=/limit$/.test(sideRaw);
+    const fuzzySide=!sideMatch?detectTradeSideFromLine(line):null;
+    if(!sideMatch&&!fuzzySide) continue;
+    const sideRaw=sideMatch?sideMatch[1].replace(/\s+/g,' '):fuzzySide;
+    const isPending=!!sideMatch&&/limit$/.test(sideRaw);
     // MT5 OCR may split a row into: "GOLD# buy 0.01" + "entry > current",
     // or (especially on iPhone) reverse those two lines.  Check same/next/prev
     // line explicitly instead of assuming a fixed OCR reading order.
@@ -1428,8 +1491,9 @@ function parseOCR(text){
     if(!arrow && !isPending) arrow=prev.match(arrowRe);
     const chunk=(isPending?lines.slice(i,i+3):lines.slice(Math.max(0,i-1),Math.min(lines.length,i+3))).join(' ');
 
-    let lotMatch=line.match(/(?:buy\s*limit|sell\s*limit|buy|sell)\s*(?:#?\s*)?(\d+(?:\.\d+)?)/i)
-                 || line.match(/\b(\d+(?:\.\d+)?)\s*(?:lot)?\b/i);
+    let lotMatch=line.match(/(?:buy\s*limit|sell\s*limit|buy|sell)\s*(?:#?\s*)?(\d+(?:\.\d+)?)/i);
+    if(!lotMatch&&fuzzySide)lotMatch=line.match(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+[A-Za-z!|1]{3,5}\s+(0?\.\d+|\d+(?:\.\d+)?)/i);
+    lotMatch=lotMatch || line.match(/\b(\d+(?:\.\d+)?)\s*(?:lot)?\b/i);
     if(!lotMatch){
       lotMatch=chunk.match(/\b(\d+(?:\.\d+)?)\s*\/\s*0\b/i)
              || chunk.match(/\b(0\.\d+)\s+(?:\/|at)\b/i);
@@ -2083,7 +2147,7 @@ $('mediaFile').addEventListener('change',async e=>{
         if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面動画OCR中… ${Math.round((m.progress||0)*100)}%`;
       });
     }
-    // v230 reliability-first video path: OCR every sampled anchor once.
+    // v232 reliability-first video path: OCR every sampled anchor once.
     // Four anchors are intentionally sparse (quote top / quote scroll / trade / late trade),
     // so this is still far cheaper than dense video OCR while guaranteeing that a short
     // Trade screen is not skipped. It also lets the first quote import capture every
@@ -2190,7 +2254,7 @@ $('mediaFile').addEventListener('change',async e=>{
           if(src===middleCandidate||src?.isControlCenter)continue;
           focusedSources.push(src);
         }
-        // v230: all sparse anchors were already OCR'd in the first pass. Only run
+        // v232: all sparse anchors were already OCR'd in the first pass. Only run
         // a second PSM6 pass when an unprocessed source actually exists. This keeps
         // the reliability gain without doubling OCR work on the normal path.
         if(focusedSources.length){
@@ -2773,10 +2837,82 @@ function runCalcSelfTest(){
     // A single explicit symbol+side+lot+entry→current row must be accepted; v229
     // incorrectly required repeated-frame evidence and blocked DEAD LINE.
     const singlePositionRaw='残高: 50 000\n有効額: 54 960\nクレジット: 4 935\n証拠金: 735\n可能額: 54 225\nポジション\nGOLD sell 0.01\n4618.43 -> 4618.27\nオーダー\nGOLD sell limit\n0.01 / 0 at 4644.09 placed';
+    const realEngOcrTrade=`20:45
+
+e
+
+all F €D
+
+25 JPY
+
++
+
+Re:
+
+50 000
+
+AME:
+
+54 960
+
+ILYYb
+
+4935
+
+735
+
+AYRE
+
+54 225
+
+AEM (%):
+
+7 477.55
+
+RYY ay
+
+GOLD sel! 0.01
+
+4618.43
+
+> 4618.27
+
+25
+
+A-9—
+
+GOLD sell limit
+
+placed
+
+0.01 / 0 at 4644.09
+
+GOLD sell limit
+
+0.01 / 0 at 4658.27
+
+placed
+
+GOLD sell limit
+
+0.01 / 0 at 4683.09
+
+placed
+
+GOLD sell limit
+
+placed
+
+0.01 / 0 at 4629.49`;
+    const realEngParsed=parseOCR(realEngOcrTrade);
+    const realEngPos=realEngParsed.positions.filter(o=>/^sell$/i.test(String(o.side))&&Math.abs(Number(o.lot)-0.01)<1e-9&&Math.abs(Number(o.price)-4618.43)<0.01);
+    const realEngPending=[...new Map(realEngParsed.pending.map(o=>[`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(2)}`,o])).values()];
+    const realEngAccount=parseAccountSnapshotFromText(realEngOcrTrade);
+    const realVideoEngOcrRecovery=realEngPos.length===1&&realEngPending.length===4&&realEngAccount.balance===50000&&realEngAccount.credit===4935&&realEngAccount.equity===54960&&Math.abs(realEngAccount.free-54225)<=2;
     const singlePositionParsed=parseOCR(singlePositionRaw);
     const singlePositionCandidate=sanitizeRecognizedPositions(singlePositionParsed.positions.filter(o=>normalizeSymbol(o.symbol)===currentSymbol));
     const singlePositionVideoAccepted=singlePositionCandidate.length===1&&shouldAcceptVideoPositionBasket({isVideo:true,positionEvidenceCount:1,positionsCandidate:singlePositionCandidate,rawText:singlePositionRaw})===true;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v230-20260826$/.test(buildId)&&/v230/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v232-20260826$/.test(buildId)&&/v232/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -2866,7 +3002,7 @@ function runCalcSelfTest(){
     const accountTypeAmbiguityFailsClosed=unresolvedType.type==='unknown'&&unresolvedType.reason==='quote-board-unresolved';
     const importRollbackScopeSafe=(()=>{const src=document.documentElement.innerHTML;return src.includes('let importSnapshot=null,sharedVideoWorker=null')&&src.includes('if(importSnapshot)restoreImportSnapshot(importSnapshot)')&&captureImportSnapshot.toString().includes('xmAccountType')&&restoreImportSnapshot.toString().includes('setXMAccountType')})();
     const quoteScrollSamplingPolicy=videoSamplingRegressionTest().count===4&&videoFrameSources.toString().includes('[0.10,0.35,0.73,0.90]')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
-    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,buildOk,apiOk,domOk};
+    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,realVideoEngOcrRecovery,buildOk,apiOk,domOk};
     const failed=Object.entries(named).filter(([,ok])=>!ok).map(([k])=>k);
     const ok=failed.length===0;
     window.__regressionOK=ok;
@@ -3280,7 +3416,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v230-20260826';
+window.__APP_BUILD__='v232-20260826';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -3292,7 +3428,7 @@ window.__V125_PENDING_ORDER_TEST__=(()=>{
 window.__V200_VIDEO_ORDER_TEST__=(()=>{const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed\nGOLD# buy limit\n0.03 / 0 at 4334.46 placed\nGOLD# buy limit\n0.03 / 0 at 4474.22 placed';const p=mergeParsedResults([{frameIndex:1,data:{text:t}}]).pending;return {count:p.length,pass:p.length===5,prices:p.map(o=>o.price).sort((a,b)=>b-a)}})();
 window.__V218_TARGET_PNL_TOGGLE_TEST__={toggleFn:typeof toggleTargetPnlPosition==='function',keyFn:typeof targetPnlKey==='function',excludedSet:targetPnlExcluded instanceof Set};
 
-// v230 regression fixtures: the supplied Standard Orders screen is authoritative flat.
+// v232 regression fixtures: the supplied Standard Orders screen is authoritative flat.
 (function(){
   try{
     const raw=`JPY
@@ -3318,8 +3454,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v230-20260826'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v230-20260826'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v232-20260826'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v232-20260826'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

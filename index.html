@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v237-20260826">
+<meta name="build-id" content="v239-20260826">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v237</title>
+<title>Stop Out positioning｜デラポジ Pro v239</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -86,7 +86,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .compactCard{padding:11px 13px}.compactCard .row{padding:3px 0}.compactDetails{padding:10px 13px}.compactDetails summary{cursor:pointer;list-style:none}.compactDetails summary::-webkit-details-marker{display:none}.compactDetails summary:after{content:"＋";float:right;color:var(--muted)}.compactDetails[open] summary:after{content:"−"}.compactDetails .footer{margin-top:8px}.page#pageLC > .card{margin:8px 0}.page#pageLC .alert,.page#pageLC .danger{padding:9px 11px}.page#pageLC .small{line-height:1.4}
 
 /* v106 compact mobile UI */
-.app{padding:9px 10px}h1{font-size:21px;margin:1px 0}.sub{font-size:11px;margin-bottom:8px}.nav{margin-bottom:7px}.nav button{padding:9px 10px;font-size:13px}.card,.hero{border-radius:14px;padding:10px;margin:6px 0}.grid{gap:7px}label{font-size:11px;margin:3px 0}input,select{padding:8px 9px;font-size:15px}.small{font-size:11px;line-height:1.35}.row{padding:5px 0;gap:7px}.toolbar{gap:5px}.toolbar button{padding:8px 10px;font-size:12px}.drop{padding:10px;border-radius:12px}.deadlineHero{padding:12px 10px 10px}.deadlineKicker{font-size:12px;letter-spacing:2px;padding:5px 10px}.deadlineSub{font-size:10px;margin-bottom:2px}.deadlineHero .price{font-size:44px;margin:2px 0 4px}.deadlineRule{margin-top:7px;padding-top:6px;font-size:10px}.compactInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.compactInfoGrid .row{display:block;padding:4px 0}.compactInfoGrid .row span,.compactInfoGrid .row b{display:block}.compactInfoGrid .row b{margin-top:1px;font-size:13px}.compactCard{padding:8px 10px}.compactDetails{padding:8px 10px}.alert,.danger{padding:7px 9px;font-size:11px;line-height:1.35}.page#pageLC > .card{margin:6px 0}.page#pageLC .alert,.page#pageLC .danger{padding:7px 9px}.mediaDone{margin-top:7px;padding:9px 10px}.mediaDone .title{font-size:13px;margin-bottom:5px}.mediaDone .item{font-size:11px}.mediaDone .item b{font-size:12px}.resultBox{padding:12px;border-radius:12px;margin-top:7px}.resultBig{font-size:31px}.targetPnlRow{padding:7px 0}.targetPnlRow .amount{font-size:16px}.subcard{padding:8px!important;margin-top:8px!important}.page#pagePnl .card{padding:10px;margin:6px 0}.page#pagePnl .grid{gap:6px}
+.app{padding:9px max(10px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}h1{font-size:21px;margin:1px 0}.sub{font-size:11px;margin-bottom:8px}.nav{margin-bottom:7px}.nav button{padding:9px 10px;font-size:13px}.card,.hero{border-radius:14px;padding:10px;margin:6px 0}.grid{gap:7px}label{font-size:11px;margin:3px 0}input,select{padding:8px 9px;font-size:15px}.small{font-size:11px;line-height:1.35}.row{padding:5px 0;gap:7px}.toolbar{gap:5px}.toolbar button{padding:8px 10px;font-size:12px}.drop{padding:10px;border-radius:12px}.deadlineHero{padding:12px 10px 10px}.deadlineKicker{font-size:12px;letter-spacing:2px;padding:5px 10px}.deadlineSub{font-size:10px;margin-bottom:2px}.deadlineHero .price{font-size:44px;margin:2px 0 4px}.deadlineRule{margin-top:7px;padding-top:6px;font-size:10px}.compactInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.compactInfoGrid .row{display:block;padding:4px 0}.compactInfoGrid .row span,.compactInfoGrid .row b{display:block}.compactInfoGrid .row b{margin-top:1px;font-size:13px}.compactCard{padding:8px 10px}.compactDetails{padding:8px 10px}.alert,.danger{padding:7px 9px;font-size:11px;line-height:1.35}.page#pageLC > .card{margin:6px 0}.page#pageLC .alert,.page#pageLC .danger{padding:7px 9px}.mediaDone{margin-top:7px;padding:9px 10px}.mediaDone .title{font-size:13px;margin-bottom:5px}.mediaDone .item{font-size:11px}.mediaDone .item b{font-size:12px}.resultBox{padding:12px;border-radius:12px;margin-top:7px}.resultBig{font-size:31px}.targetPnlRow{padding:7px 0}.targetPnlRow .amount{font-size:16px}.subcard{padding:8px!important;margin-top:8px!important}.page#pagePnl .card{padding:10px;margin:6px 0}.page#pagePnl .grid{gap:6px}
 
 /* v106 ultra-compact layout: keep positions/orders visible and move them up */
 .posOrderCard{padding:9px 10px;margin:6px 0}.posOrderHead{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:900}.posOrderHead .count{font-size:11px;color:var(--muted);font-weight:700}.posOrderRows{margin-top:5px}.posOrderRows .grid{gap:5px}.posOrderRows input{padding:6px 7px;font-size:14px}.posOrderRows label{margin:1px 0;font-size:10px}.posOrderRows .wide.small{padding-top:1px}.posOrderTools{display:flex;gap:5px;margin-top:5px}.posOrderTools button{padding:6px 9px;font-size:11px}.compactInfoGrid{gap:0 8px}.compactInfoGrid .row{padding:3px 0}.page#pageLC>.card{margin:4px 0}.page#pageLC .footer{line-height:1.25}.hideOnMobile{display:none!important}
@@ -126,9 +126,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v237</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v239</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v237 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v239 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -137,7 +137,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
     <div><label>銘柄</label><select id="symbol"></select></div>
     <div><label>レバレッジ</label><input id="symbolLeverage" type="number" min="1" step="1"></div>
     <div><label>契約サイズ</label><input id="contractSize" type="number" min="0.000001" step="any"></div>
-    <div><label id="priceLabel">XM画面</label><input id="mediaFile" class="file" type="file"><button type="button" class="primary" id="mediaChoose">📷/🎬 読み込む</button></div>
+    <div><label id="priceLabel">XM画面</label><input id="mediaFile" class="file" type="file" accept="image/*,video/*"><button type="button" class="primary" id="mediaChoose">📷/🎬 読み込む</button></div>
   </div>
   <div id="symbolHint" class="small" style="margin-top:4px"></div><div id="specStatus" class="small"></div>
   <div class="small" id="rateStatus">保存XM価格を確認中…</div>
@@ -147,8 +147,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">現在保有＋到達前に約定するPendingを反映。</div></div><div id="pendingDeadlineWarning" class="danger" style="display:none;margin-top:10px"></div>
 
 
-<div class="card posOrderCard"><div class="posOrderHead"><span>現在ポジション</span><span class="count" id="positionCount">0件</span></div><div id="positions" class="posOrderRows"></div><div class="posOrderTools"><button class="secondary" onclick="addPosition()">＋ 追加</button><button class="secondary" onclick="resetPositions()">リセット</button></div></div>
-<div class="card posOrderCard"><div class="posOrderHead"><span>未約定注文</span><span class="count" id="count">0件 / 追加0件</span></div><div id="orders" class="posOrderRows"></div><div class="posOrderTools"><button class="secondary" onclick="addOrder()">＋ 追加</button><button class="secondary" onclick="resetOrders()">リセット</button></div></div>
+<div class="card posOrderCard"><div class="posOrderHead"><span>現在ポジション</span><span class="count" id="positionCount">0件</span></div><div id="positions" class="posOrderRows"></div><div class="posOrderTools"><button type="button" class="secondary" onclick="addPosition()">＋ 追加</button><button type="button" class="secondary" onclick="resetPositions()">リセット</button></div></div>
+<div class="card posOrderCard"><div class="posOrderHead"><span>未約定注文</span><span class="count" id="count">0件 / 追加0件</span></div><div id="orders" class="posOrderRows"></div><div class="posOrderTools"><button type="button" class="secondary" onclick="addOrder()">＋ 追加</button><button type="button" class="secondary" onclick="resetOrders()">リセット</button></div></div>
 <div class="card compactCard"><div class="grid">
 <div><label>口座残高（JPY）</label><input id="balance" type="number" min="0" step="1" value="" placeholder="MT5から自動 / 手動入力"><div id="balanceStatus" class="small">未確認</div></div>
 <div><label>口座レバレッジ（参考）</label><input id="leverage" type="number" value="1000"></div>
@@ -315,7 +315,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v237-20260826';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v239-20260826';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -394,8 +394,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2};
 }
-window.__DEPLOYMENT_STATE__={build:'v237-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v237-20260826';
+window.__DEPLOYMENT_STATE__={build:'v239-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v239-20260826';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -409,7 +409,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v237-20260826', SHORT='v237';
+  const BUILD='v239-20260826', SHORT='v239';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -660,7 +660,7 @@ function getRateToJPY(currency){if(currency==='JPY')return 1;const g=conversionG
 function baseRateFor(c){return getRateToJPY(c.base)}
 function quoteRateFor(c){if(window.__testRate&&c.quote==='USD')return window.__testRate;return getRateToJPY(c.quote)}
 function currentPositionPnlJPY(o,c,bid=goldBid,ask=goldAsk){const px=Number(o?.price),lot=Number(o?.lot),qr=quoteRateFor(c);if(!Number.isFinite(px)||!Number.isFinite(lot)||lot<=0||!qr)return null;if(/^buy$/i.test(String(o?.side||''))&&Number.isFinite(bid))return (bid-px)*lot*c.contract*qr;if(/^sell$/i.test(String(o?.side||''))&&Number.isFinite(ask))return (px-ask)*lot*c.contract*qr;return null;}
-function renderPositions(lc=null,c=cfg()){const arr=getPositions();$('positionCount').textContent=`${arr.length}件`;if(!positionDataValid){$('positions').innerHTML='<div class="dataLock"><strong>⚠ 保存済みポジションは現在の計算には使用していません。</strong><br>今回のスクショで現在ポジションを確定できるまでDEAD LINEを表示しません。</div>';return}if(!arr.length){$('positions').innerHTML='<div class="small">現在の約定済みポジションはまだありません。注文スクショから自動認識します。</div>';return}$('positions').innerHTML=arr.map((o,i)=>{const px=Number(o.price),lot=Number(o.lot),qr=quoteRateFor(c);let nowPnl=currentPositionPnlJPY(o,c,goldBid,goldAsk);const lcLoss=lc!==null?lossAtLCJPY(o,lc,c):null;return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editPosition(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editPosition(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>約定価格</label><input type="number" step="any" value="${o.price}" onchange="editPosition(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small">現在評価損益（概算）：${nowPnl!==null?formatJPYLoss(nowPnl):'—'}　／　LC時想定含み損：${lcLoss!==null?formatJPYLoss(lcLoss):'—'}</div></div>`}).join('')}
+function renderPositions(lc=null,c=cfg()){const arr=getPositions();$('positionCount').textContent=`${arr.length}件`;if(!positionDataValid){$('positions').innerHTML='<div class="dataLock"><strong>⚠ 保存済みポジションは現在の計算には使用していません。</strong><br>今回の読み込みで現在ポジションを確定できるまでDEAD LINEを表示しません。</div>';return}if(!arr.length){$('positions').innerHTML='<div class="small">現在の約定済みポジションはまだありません。注文スクショから自動認識します。</div>';return}$('positions').innerHTML=arr.map((o,i)=>{const px=Number(o.price),lot=Number(o.lot),qr=quoteRateFor(c);let nowPnl=currentPositionPnlJPY(o,c,goldBid,goldAsk);const lcLoss=lc!==null?lossAtLCJPY(o,lc,c):null;return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editPosition(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editPosition(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>約定価格</label><input type="number" step="any" value="${o.price}" onchange="editPosition(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small">現在評価損益（概算）：${nowPnl!==null?formatJPYLoss(nowPnl):'—'}　／　LC時想定含み損：${lcLoss!==null?formatJPYLoss(lcLoss):'—'}</div></div>`}).join('')}
 window.editPosition=function(i,k,v){const a=getPositions();a[i][k]=v;setPositions(a);renderPositions();calc()}
 window.addPosition=function(){const a=getPositions();a.push({side:'Buy',lot:.01,price:Number.isFinite(goldBid)?goldBid:0});setPositions(a);renderPositions();calc()}
 window.resetPositions=function(){setPositions([]);renderPositions();calc()}
@@ -871,7 +871,7 @@ function renderOrderStatus(added,all,lc){
     const f=keys.has(o.price+'|'+o.lot+'|'+o.side),loss=f?lossAtLCJPY(o,lc,c):null;
     const lossHtml=f?`<div class="wide small" style="margin-top:3px;color:#b42318">シナリオStop Out時 想定含み損：<b>${formatJPYLoss(loss)}</b>（${Number(o.lot).toFixed(2)} lot）</div>`:`<div class="wide small" style="margin-top:3px">Stop Out到達前のため想定含み損：—</div>`;
     return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editOrder(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editOrder(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>価格</label><input type="number" step="any" value="${o.price}" onchange="editOrder(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small"><b class="${f?'ok':'warn'}">${f?'✓ 想定経路で追加約定':'○ Stop Out前は未約定'}</b></div>${lossHtml}</div>`;
-  }).join(''):'<div class="small">この銘柄のBuy Limit注文はまだありません。</div>';
+  }).join(''):'<div class="small">この銘柄の未約定注文はありません。</div>';
 }
 function pointStepFor(sym,c){if(c.type==='fx')return /JPY#$/.test(sym)?0.01:0.0001;return Number.isFinite(+c.point)&&+c.point>0?+c.point:(c.type==='index'?1:0.01)}
 function updatePipValue(){const c=cfg(),lots=.01,step=pointStepFor(currentSymbol,c),label=c.type==='fx'?'1 pip':'1 point';const qr=quoteRateFor(c),value=qr?step*lots*c.contract*qr:null;const pipLabel=$('pipLabel'),pipValue=$('pipValue'),pipNote=$('pipNote');if(pipLabel)pipLabel.textContent=`${currentSymbol} ${label} / 0.01 lot`;if(pipValue)pipValue.textContent=value!==null?`${value.toFixed(2)} JPY`:'換算レート不足';if(pipNote)pipNote.textContent=c.type==='fx'?`${step} ${label} × 0.01 lot（${(lots*c.contract).toLocaleString()} ${c.unit}）をJPY換算`:`${step} ${label} × 0.01 lot（契約サイズ ${c.contract} ${c.unit} / lot）をJPY換算`}
@@ -1527,16 +1527,46 @@ function recoverStrongOpenPositionsFromTradeText(text){
 
 function recoverAuthoritativeVideoPositions(results){
   let best=[]; let bestScore=-1;
-  for(const r of filterUsableOCRResults(results||[])){
+  // IMPORTANT: position recovery must inspect every OCR frame, not only frames that
+  // passed the quote-quality filter. A perfectly valid MT5 Trade frame has no Bid/Ask
+  // board and can therefore be rejected by quote-oriented quality scoring. That was
+  // the root cause of the real state "position evidence 2 / current positions 0".
+  for(const r of (results||[])){
     const text=String(r?.data?.text||r?.text||'');
+    if(!text)continue;
+    if(isControlCenterFrameText(text))continue;
     const rows=recoverStrongOpenPositionsFromTradeText(text);
     if(!rows.length)continue;
-    // Prefer the single frame with the largest coherent open-position basket.
-    // A frame-local basket cannot be fabricated by concatenating unrelated quote/order frames.
-    const score=rows.length*100 + (/(?:オーダー|orders?|buy\s*limit|sell\s*limit)/i.test(text)?10:0) + Number(r?.time||0)/1000;
+    // Require actual Trade-pane context. This prevents a quote-board or app UI value
+    // from being promoted to an open position merely because OCR produced an arrow.
+    const tradeContext=/(?:ポジション|positions?|オーダー|orders?|証拠金|margin|残高|balance|buy\s*limit|sell\s*limit)/i.test(text);
+    if(!tradeContext)continue;
+    const score=rows.length*1000 + (/(?:オーダー|orders?|buy\s*limit|sell\s*limit)/i.test(text)?100:0) + Number(r?.time||0)/1000;
     if(score>bestScore){bestScore=score;best=rows.map(o=>({...o,frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null,authoritativeFrame:true}));}
   }
   return best;
+}
+
+// v239: one coherent MT5 Trade frame is authoritative for the CURRENT open-position basket.
+// The previous pipeline could count two raw position evidences, then discard both during a
+// later confidence gate. Keep evidence and accepted positions tied to the same strong rows.
+function recoverTrustedVideoPositionBasket(results,mergedText=''){
+  const candidates=[];
+  for(const r of (results||[])){
+    if(r?.isControlCenter)continue;
+    const text=String(r?.data?.text||r?.text||'');
+    if(!text||isControlCenterFrameText(text))continue;
+    const rows=sanitizeRecognizedPositions(recoverStrongOpenPositionsFromTradeText(text));
+    if(!rows.length)continue;
+    const hasTradeContext=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell|sel[!|1lI])|(?:buy|sell|sel[!|1lI])\s*(?:limit|stop)|(?:残高|balance|有効額|equity|可能額|margin|オーダー|orders?|ポジション|positions?)/i.test(text);
+    if(!hasTradeContext)continue;
+    candidates.push({rows,time:Number(r?.time||0),frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null});
+  }
+  candidates.sort((a,b)=>b.rows.length-a.rows.length||b.time-a.time);
+  if(candidates.length)return {rows:candidates[0].rows,authoritative:true,source:'single-trade-frame',frameIndex:candidates[0].frameIndex};
+  // Aggregate fallback remains strict: only explicit symbol + side + lot + entry→current rows.
+  const aggregate=sanitizeRecognizedPositions(recoverStrongOpenPositionsFromTradeText(String(mergedText||'')));
+  return {rows:aggregate,authoritative:aggregate.length>0,source:aggregate.length?'merged-strong-rows':'none',frameIndex:null};
 }
 
 function parseTradeRowsByLinePair(text){
@@ -2393,9 +2423,11 @@ $('mediaFile').addEventListener('change',async e=>{
     // stopped as soon as any position+order was found, which caused exactly that
     // failure mode. The focused pass is therefore mandatory for video and its
     // results are MERGED, never used only as a fallback.
+    const preFocusStrongPositions=recoverStrongOpenPositionsFromTradeText(parsed.rawText||'').length;
+    const preFocusPendingWords=/(?:buy|sell|sel[!|1lI])\s*(?:limit|stop)/i.test(parsed.rawText||'');
     const needsFocusedTradePass=isVideo && (
-      parsed.positions.length<3 || parsed.pending.length<1 ||
-      !/(?:GOLD#?|XAUUSD)\s+(?:buy|sell)/i.test(parsed.rawText||'')
+      preFocusStrongPositions>parsed.positions.length ||
+      (preFocusPendingWords && parsed.pending.length===0)
     );
     if(needsFocusedTradePass){
       try{
@@ -2474,9 +2506,17 @@ $('mediaFile').addEventListener('change',async e=>{
     if(sharedVideoWorker){try{await sharedVideoWorker.terminate()}catch(e){console.warn('[XM] shared OCR worker terminate skipped',e)} sharedVideoWorker=null;}
     if(isVideo){
       const allUsable=filterUsableOCRResults(results);
-      const mt5Now=allUsable.filter(r=>isLikelyMT5FrameText(r?.data?.text||r?.text||'')).length;
-      const controlNow=(results||[]).filter(r=>r?.isControlCenter).length;
-      mediaQuality={total:results.length,usable:mt5Now,ocrUsable:allUsable.length,excluded:Math.max(controlNow,results.length-mt5Now),controlExcluded:controlNow,expected:(videoSourcesForReuse||[]).length||results.length};
+      // Count physical sampled frames, not OCR passes. The same frame can be read by
+      // PSM11 + PSM3, and the old counter produced impossible UI such as 5/4 frames.
+      const expected=(videoSourcesForReuse||[]).length||results.length;
+      const mt5FrameIds=new Set(),controlFrameIds=new Set();
+      for(const r of (results||[])){
+        const id=Number.isFinite(r?.frameIndex)?Number(r.frameIndex):`pass-${mt5FrameIds.size+controlFrameIds.size}`;
+        if(r?.isControlCenter||isControlCenterFrameText(r?.data?.text||r?.text||'')){controlFrameIds.add(id);continue;}
+        if(isLikelyMT5FrameText(r?.data?.text||r?.text||''))mt5FrameIds.add(id);
+      }
+      const mt5Now=mt5FrameIds.size,controlNow=controlFrameIds.size;
+      mediaQuality={total:expected,usable:mt5Now,ocrUsable:allUsable.length,ocrPasses:results.length,excluded:Math.max(0,expected-mt5Now),controlExcluded:controlNow,expected};
       if(results.length && !mt5Now)throw new Error('VIDEO_NO_VALID_MT5_FRAME');
     }
 
@@ -2591,12 +2631,22 @@ $('mediaFile').addEventListener('change',async e=>{
     // without ever converting pending limit/stop rows into positions.
     const strongRecoveredPositions=recoverStrongOpenPositionsFromTradeText(parsed.rawText||'');
     for(const o of strongRecoveredPositions){if(!positionsRaw.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-o.lot)<1e-6&&Math.abs(Number(x.price)-o.price)<1e-5))positionsRaw.push(o);}
-    // v237: recover the strongest coherent basket directly from ONE OCR frame as well.
+    // v239: recover the strongest coherent basket directly from ONE OCR frame as well.
     // This covers PSM11's line-split arrows and prevents merged-text quirks from turning
     // a clearly visible 2-position Trade pane into an unsafe 0-position result.
-    const authoritativeVideoPositions=isVideo?recoverAuthoritativeVideoPositions(results):[];
+    let authoritativeVideoPositions=isVideo?recoverAuthoritativeVideoPositions(results):[];
+    const trustedVideoBasket=isVideo?recoverTrustedVideoPositionBasket(results,parsed.rawText||rawAllText||''):{rows:[],authoritative:false,source:'still'};
+    if(isVideo && trustedVideoBasket.authoritative)authoritativeVideoPositions=trustedVideoBasket.rows;
+    // Last-resort recovery from the unfiltered OCR aggregate. This is still strict:
+    // only explicit symbol + side + lot + entry→current rows are accepted, and pending
+    // limit/stop rows are excluded by recoverStrongOpenPositionsFromTradeText().
+    if(isVideo && !authoritativeVideoPositions.length){
+      const allFrameRecovered=recoverStrongOpenPositionsFromTradeText(rawAllText||'');
+      if(allFrameRecovered.length) authoritativeVideoPositions=allFrameRecovered.map(o=>({...o,authoritativeAggregate:true}));
+    }
     for(const o of authoritativeVideoPositions){if(!positionsRaw.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-o.lot)<1e-6&&Math.abs(Number(x.price)-o.price)<1e-5))positionsRaw.push(o);}
-    const positionEvidenceCount=new Set(positionsRaw.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
+    const sanitizedEvidence=sanitizeRecognizedPositions(positionsRaw);
+    const positionEvidenceCount=new Set(sanitizedEvidence.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
     const currentCore=String(currentSymbol||'').replace(/#$/,'');
     const aliasPattern=/^GOLD$/i.test(currentCore)?'(?:GOLD|XAUUSD)':currentCore.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const tradeRowEvidence=(parsed.rawText||'').match(new RegExp(`${aliasPattern}#?\\s+(?:buy|sell)\\s+0?\\.\\d+`,'ig'))||[];
@@ -2661,7 +2711,7 @@ $('mediaFile').addEventListener('change',async e=>{
     // A clear MT5 Order pane may contain only one pending row. A complete position
     // basket plus one structured pending row is enough evidence, even if that row
     // appears in only one sampled frame. Never require two copies of a single order.
-    const completeOrderBasket=isVideo && (pendingEvidenceCount>=2 || (pendingEvidenceCount>=1 && positionEvidenceCount>=3));
+    const completeOrderBasket=isVideo && (pendingEvidenceCount>=2 || (pendingEvidenceCount>=1 && !!trustedVideoBasket?.authoritative));
     // A single explicit pending row in a complete MT5 Trade screen is enough.
     // Do not discard it merely because OCR saw it in one sampled frame.
     const found=isVideo ? rawFound.filter(o=>Number(o.frameCount||0)>=2 || completeOrderBasket || o.recoveredPending===true) : rawFound;
@@ -2669,15 +2719,16 @@ $('mediaFile').addEventListener('change',async e=>{
     if(isVideo && tradeRowEvidence.length>positionsRaw.length){
       invalidatePositionData(`MT5動画内に${tradeRowEvidence.length}件の${currentSymbol}ポジション行を検出しましたが、アプリは${positionsRaw.length}件しか構造化できませんでした。部分データでDEAD LINEを計算しません。`);
     }
-    const positionsCandidate=sanitizeRecognizedPositions(positionsRaw);
-    // positionEvidenceCount was computed above, before any evidence gate, so the
-    // current Trade basket can safely authorize a single-frame order row as well.
-    const authoritativeFrameComplete=isVideo && authoritativeVideoPositions.length>0 && positionsCandidate.length>=authoritativeVideoPositions.length;
-    const completePositionBasket=isVideo && (authoritativeFrameComplete || shouldAcceptVideoPositionBasket({isVideo,positionEvidenceCount,positionsCandidate,rawText:parsed.rawText||''}));
-    // One explicit row is a complete basket when the Trade screen itself proves it.
-    // For ambiguous rows, retain the conservative repeated-frame requirement.
-    const weakPositionRows=isVideo&&!completePositionBasket?positionsRaw.filter(o=>Number(o.frameCount||0)<2):[];
-    const positions=completePositionBasket ? positionsCandidate : (weakPositionRows.length?[]:positionsCandidate);
+    const positionsCandidate=sanitizedEvidence;
+    // A coherent strong basket from one Trade frame is current-state evidence. Do not
+    // re-demote it merely because generic clustering attached frameCount=0/1.
+    const authoritativeFrameComplete=isVideo && authoritativeVideoPositions.length>0 &&
+      positionsCandidate.length>=authoritativeVideoPositions.length &&
+      authoritativeVideoPositions.every(a=>positionsCandidate.some(p=>String(p.side).toLowerCase()===String(a.side).toLowerCase()&&Math.abs(Number(p.lot)-Number(a.lot))<1e-6&&Math.abs(Number(p.price)-Number(a.price))<1e-5));
+    const completePositionBasket=isVideo && ((trustedVideoBasket?.authoritative&&trustedVideoBasket.rows.length>0) || authoritativeFrameComplete || shouldAcceptVideoPositionBasket({isVideo,positionEvidenceCount,positionsCandidate,rawText:parsed.rawText||''}));
+    // Only genuinely ambiguous generic rows are subject to repeat-frame blocking.
+    const weakPositionRows=isVideo&&!completePositionBasket?positionsRaw.filter(o=>Number(o.frameCount||0)<2&&!o.strongRecoveredPosition):[];
+    const positions=completePositionBasket ? (trustedVideoBasket?.authoritative?trustedVideoBasket.rows:positionsCandidate) : (weakPositionRows.length?[]:positionsCandidate);
     if(isVideo && weakPositionRows.length){
       console.warn('Incomplete position basket; calculation blocked',weakPositionRows);
       invalidatePositionData(`現在ポジション${positionEvidenceCount}件を検出しましたが、ポジション行を安全に確定できませんでした。MT5のポジション欄が十分に写ったフレームを確認できるまでDEAD LINEを計算しません。`);
@@ -2729,7 +2780,7 @@ $('mediaFile').addEventListener('change',async e=>{
     // 残っている場合は、注文画面が再確定するまでDEAD LINEを再開しない。
 
     const looksLikeOrderScreen = orderEvidence || found.length>0;
-    const hasCurrentPositionEvidence = positions.length>0 && !(isVideo && tradeRowEvidence.length>positions.length);
+    const hasCurrentPositionEvidence = positions.length>0 && (trustedVideoBasket?.authoritative || !(isVideo && tradeRowEvidence.length>positions.length));
     const hasAnyPositionRowEvidence = positionsRaw.length>0 || tradeRowEvidence.length>0 || positionEvidenceCount>0;
     const hasOrderEvidence = looksLikeOrderScreen;
     // Account summary can live in a different sampled frame from order/position rows.
@@ -3097,7 +3148,15 @@ placed
     const splitArrowRecovered=recoverStrongOpenPositionsFromTradeText(splitArrowTradeRaw);
     const splitArrowPositionRecovery=splitArrowRecovered.length===2&&splitArrowRecovered.some(o=>Math.abs(o.price-4618.43)<1e-6)&&splitArrowRecovered.some(o=>Math.abs(o.price-4629.54)<1e-6);
     const authoritativeFrameRecovery=recoverAuthoritativeVideoPositions([{frameIndex:2,time:5.24,data:{text:splitArrowTradeRaw}}]).length===2;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v237-20260826$/.test(buildId)&&/v237/.test(document.querySelector('h1')?.textContent||'');
+    const realTwoSellFrameText='JPY\n50 000\n54 960\n4 935\nGOLD sel! 0.01\n4618.43\n> 4622.10\nGOLD sel! 0.01\n4629.54 — 4622.10\nGOLD sell limit\n0.01 / 0 at 4644.09\nGOLD sell limit\n0.01 / 0 at 4658.27\nGOLD sell limit\n0.01 / 0 at 4683.09';
+    const realTwoSellTrusted=recoverTrustedVideoPositionBasket([{frameIndex:2,time:5.2,data:{text:realTwoSellFrameText}}],realTwoSellFrameText);
+    const realTwoSellCurrentState=realTwoSellTrusted.authoritative&&realTwoSellTrusted.rows.length===2&&new Set(realTwoSellTrusted.rows.map(o=>Number(o.price).toFixed(2))).has('4618.43')&&new Set(realTwoSellTrusted.rows.map(o=>Number(o.price).toFixed(2))).has('4629.54');
+    const realTwoSellPending=[4644.09,4658.27,4683.09].map(price=>({side:'Sell Limit',lot:.01,price}));
+    window.__testRate=159.070;
+    const realTwoSellSim=chooseLCScenario(54935,20,realTwoSellPending,realTwoSellTrusted.rows,c,1000,100,4622.19,0,4621.64);
+    const realTwoSellDeadline=realTwoSellSim.direction==='up'&&realTwoSellSim.added.length===3&&realTwoSellSim.filled.length===5&&Number.isFinite(realTwoSellSim.lc)&&Math.abs(realTwoSellSim.lc-4714.26)<0.20;
+    window.__testRate=159.53;
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v239-20260826$/.test(buildId)&&/v239/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3190,7 +3249,7 @@ placed
     const accountTypeAmbiguityFailsClosed=splitLineStandard.type==='standard'&&splitLineKiwami.type==='kiwami'&&mixedType.type==='unknown';
     const importRollbackScopeSafe=(()=>{const src=document.documentElement.innerHTML;return src.includes('let importSnapshot=null,sharedVideoWorker=null')&&src.includes('if(importSnapshot)restoreImportSnapshot(importSnapshot)')&&captureImportSnapshot.toString().includes('xmAccountType')&&restoreImportSnapshot.toString().includes('setXMAccountType')})();
     const quoteScrollSamplingPolicy=videoSamplingRegressionTest().count===4&&videoFrameSources.toString().includes('[0.10,0.35,0.73,0.90]')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
-    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     const failed=Object.entries(named).filter(([,ok])=>!ok).map(([k])=>k);
     const ok=failed.length===0;
     window.__regressionOK=ok;
@@ -3454,17 +3513,18 @@ async function cmpExtractVideoFrames(file,maxFrames=7){
 }
 async function cmpImportSpecFile(file){
   if(!file)return;cmpSetSpecStatus('MT5詳細を解析中…','small warn');
-  const T=await ensureOCR();const worker=await createOCRWorker(T,()=>{});
+  let worker=null;
   try{
+    const T=await ensureOCR();worker=await createOCRWorker(T,()=>{});
     try{await worker.setParameters({tessedit_char_whitelist:'0123456789.-',preserve_interword_spaces:'1'})}catch(e){}
     let frames=[];if(/^video\//i.test(file.type)||/\.(mp4|mov|m4v)$/i.test(file.name||''))frames=await cmpExtractVideoFrames(file,7);else frames=[cmpDrawSource(await cmpLoadImageFile(file))];
     let candidates=[];for(let i=0;i<frames.length;i++){cmpSetSpecStatus(`MT5詳細を解析中… ${i+1}/${frames.length}`,'small warn');const r=await cmpRecognizeSpecFrame(frames[i],worker);if(r)candidates.push({...r,frame:i})}
     if(!candidates.length)throw new Error('SWAP_NOT_FOUND');
     // Consensus around the highest-scoring pair protects against random numeric rows.
     candidates.sort((a,b)=>b.score-a.score);const top=candidates[0];const near=candidates.filter(r=>Math.abs(r.buy-top.buy)<.05&&Math.abs(r.sell-top.sell)<.05);const r={buy:top.buy,sell:top.sell,tripleDay:near.some(x=>x.tripleDay===3)?3:top.tripleDay,confidence:Math.min(99,top.confidence+Math.min(15,near.length*3)),updatedAt:Date.now(),source:'mt5-spec-ocr'};
-    const sym=$('cmpSymbol')?.value||'GOLD#';cmpSpecStore[sym]=r;cmpSaveSpecStore();$('cmpSwapCurrent').value=String(r.buy);window.__cmpSellSwap=r.sell;window.__cmpTripleDay=r.tripleDay;cmpRenderSpecResult(r);cmpSetSpecStatus(`✓ ${sym}：買 ${r.buy} / 売 ${r.sell}${r.tripleDay===3?' / 水曜3倍':''} を反映`,'small ok');calcCompare();
+    const sym=$('cmpSymbol')?.value||'GOLD#';cmpSpecStore[sym]=r;cmpSaveSpecStore();$('cmpSwapCurrent').value=String(r.buy);if($('cmpSwapSell'))$('cmpSwapSell').value=String(r.sell);window.__cmpSellSwap=r.sell;window.__cmpTripleDay=r.tripleDay;cmpRenderSpecResult(r);cmpSetSpecStatus(`✓ ${sym}：買 ${r.buy} / 売 ${r.sell}${r.tripleDay===3?' / 水曜3倍':''} を反映`,'small ok');calcCompare();
   }catch(e){console.warn('[CMP SPEC OCR]',e);cmpSetSpecStatus('⚠ スワップ値を確定できませんでした。詳細画面で「買スワップ」「売スワップ」が同時に見える状態を読み込んでください。','small err');}
-  finally{try{await worker.terminate()}catch(e){}}
+  finally{if(worker){try{await worker.terminate()}catch(e){}}}
 }
 
 const CMP_COEFF={
@@ -3532,9 +3592,9 @@ function calcCompare(){
     return ((Number.isFinite(stdSwap)?stdSwap:0)-spreadCost+stdReward)-((Number.isFinite(kiwSwapDir)?kiwSwapDir:0)+kiwReward);
   };
   const longDiff=dirDiff('buy'),shortDiff=dirDiff('sell');
-  const dirText=(label,d)=>`${label} → <b>${d>0?'Standard':'KIWAMI'}が ${Math.abs(Math.round(d)).toLocaleString('ja-JP')}円有利</b>`;
+  const dirText=(label,d)=>Math.abs(d)<0.5?`${label} → <b>ほぼ同等（差 0円）</b>`:`${label} → <b>${d>0?'Standard':'KIWAMI'}が ${Math.abs(Math.round(d)).toLocaleString('ja-JP')}円有利</b>`;
   if($('cmpDirectionSummary'))$('cmpDirectionSummary').innerHTML=`${dirText('ロング',longDiff)}<br>${dirText('ショート',shortDiff)}<div class="small" style="margin-top:5px">※ 現在スワップ・1週間・入力中のロット/取引回数で比較</div>`;
-  const r1=rows[0],stdWins=r1.diff>0;$('cmpWinner').textContent=`${side==='buy'?'ロング':'ショート'}：${stdWins?'Standard':'KIWAMI'}が ${Math.round(Math.abs(r1.diff)).toLocaleString('ja-JP')}円 有利`;$('cmpWinner').className='compareWinner '+(stdWins?'warn':'good');$('cmpWinnerDetail').textContent=`${effectiveScenario==='current'?'現在':effectiveScenario==='avg'?'過去平均':'過去最悪'}スワップ / ${side==='buy'?'ロング':'ショート'} / ${lots.toFixed(2)} lot / 1週間 / ${trades}往復で比較${side==='sell'&&cmpScenario!=='current'?'（ショート過去統計未登録のため現在値）':''}`;
+  const r1=rows[0],neutral=Math.abs(r1.diff)<0.5,stdWins=r1.diff>0;$('cmpWinner').textContent=neutral?`${side==='buy'?'ロング':'ショート'}：Standard / KIWAMI ほぼ同等`:`${side==='buy'?'ロング':'ショート'}：${stdWins?'Standard':'KIWAMI'}が ${Math.round(Math.abs(r1.diff)).toLocaleString('ja-JP')}円 有利`;$('cmpWinner').className='compareWinner '+(neutral?'':stdWins?'warn':'good');$('cmpWinnerDetail').textContent=`${effectiveScenario==='current'?'現在':effectiveScenario==='avg'?'過去平均':'過去最悪'}スワップ / ${side==='buy'?'ロング':'ショート'} / ${lots.toFixed(2)} lot / 1週間 / ${trades}往復で比較${side==='sell'&&cmpScenario!=='current'?'（ショート過去統計未登録のため現在値）':''}`;
   const swapGap=(Number.isFinite(r1.ss)?r1.ss:0)-(Number.isFinite(r1.ks)?r1.ks:0);
   const rewardGap=stdReward-kiwReward;
   const spreadGap=-spreadCost;
@@ -3604,7 +3664,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v237-20260826';
+window.__APP_BUILD__='v239-20260826';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -3642,8 +3702,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v237-20260826'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v237-20260826'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v239-20260826'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v239-20260826'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v236-20260826">
+<meta name="build-id" content="v237-20260826">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v236</title>
+<title>Stop Out positioning｜デラポジ Pro v237</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -126,9 +126,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v236</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v237</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v233 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v237 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -315,7 +315,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v236-20260826';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v237-20260826';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -394,8 +394,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2};
 }
-window.__DEPLOYMENT_STATE__={build:'v236-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v236-20260826';
+window.__DEPLOYMENT_STATE__={build:'v237-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v237-20260826';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -409,7 +409,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v236-20260826', SHORT='v236';
+  const BUILD='v237-20260826', SHORT='v237';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1495,16 +1495,25 @@ function recoverStrongOpenPositionsFromTradeText(text){
     // Pending rows are never eligible for this recovery path.
     if(/\b(?:limit|stop)\b/i.test(line))continue;
     const side=detectTradeSideFromLine(line); if(!side)continue;
-    // Require an explicit small lot on the same symbol/side line.
+    // Require an explicit lot on the same symbol/side line.
     const after=line.slice((sm.index||0)+sm[0].length);
-    const lm=after.match(/(?:buy|sell|sel[!|1lI]?|buv|bu[yv])[^0-9]{0,5}(0?\.\d+|\d+(?:\.\d+)?)/i) || line.match(/\b(0?\.\d+)\b/);
+    const lm=after.match(/(?:buy|sell|sel[!|1lI]?|buv|bu[yv])[^0-9]{0,7}(0?\.\d+|\d+(?:\.\d+)?)/i) || line.match(/\b(0?\.\d+)\b/);
     const lot=lm?Number(lm[1]):NaN;
     if(!Number.isFinite(lot)||lot<=0||lot>1000)continue;
-    // Only pair the symbol/side line with its immediate price line. Looking three lines
-    // ahead can accidentally include the *next* pending row and wrongly reject the
-    // second open position in a compact MT5 list.
-    const chunk=lines.slice(i,Math.min(lines.length,i+2)).join(' ');
-    if(/\b(?:limit|stop)\b/i.test(line))continue;
+
+    // iPhone/Tesseract PSM11 often splits `4618.43 → 4622.10` into TWO OCR lines:
+    // `4618.43` then `> 4622.10`. Read forward until the next MT5 symbol row, but
+    // never cross into a pending order. This keeps the recovery strict while fixing
+    // the real 2-position Trade recording that previously showed "証拠2件 / 現在0件".
+    const parts=[line];
+    for(let j=i+1;j<Math.min(lines.length,i+4);j++){
+      const next=lines[j];
+      if(symRe.test(next))break;
+      if(/\b(?:buy|sell|sel[!|1lI]?|buv|bu[yv])\s*(?:limit|stop)\b/i.test(next))break;
+      parts.push(next);
+      if(/(\d[\d,.]*\.\d+)\s*(?:->|→|>|—|–|-|to)\s*(\d[\d,.]*\.\d+)/i.test(parts.join(' ')))break;
+    }
+    const chunk=parts.join(' ');
     const am=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|→|>|—|–|-|to)\s*(\d[\d,.]*\.\d+)/i);
     if(!am)continue;
     const entry=normalizeOcrNumber(am[1]), cur=normalizeOcrNumber(am[2]);
@@ -1514,6 +1523,20 @@ function recoverStrongOpenPositionsFromTradeText(text){
     if(!out.some(x=>x.side===obj.side&&Math.abs(x.lot-obj.lot)<1e-6&&Math.abs(x.price-obj.price)<1e-5))out.push(obj);
   }
   return out;
+}
+
+function recoverAuthoritativeVideoPositions(results){
+  let best=[]; let bestScore=-1;
+  for(const r of filterUsableOCRResults(results||[])){
+    const text=String(r?.data?.text||r?.text||'');
+    const rows=recoverStrongOpenPositionsFromTradeText(text);
+    if(!rows.length)continue;
+    // Prefer the single frame with the largest coherent open-position basket.
+    // A frame-local basket cannot be fabricated by concatenating unrelated quote/order frames.
+    const score=rows.length*100 + (/(?:オーダー|orders?|buy\s*limit|sell\s*limit)/i.test(text)?10:0) + Number(r?.time||0)/1000;
+    if(score>bestScore){bestScore=score;best=rows.map(o=>({...o,frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null,authoritativeFrame:true}));}
+  }
+  return best;
 }
 
 function parseTradeRowsByLinePair(text){
@@ -2568,6 +2591,11 @@ $('mediaFile').addEventListener('change',async e=>{
     // without ever converting pending limit/stop rows into positions.
     const strongRecoveredPositions=recoverStrongOpenPositionsFromTradeText(parsed.rawText||'');
     for(const o of strongRecoveredPositions){if(!positionsRaw.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-o.lot)<1e-6&&Math.abs(Number(x.price)-o.price)<1e-5))positionsRaw.push(o);}
+    // v237: recover the strongest coherent basket directly from ONE OCR frame as well.
+    // This covers PSM11's line-split arrows and prevents merged-text quirks from turning
+    // a clearly visible 2-position Trade pane into an unsafe 0-position result.
+    const authoritativeVideoPositions=isVideo?recoverAuthoritativeVideoPositions(results):[];
+    for(const o of authoritativeVideoPositions){if(!positionsRaw.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-o.lot)<1e-6&&Math.abs(Number(x.price)-o.price)<1e-5))positionsRaw.push(o);}
     const positionEvidenceCount=new Set(positionsRaw.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
     const currentCore=String(currentSymbol||'').replace(/#$/,'');
     const aliasPattern=/^GOLD$/i.test(currentCore)?'(?:GOLD|XAUUSD)':currentCore.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -2644,7 +2672,8 @@ $('mediaFile').addEventListener('change',async e=>{
     const positionsCandidate=sanitizeRecognizedPositions(positionsRaw);
     // positionEvidenceCount was computed above, before any evidence gate, so the
     // current Trade basket can safely authorize a single-frame order row as well.
-    const completePositionBasket=isVideo && shouldAcceptVideoPositionBasket({isVideo,positionEvidenceCount,positionsCandidate,rawText:parsed.rawText||''});
+    const authoritativeFrameComplete=isVideo && authoritativeVideoPositions.length>0 && positionsCandidate.length>=authoritativeVideoPositions.length;
+    const completePositionBasket=isVideo && (authoritativeFrameComplete || shouldAcceptVideoPositionBasket({isVideo,positionEvidenceCount,positionsCandidate,rawText:parsed.rawText||''}));
     // One explicit row is a complete basket when the Trade screen itself proves it.
     // For ambiguous rows, retain the conservative repeated-frame requirement.
     const weakPositionRows=isVideo&&!completePositionBasket?positionsRaw.filter(o=>Number(o.frameCount||0)<2):[];
@@ -3064,7 +3093,11 @@ placed
     const singlePositionParsed=parseOCR(singlePositionRaw);
     const singlePositionCandidate=sanitizeRecognizedPositions(singlePositionParsed.positions.filter(o=>normalizeSymbol(o.symbol)===currentSymbol));
     const singlePositionVideoAccepted=singlePositionCandidate.length===1&&shouldAcceptVideoPositionBasket({isVideo:true,positionEvidenceCount:1,positionsCandidate:singlePositionCandidate,rawText:singlePositionRaw})===true;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v236-20260826$/.test(buildId)&&/v236/.test(document.querySelector('h1')?.textContent||'');
+    const splitArrowTradeRaw='GOLD sel! 0.01\n4618.43\n> 4622.10\n-584\nGOLD sel! 0.01\n4629.54 — 4622.10\n1184\nGOLD sell limit\n0.01 / 0 at 4644.09';
+    const splitArrowRecovered=recoverStrongOpenPositionsFromTradeText(splitArrowTradeRaw);
+    const splitArrowPositionRecovery=splitArrowRecovered.length===2&&splitArrowRecovered.some(o=>Math.abs(o.price-4618.43)<1e-6)&&splitArrowRecovered.some(o=>Math.abs(o.price-4629.54)<1e-6);
+    const authoritativeFrameRecovery=recoverAuthoritativeVideoPositions([{frameIndex:2,time:5.24,data:{text:splitArrowTradeRaw}}]).length===2;
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v237-20260826$/.test(buildId)&&/v237/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3157,7 +3190,7 @@ placed
     const accountTypeAmbiguityFailsClosed=splitLineStandard.type==='standard'&&splitLineKiwami.type==='kiwami'&&mixedType.type==='unknown';
     const importRollbackScopeSafe=(()=>{const src=document.documentElement.innerHTML;return src.includes('let importSnapshot=null,sharedVideoWorker=null')&&src.includes('if(importSnapshot)restoreImportSnapshot(importSnapshot)')&&captureImportSnapshot.toString().includes('xmAccountType')&&restoreImportSnapshot.toString().includes('setXMAccountType')})();
     const quoteScrollSamplingPolicy=videoSamplingRegressionTest().count===4&&videoFrameSources.toString().includes('[0.10,0.35,0.73,0.90]')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
-    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,realVideoEngOcrRecovery,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     const failed=Object.entries(named).filter(([,ok])=>!ok).map(([k])=>k);
     const ok=failed.length===0;
     window.__regressionOK=ok;
@@ -3571,7 +3604,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v236-20260826';
+window.__APP_BUILD__='v237-20260826';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -3609,8 +3642,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v236-20260826'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v236-20260826'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v237-20260826'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v237-20260826'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

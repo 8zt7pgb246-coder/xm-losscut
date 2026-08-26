@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v234-20260826">
+<meta name="build-id" content="v235-20260826">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v234</title>
+<title>Stop Out positioning｜デラポジ Pro v235</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -126,7 +126,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v234</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v235</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v233 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
@@ -315,7 +315,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v234-20260826';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v235-20260826';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -394,8 +394,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2};
 }
-window.__DEPLOYMENT_STATE__={build:'v234-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v234-20260826';
+window.__DEPLOYMENT_STATE__={build:'v235-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v235-20260826';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -409,7 +409,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v234-20260826', SHORT='v234';
+  const BUILD='v235-20260826', SHORT='v235';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1416,8 +1416,11 @@ function shouldAcceptVideoPositionBasket({isVideo=false,positionEvidenceCount=0,
   // two sampled frames caused valid one-position accounts to fail closed.
   // Pending rows are excluded by hasStrongOpenPositionRowText().
   if(count===1 && Array.isArray(positionsCandidate) && positionsCandidate.length===1 && hasStrongOpenPositionRowText(rawText))return true;
-  // Multi-position baskets are accepted when the parser structured every distinct
-  // row seen in the merged Trade text. This preserves the existing conservative gate.
+  // Multi-position baskets are authoritative when every distinct strong row was structured.
+  // Two or more explicit open-position rows in one Trade frame do NOT need to repeat in another frame.
+  // Requiring repetition here was the reason the real 2-position Standard account stayed at 0 positions.
+  const strongCount=recoverStrongOpenPositionsFromTradeText(rawText).length;
+  if(strongCount>=1 && Array.isArray(positionsCandidate) && positionsCandidate.length>=strongCount && count>=strongCount)return true;
   return Array.isArray(positionsCandidate) && positionsCandidate.length===count;
 }
 function isExplicitFlatTradeSnapshot(text,snapshot,positionRows){
@@ -1465,6 +1468,38 @@ function parseTradeRowsRobust(text){
   }
   return {positions,pending};
 }
+function recoverStrongOpenPositionsFromTradeText(text){
+  const lines=String(text||'').replace(/\r/g,'').split(/\n+/).map(normalizeOcrLine).filter(Boolean);
+  const out=[];
+  const symRe=/(GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i;
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    const sm=line.match(symRe); if(!sm)continue;
+    const sym=symbolFromText(sm[0]); if(!sym||normalizeSymbol(sym)!==currentSymbol)continue;
+    // Pending rows are never eligible for this recovery path.
+    if(/\b(?:limit|stop)\b/i.test(line))continue;
+    const side=detectTradeSideFromLine(line); if(!side)continue;
+    // Require an explicit small lot on the same symbol/side line.
+    const after=line.slice((sm.index||0)+sm[0].length);
+    const lm=after.match(/(?:buy|sell|sel[!|1lI]?|buv|bu[yv])[^0-9]{0,5}(0?\.\d+|\d+(?:\.\d+)?)/i) || line.match(/\b(0?\.\d+)\b/);
+    const lot=lm?Number(lm[1]):NaN;
+    if(!Number.isFinite(lot)||lot<=0||lot>1000)continue;
+    // Only pair the symbol/side line with its immediate price line. Looking three lines
+    // ahead can accidentally include the *next* pending row and wrongly reject the
+    // second open position in a compact MT5 list.
+    const chunk=lines.slice(i,Math.min(lines.length,i+2)).join(' ');
+    if(/\b(?:limit|stop)\b/i.test(line))continue;
+    const am=chunk.match(/(\d[\d,.]*\.\d+)\s*(?:->|→|>|—|–|-|to)\s*(\d[\d,.]*\.\d+)/i);
+    if(!am)continue;
+    const entry=normalizeOcrNumber(am[1]), cur=normalizeOcrNumber(am[2]);
+    if(!Number.isFinite(entry)||!Number.isFinite(cur)||entry<=0||cur<=0)continue;
+    if(Math.abs(entry-cur)/Math.max(entry,cur)>0.80)continue;
+    const obj={symbol:sym,side:side==='buy'?'Buy':'Sell',lot:+lot.toFixed(4),price:entry,positionPattern:'entry-current-arrow',strongRecoveredPosition:true};
+    if(!out.some(x=>x.side===obj.side&&Math.abs(x.lot-obj.lot)<1e-6&&Math.abs(x.price-obj.price)<1e-5))out.push(obj);
+  }
+  return out;
+}
+
 function parseTradeRowsByLinePair(text){
   const lines=String(text||'').replace(/\r/g,'').split('\n').map(normalizeOcrLine).filter(Boolean);
   const positions=[], pending=[];
@@ -2510,7 +2545,13 @@ $('mediaFile').addEventListener('change',async e=>{
     // v99 accidentally referenced positionsRaw before its declaration, which throws
     // a TDZ ReferenceError on a valid MT5 Trade screen and leaves the UI at
     // 「注文0件 / 計算停止」. This ordering is intentionally fixed here.
-    const positionsRaw=parsed.positions.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
+    let positionsRaw=parsed.positions.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
+    // v235: independently recover explicit MT5 open-position rows from the merged Trade OCR.
+    // This is intentionally stricter than the generic parser: symbol + fuzzy side + lot on one line,
+    // and entry→current on the next lines are all mandatory. It fixes the real iPhone OCR `sel!` case
+    // without ever converting pending limit/stop rows into positions.
+    const strongRecoveredPositions=recoverStrongOpenPositionsFromTradeText(parsed.rawText||'');
+    for(const o of strongRecoveredPositions){if(!positionsRaw.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-o.lot)<1e-6&&Math.abs(Number(x.price)-o.price)<1e-5))positionsRaw.push(o);}
     const positionEvidenceCount=new Set(positionsRaw.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
     const currentCore=String(currentSymbol||'').replace(/#$/,'');
     const aliasPattern=/^GOLD$/i.test(currentCore)?'(?:GOLD|XAUUSD)':currentCore.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -3007,7 +3048,7 @@ placed
     const singlePositionParsed=parseOCR(singlePositionRaw);
     const singlePositionCandidate=sanitizeRecognizedPositions(singlePositionParsed.positions.filter(o=>normalizeSymbol(o.symbol)===currentSymbol));
     const singlePositionVideoAccepted=singlePositionCandidate.length===1&&shouldAcceptVideoPositionBasket({isVideo:true,positionEvidenceCount:1,positionsCandidate:singlePositionCandidate,rawText:singlePositionRaw})===true;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v234-20260826$/.test(buildId)&&/v234/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v235-20260826$/.test(buildId)&&/v235/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3511,7 +3552,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v234-20260826';
+window.__APP_BUILD__='v235-20260826';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -3549,8 +3590,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v234-20260826'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v234-20260826'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v235-20260826'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v235-20260826'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

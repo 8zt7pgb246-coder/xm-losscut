@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v235-20260826">
+<meta name="build-id" content="v236-20260826">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v235</title>
+<title>Stop Out positioning｜デラポジ Pro v236</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -126,7 +126,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v235</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v236</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v233 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
@@ -315,7 +315,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v235-20260826';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v236-20260826';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -394,8 +394,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2};
 }
-window.__DEPLOYMENT_STATE__={build:'v235-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v235-20260826';
+window.__DEPLOYMENT_STATE__={build:'v236-20260826',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v236-20260826';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -409,7 +409,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v235-20260826', SHORT='v235';
+  const BUILD='v236-20260826', SHORT='v236';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -885,21 +885,32 @@ function setXMAccountType(t){if(!/^(standard|kiwami|unknown)$/.test(String(t)))r
 function detectXMAccountTypeFromText(text){
   const lines=String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   const evidence=[], visibleSymbols=[];
-  const tokenRe=/\b(?:GOLD|XAUUSD|SILVER|BTCUSD|USDJPY|EURUSD|GBPUSD|AUDJPY|AUDUSD|GBPAUD)#?(?=\s|$)/i;
+  const tokenRe=/\b(?:GOLD|XAUUSD|SILVER|BTCUSD|USDJPY|EURUSD|GBPUSD|GBPJPY|EURJPY|EURGBP|AUDJPY|AUDUSD|EURAUD|GBPAUD)#?(?=\s|$)/i;
   for(const line of lines){
     if(/\b(?:buy|sell)\b|\b(?:limit|stop)\b|\bplaced\b|\bat\s*\d/i.test(line))continue;
     const m=line.match(tokenRe); if(!m)continue;
     const raw=String(m[0]).toUpperCase(); visibleSymbols.push(raw);
+    // If prices are on the same OCR line this is strong quote-board evidence.
     const nums=(line.match(/\d[\d,]*(?:\.\d+)?/g)||[]).map(normalizeOcrNumber).filter(n=>Number.isFinite(n)&&n>0);
-    if(nums.length<2)continue;
-    evidence.push({symbol:raw.replace(/#$/,''),suffix:raw.endsWith('#')?'hash':'plain'});
+    if(nums.length>=2)evidence.push({symbol:raw.replace(/#$/,''),suffix:raw.endsWith('#')?'hash':'plain',strength:'row'});
   }
+  const uniqVisible=[...new Set(visibleSymbols)];
+  const hashVisible=uniqVisible.filter(x=>x.endsWith('#'));
+  const plainVisible=uniqVisible.filter(x=>!x.endsWith('#'));
   const unique=[];const seen=new Set();for(const e of evidence){const k=e.symbol+'|'+e.suffix;if(!seen.has(k)){seen.add(k);unique.push(e)}}
-  const visibleUnique=[...new Set(visibleSymbols.map(x=>x.replace(/#$/,'')))];
   const suffixes=new Set(unique.map(e=>e.suffix));
+  if(hashVisible.length&&plainVisible.length)return {type:'unknown',reason:'mixed',evidence:unique,quoteBoardVisible:true};
+  // Two or more explicit # symbols are decisive for KIWAMI even when OCR split
+  // the Bid/Ask prices onto following lines.
+  if(hashVisible.length>=2)return {type:'kiwami',reason:'quote-board-symbols',evidence:unique,quoteBoardVisible:true};
+  // Standard iPhone OCR frequently places the symbol name on one line and its prices
+  // on later lines. Require at least three distinct #less quote-board symbols before
+  // calling Standard so one dropped # cannot flip account type.
+  if(plainVisible.length>=3&&!hashVisible.length)return {type:'standard',reason:'quote-board-symbols',evidence:unique,quoteBoardVisible:true};
   if(suffixes.size>1)return {type:'unknown',reason:'mixed',evidence:unique,quoteBoardVisible:true};
-  if(unique.length<2)return {type:'unknown',reason:visibleUnique.length>=2?'quote-board-unresolved':'insufficient',evidence:unique,quoteBoardVisible:visibleUnique.length>=2};
-  return {type:[...suffixes][0]==='hash'?'kiwami':'standard',reason:'quote-board',evidence:unique,quoteBoardVisible:true};
+  if(unique.length>=2)return {type:[...suffixes][0]==='hash'?'kiwami':'standard',reason:'quote-board',evidence:unique,quoteBoardVisible:true};
+  const visibleUnique=[...new Set(uniqVisible.map(x=>x.replace(/#$/,'')))];
+  return {type:'unknown',reason:visibleUnique.length>=2?'quote-board-unresolved':'insufficient',evidence:unique,quoteBoardVisible:visibleUnique.length>=2};
 }
 function symbolFromText(s){
   const raw=String(s||'').toUpperCase().replace(/\s+/g,'');
@@ -1330,10 +1341,11 @@ function aggregateAccountSnapshotFromResults(results){
   return {...best.snap,sourceText:best.text,frameIndex:best.frameIndex,time:best.time};
 }
 function decidePositionImportAction({hasCurrentPositionEvidence=false,explicitFlat=false,hasOrderEvidence=false,priorValid=false,hasAnyPositionRowEvidence=false}={}){
-  // A proven zero-used-margin account summary is stronger than a stray OCR row.
-  // isExplicitFlatTradeSnapshot() already rejects any explicit open-position arrow row.
-  if(explicitFlat)return 'flat';
+  // A structured current-position basket is the strongest evidence of current trading state.
+  // Account-summary OCR can occasionally look flat when equity/free numbers are merged or
+  // sampled from another frame. Never let a flat fallback erase explicit open positions.
   if(hasCurrentPositionEvidence)return 'replace';
+  if(explicitFlat&&!hasAnyPositionRowEvidence)return 'flat';
   if(hasOrderEvidence&&priorValid&&!hasAnyPositionRowEvidence)return 'retain';
   return 'invalidate';
 }
@@ -1425,6 +1437,10 @@ function shouldAcceptVideoPositionBasket({isVideo=false,positionEvidenceCount=0,
 }
 function isExplicitFlatTradeSnapshot(text,snapshot,positionRows){
   const raw=String(text||'');
+  // If the current import already structured one or more valid open positions, the
+  // account cannot be treated as flat. This guard is intentionally before all
+  // account-summary fallbacks because cross-frame OCR can mix stale/partial totals.
+  if(Array.isArray(positionRows)&&positionRows.some(o=>/^(?:buy|sell)$/i.test(String(o?.side||''))&&Number(o?.lot)>0&&Number(o?.price)>0))return false;
   const hasAccount=Number.isFinite(snapshot?.balance)&&Number.isFinite(snapshot?.equity)&&Number.isFinite(snapshot?.free);
   const cr=Number.isFinite(snapshot?.credit)?snapshot.credit:0;
   const accountFlat=hasAccount&&Math.abs(snapshot.equity-snapshot.free)<=1&&(Math.abs(snapshot.balance-snapshot.equity)<=1||Math.abs((snapshot.balance+cr)-snapshot.equity)<=1);
@@ -3048,7 +3064,7 @@ placed
     const singlePositionParsed=parseOCR(singlePositionRaw);
     const singlePositionCandidate=sanitizeRecognizedPositions(singlePositionParsed.positions.filter(o=>normalizeSymbol(o.symbol)===currentSymbol));
     const singlePositionVideoAccepted=singlePositionCandidate.length===1&&shouldAcceptVideoPositionBasket({isVideo:true,positionEvidenceCount:1,positionsCandidate:singlePositionCandidate,rawText:singlePositionRaw})===true;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v235-20260826$/.test(buildId)&&/v235/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v236-20260826$/.test(buildId)&&/v236/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3073,6 +3089,7 @@ placed
     ]);
     const perFrameAccountConsensus=frameAgg.balance===154646&&frameAgg.equity===154646&&frameAgg.free===154646&&frameAgg.frameIndex===1;
     const reportedScreenshotStateTransition=decidePositionImportAction({hasCurrentPositionEvidence:false,explicitFlat:true,hasOrderEvidence:true,priorValid:true,hasAnyPositionRowEvidence:false})==='flat';
+    const explicitPositionBeatsFlat=decidePositionImportAction({hasCurrentPositionEvidence:true,explicitFlat:true,hasOrderEvidence:true,priorValid:false,hasAnyPositionRowEvidence:true})==='replace';
     const genuineOrderOnlyRetention=decidePositionImportAction({hasCurrentPositionEvidence:false,explicitFlat:false,hasOrderEvidence:true,priorValid:true,hasAnyPositionRowEvidence:false})==='retain';
     const noQuoteScreenBalance=parseAccountSnapshotFromText('18:39\nJPY\nUSDJPY# 159.18 159.19\nGOLD# 4635.33 4635.60').balance===null;
     // A lone unlabeled integer above an order row must never become Balance.
@@ -3134,11 +3151,13 @@ placed
     const chfToJpy=getRateToJPY('CHF');
     const conversionSpreadDirection=Number.isFinite(chfToJpy)&&Math.abs(chfToJpy-160)<1e-6;
     quoteStore=savedQuoteStoreForGraph;$('usdjpy').value=savedUsdJpyForGraph;
-    const unresolvedType=detectXMAccountTypeFromText('GOLD 4619.75\nUSDJPY\nSILVER');
-    const accountTypeAmbiguityFailsClosed=unresolvedType.type==='unknown'&&unresolvedType.reason==='quote-board-unresolved';
+    const splitLineStandard=detectXMAccountTypeFromText('GOLD\n4621.68\n4622.23\nUSDJPY\n159.157\n159.182\nSILVER\n68.708\n68.777');
+    const splitLineKiwami=detectXMAccountTypeFromText('GOLD#\n4621.68\n4622.23\nUSDJPY#\n159.157\n159.182\nEURUSD#\n1.16625\n1.16645');
+    const mixedType=detectXMAccountTypeFromText('GOLD#\n4621.68\n4622.23\nUSDJPY\n159.157\n159.182\nSILVER\n68.708\n68.777');
+    const accountTypeAmbiguityFailsClosed=splitLineStandard.type==='standard'&&splitLineKiwami.type==='kiwami'&&mixedType.type==='unknown';
     const importRollbackScopeSafe=(()=>{const src=document.documentElement.innerHTML;return src.includes('let importSnapshot=null,sharedVideoWorker=null')&&src.includes('if(importSnapshot)restoreImportSnapshot(importSnapshot)')&&captureImportSnapshot.toString().includes('xmAccountType')&&restoreImportSnapshot.toString().includes('setXMAccountType')})();
     const quoteScrollSamplingPolicy=videoSamplingRegressionTest().count===4&&videoFrameSources.toString().includes('[0.10,0.35,0.73,0.90]')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
-    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,realVideoEngOcrRecovery,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,realVideoEngOcrRecovery,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     const failed=Object.entries(named).filter(([,ok])=>!ok).map(([k])=>k);
     const ok=failed.length===0;
     window.__regressionOK=ok;
@@ -3552,7 +3571,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v235-20260826';
+window.__APP_BUILD__='v236-20260826';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -3590,8 +3609,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v235-20260826'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v235-20260826'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:recognizeFileFrames.toString().includes("if(isVideo && mode==='order') source=source"),build:'v236-20260826'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v236-20260826'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

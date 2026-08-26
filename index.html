@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v248-20260827">
+<meta name="build-id" content="v250-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v248</title>
+<title>Stop Out positioning｜デラポジ Pro v250</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -123,7 +123,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .compareWinner{font-size:29px;font-weight:1000;line-height:1.15;margin:6px 0}.compareWinner.good{color:#39e58c}.compareWinner.warn{color:#ffb15c}
 .compareTable{width:100%;border-collapse:collapse;margin-top:8px;font-variant-numeric:tabular-nums}.compareTable th,.compareTable td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:right;font-size:11px}.compareTable th:first-child,.compareTable td:first-child{text-align:left}.compareTable th{color:#8b95a5;font-weight:850}.compareTable td b{color:#fff}.scenarioPills{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px}.scenarioPills button{padding:8px 5px;font-size:11px;background:#111820;color:#aeb8c6;border:1px solid var(--line)}.scenarioPills button.active{background:#eef1f4;color:#0b0f13}.meter{height:8px;border-radius:99px;background:#1a2028;overflow:hidden;margin:6px 0}.meter>i{display:block;height:100%;background:#eef1f4;border-radius:99px}.compareNote{font-size:10px;color:#8b95a5;line-height:1.45;margin-top:6px}
 
-/* v248: account strategy UI. Compare module only; LC/OCR/order pipeline untouched. */
+/* v250: account strategy UI. Compare module only; LC/OCR/order pipeline untouched. */
 .compareDecisionGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
 .compareDecisionBox{border:1px solid var(--line);border-radius:12px;padding:10px;background:#0b1015}
 .compareDecisionBox .k{font-size:10px;color:var(--muted);font-weight:850}
@@ -137,19 +137,19 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 .compareTable td:last-child{font-weight:950}
 @media(max-width:520px){.compareDecisionGrid{grid-template-columns:1fr 1fr}.compareDecisionBox{padding:8px}.compareDecisionBox .v{font-size:15px}.compareBreakEven .big{font-size:19px}}
 
-/* v248 account-comparison fix: GOLD Standard/KIWAMI reference spreads + calculation readiness */
+/* v250 account-comparison fix: GOLD Standard/KIWAMI reference spreads + calculation readiness */
 .compareHero .compareWinner{font-size:31px}
 .cmpHeadline{font-size:13px;color:#aeb7c4;margin-top:4px}.cmpAdvantage{font-size:18px;font-weight:1000;color:#39e58c;margin-top:4px}
-.cmpPeriodList{display:grid;gap:6px;margin-top:8px}.cmpPeriodRow{display:grid;grid-template-columns:64px 1fr;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:#0b1015}.cmpPeriodRow .d{font-size:11px;color:var(--muted);font-weight:900}.cmpPeriodRow .w{text-align:right;font-size:13px;font-weight:950}.cmpPeriodRow .w.good{color:#39e58c}.cmpPeriodRow .w.warn{color:#ffb15c}
+.cmpPeriodList{display:grid;gap:6px;margin-top:8px}.cmpPeriodHead,.cmpPeriodRow{display:grid;grid-template-columns:58px minmax(0,1fr) minmax(0,1fr);gap:7px;align-items:center}.cmpPeriodHead{padding:0 10px 3px;color:var(--muted);font-size:11px;font-weight:900;text-align:center}.cmpPeriodHead>div:first-child{text-align:left}.cmpPeriodRow{padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:#0b1015}.cmpPeriodRow .d{font-size:11px;color:var(--muted);font-weight:900}.cmpPeriodRow .w{text-align:center;font-size:12px;font-weight:950;line-height:1.35}.cmpPeriodRow .w.good{color:#39e58c}.cmpPeriodRow .w.warn{color:#ffb15c}
 .cmpDataLine{display:grid;grid-template-columns:1fr auto;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:11px}.cmpDataLine:last-child{border-bottom:0}.cmpDataLine b{color:#fff;text-align:right}.cmpSourceTag{font-size:9px;border:1px solid #34404d;border-radius:999px;padding:2px 6px;color:#aeb7c4;margin-left:4px;white-space:nowrap}
 .cmpHiddenCompat{display:none!important}
 </style>
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v248</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v250</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v248 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v250 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -295,7 +295,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   </div>
 
   <div class="card">
-    <div class="row"><b>保有期間ごとの結論</b><span class="small">あなたのLotで円換算</span></div>
+    <div class="row"><b>保有期間ごとの結論</b><span class="small">BUY / SELLを同時比較</span></div>
+    <div class="cmpPeriodHead"><div>保有</div><div>ロング BUY</div><div>ショート SELL</div></div>
     <div id="cmpPeriodList" class="cmpPeriodList"></div>
     <table class="compareTable cmpHiddenCompat"><thead><tr><th>保有</th><th>Standard</th><th>KIWAMI</th><th>有利</th></tr></thead><tbody id="cmpTableBody"></tbody></table>
     <div class="small" id="cmpBreakEven" style="margin-top:8px">—</div>
@@ -343,7 +344,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v248-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v250-20260827';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -423,8 +424,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===6&&pos>=2&&fractions.includes(.73)&&fractions.includes(.90)};
 }
-window.__DEPLOYMENT_STATE__={build:'v248-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v248-20260827';
+window.__DEPLOYMENT_STATE__={build:'v250-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v250-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -438,7 +439,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v248-20260827', SHORT='v248';
+  const BUILD='v250-20260827', SHORT='v250';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1576,7 +1577,7 @@ function recoverAuthoritativeVideoPositions(results){
   return best;
 }
 
-// v248: one coherent MT5 Trade frame is authoritative for the CURRENT open-position basket.
+// v250: one coherent MT5 Trade frame is authoritative for the CURRENT open-position basket.
 // The previous pipeline could count two raw position evidences, then discard both during a
 // later confidence gate. Keep evidence and accepted positions tied to the same strong rows.
 function recoverTrustedVideoPositionBasket(results,mergedText=''){
@@ -2037,7 +2038,7 @@ function fingerprintDistance(a,b){
 function selectAdaptiveVideoFrames(candidates,target=5){
   const all=(Array.isArray(candidates)?candidates:[]).filter(Boolean);
   if(!all.length)return [];
-  // v248 regression fix: NEVER replace the four proven v239 anchors.
+  // v250 regression fix: NEVER replace the four proven v239 anchors.
   // Position/order recognition depends on 0.73 and 0.90 being OCR'd exactly,
   // so adaptive quote sampling may only ADD early quote frames.
   const anchorFractions=[0.10,0.35,0.73,0.90];
@@ -2081,7 +2082,7 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     if(!Number.isFinite(duration)||duration<=0)throw new Error('VIDEO_DURATION_INVALID');
     if(width<=0||height<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
     if(v.readyState<2){const p=waitEvent('loadeddata');if(v.readyState<2)await p}
-    // v248: cheap candidate scan first, OCR only five selected frames. Six seeks are
+    // v250: cheap candidate scan first, OCR only five selected frames. Six seeks are
     // cheaper than extra OCR passes and still capture one additional quote-scroll state beyond the proven 4 anchors.
     const targetCount=Math.min(5,Math.max(4,maxFrames));
     // Keep the exact v239 anchors, then add cheap early quote candidates.
@@ -2705,7 +2706,7 @@ $('mediaFile').addEventListener('change',async e=>{
     // without ever converting pending limit/stop rows into positions.
     const strongRecoveredPositions=recoverStrongOpenPositionsFromTradeText(parsed.rawText||'');
     for(const o of strongRecoveredPositions){if(!positionsRaw.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-o.lot)<1e-6&&Math.abs(Number(x.price)-o.price)<1e-5))positionsRaw.push(o);}
-    // v248: recover the strongest coherent basket directly from ONE OCR frame as well.
+    // v250: recover the strongest coherent basket directly from ONE OCR frame as well.
     // This covers PSM11's line-split arrows and prevents merged-text quirks from turning
     // a clearly visible 2-position Trade pane into an unsafe 0-position result.
     let authoritativeVideoPositions=isVideo?recoverAuthoritativeVideoPositions(results):[];
@@ -3230,7 +3231,7 @@ placed
     const realTwoSellSim=chooseLCScenario(54935,20,realTwoSellPending,realTwoSellTrusted.rows,c,1000,100,4622.19,0,4621.64);
     const realTwoSellDeadline=realTwoSellSim.direction==='up'&&realTwoSellSim.added.length===3&&realTwoSellSim.filled.length===5&&Number.isFinite(realTwoSellSim.lc)&&Math.abs(realTwoSellSim.lc-4714.26)<0.20;
     window.__testRate=159.53;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v248-20260827$/.test(buildId)&&/v248/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v250-20260827$/.test(buildId)&&/v250/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3718,7 +3719,7 @@ function calcCompare(){
   const stdSwap1=cmpSwapJPY(stdPts,lots,1,c,usdJpy),kiwSwap1=cmpSwapJPY(kiwPts,lots,1,c,usdJpy);
   const dailyGap=(Number.isFinite(stdSwap1)?stdSwap1:0)-(Number.isFinite(kiwSwap1)?kiwSwap1:0);
   const upfrontGap=spreadReady?(-stdSpread)-(-kiwSpread):NaN;
-  // v248: always show BUY and SELL account preference side-by-side. Lot affects yen amounts, not the account winner.
+  // v250: always show BUY and SELL account preference side-by-side. Lot affects yen amounts, not the account winner.
   const sideSummary=(dir)=>{const sp=dir==='sell'?Number($('cmpSwapSell').value):Number($('cmpSwapCurrent').value),kp=dir==='sell'?Number($('cmpSwapKiwamiSell').value||0):Number($('cmpSwapKiwami').value||0),ss=cmpSwapJPY(sp,lots,1,c,usdJpy),ks=cmpSwapJPY(kp,lots,1,c,usdJpy),dg=(Number.isFinite(ss)?ss:0)-(Number.isFinite(ks)?ks:0),st=spreadReady?cmpClassifyStrategy(upfrontGap,dg):{short:'—',long:dg>0?'Standard':dg<0?'KIWAMI':'—',cross:null};return {dg,st};};
   const buySummary=sideSummary('buy'),sellSummary=sideSummary('sell');
   const renderSide=(prefix,x,dir)=>{
@@ -3734,9 +3735,11 @@ function calcCompare(){
   renderSide('cmpBuy',buySummary,'buy');renderSide('cmpSell',sellSummary,'sell');
   const strategy=spreadReady?cmpClassifyStrategy(upfrontGap,dailyGap):{short:'—',long:dailyGap>0?'Standard':dailyGap<0?'KIWAMI':'—',cross:null};
   const periods=[0,1,3,7,14,30];
-  const rows=periods.map(days=>{const ss=cmpSwapJPY(stdPts,lots,days,c,usdJpy),ks=cmpSwapJPY(kiwPts,lots,days,c,usdJpy),std=(Number.isFinite(ss)?ss:0)-(Number.isFinite(stdSpread)?stdSpread:0),kiw=(Number.isFinite(ks)?ks:0)-(Number.isFinite(kiwSpread)?kiwSpread:0),diff=spreadReady?std-kiw:NaN;return {days,std,kiw,diff}});
+  const periodRows=(dir)=>{const sp=dir==='sell'?Number($('cmpSwapSell').value):Number($('cmpSwapCurrent').value),kp=dir==='sell'?Number($('cmpSwapKiwamiSell').value||0):Number($('cmpSwapKiwami').value||0);return periods.map(days=>{const ss=cmpSwapJPY(sp,lots,days,c,usdJpy),ks=cmpSwapJPY(kp,lots,days,c,usdJpy),std=(Number.isFinite(ss)?ss:0)-(Number.isFinite(stdSpread)?stdSpread:0),kiw=(Number.isFinite(ks)?ks:0)-(Number.isFinite(kiwSpread)?kiwSpread:0),diff=spreadReady?std-kiw:NaN;return {days,std,kiw,diff}})};
+  const buyRows=periodRows('buy'),sellRows=periodRows('sell'),rows=side==='sell'?sellRows:buyRows;
   $('cmpTableBody').innerHTML=rows.map(r=>`<tr><td>${r.days===0?'新規直後':r.days+'日'}</td><td>${cmpFmtJPY(r.std)}</td><td>${cmpFmtJPY(r.kiw)}</td><td>${Number.isFinite(r.diff)?cmpWinnerName(r.diff):'—'}</td></tr>`).join('');
-  const list=$('cmpPeriodList');if(list)list.innerHTML=rows.map(r=>{const d=r.days===0?'今すぐ':r.days+'日';if(!Number.isFinite(r.diff))return `<div class="cmpPeriodRow"><div class="d">${d}</div><div class="w">スプレッド不足</div></div>`;if(Math.abs(r.diff)<.5)return `<div class="cmpPeriodRow"><div class="d">${d}</div><div class="w">ほぼ同等</div></div>`;const w=r.diff>0?'Standard':'KIWAMI',cls=w==='KIWAMI'?'good':'warn';return `<div class="cmpPeriodRow"><div class="d">${d}</div><div class="w ${cls}">${w}が ${Math.abs(Math.round(r.diff)).toLocaleString('ja-JP')}円 有利</div></div>`}).join('');
+  const periodCell=(r)=>{if(!Number.isFinite(r.diff))return '<div class="w">不足</div>';if(Math.abs(r.diff)<.5)return '<div class="w">ほぼ同等</div>';const w=r.diff>0?'Standard':'KIWAMI',cls=w==='KIWAMI'?'good':'warn';return `<div class="w ${cls}">${w}<br>${Math.abs(Math.round(r.diff)).toLocaleString('ja-JP')}円有利</div>`};
+  const list=$('cmpPeriodList');if(list)list.innerHTML=periods.map((days,i)=>`<div class="cmpPeriodRow"><div class="d">${days===0?'今すぐ':days+'日'}</div>${periodCell(buyRows[i])}${periodCell(sellRows[i])}</div>`).join('');
   $('cmpWinnerDetail').textContent=`${sym.replace(/#$/,'')} / ${side==='buy'?'BUY':'SELL'} / ${lots.toFixed(2)} lot`;
   if(spreadReady){
     const first=rows[0].diff,w=cmpWinnerName(first);$('cmpWinner').textContent=w==='ほぼ同等'?'入口コストはほぼ同等':`${w} が有利`;$('cmpWinner').className='compareWinner '+(w==='KIWAMI'?'good':'warn');
@@ -3750,7 +3753,11 @@ function calcCompare(){
   const shortPlain=Number.isFinite(spreadGap)?(spreadGap>0?'Standardの方が入口コストが安い':spreadGap<0?'KIWAMIの方が入口コストが安い':'入口はほぼ同等'):'入口コストは比較データ不足';
   const carryPlain=dailyGap>0?'Standardが1日ごとに有利':dailyGap<0?'KIWAMIが1日ごとに有利':'スワップ差はほぼなし';
   $('cmpWhy').innerHTML=`${shortPlain}。${carryPlain}。`;
-  const cost=$('cmpCostSummary');if(cost)cost.innerHTML=`<div class="cmpDataLine"><span>Standard スプレッド</span><b>${stdReady?stdUnits+' '+(c.type==='fx'?'pips':'points'):'未取得'}${$('cmpSpreadStandard')?.dataset.auto==='1'?'<span class="cmpSourceTag">MT5実測</span>':$('cmpSpreadStandard')?.dataset.ref==='1'?'<span class="cmpSourceTag">XM参考</span>':''}</b></div><div class="cmpDataLine"><span>KIWAMI スプレッド</span><b>${kiwReady?kiwUnits+' '+(c.type==='fx'?'pips':'points'):'未取得'}${$('cmpSpreadKiwami')?.dataset.auto==='1'?'<span class="cmpSourceTag">MT5実測</span>':$('cmpSpreadKiwami')?.dataset.ref==='1'?'<span class="cmpSourceTag">XM参考</span>':''}</b></div><div class="cmpDataLine"><span>${side==='buy'?'BUY':'SELL'} 1日スワップ差</span><b>${Math.abs(Math.round(dailyGap)).toLocaleString('ja-JP')}円 ${dailyGap>0?'Standard有利':dailyGap<0?'KIWAMI有利':'ほぼ同等'}</b></div>`;
+  const cost=$('cmpCostSummary');if(cost){
+    const unitLabel=c.type==='fx'?'pips':'points';
+    const spreadText=(ready,units,jpy,el)=>ready?`${units} ${unitLabel} <span class="small">（${Number.isFinite(jpy)?Math.round(jpy).toLocaleString('ja-JP')+'円':'円換算不可'}）</span>${el?.dataset.auto==='1'?'<span class="cmpSourceTag">MT5実測</span>':el?.dataset.ref==='1'?'<span class="cmpSourceTag">XM参考</span>':''}`:'未取得';
+    cost.innerHTML=`<div class="cmpDataLine"><span>Standard スプレッド</span><b>${spreadText(stdReady,stdUnits,stdSpread,$('cmpSpreadStandard'))}</b></div><div class="cmpDataLine"><span>KIWAMI スプレッド</span><b>${spreadText(kiwReady,kiwUnits,kiwSpread,$('cmpSpreadKiwami'))}</b></div><div class="cmpDataLine"><span>${side==='buy'?'BUY':'SELL'} 1日スワップ差</span><b>${Math.abs(Math.round(dailyGap)).toLocaleString('ja-JP')}円 ${dailyGap>0?'Standard有利':dailyGap<0?'KIWAMI有利':'ほぼ同等'}</b></div>`;
+  }
   const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br><span class="small">「実測」は今回のMT5気配値、「XM参考」は公開平均/最低値。変動スプレッドなので一致しない場合があります。</span>`;
   $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>※ メイン判定はスプレッド＋スワップのみ。XMPは確定取引コストに混ぜません。`;
 }
@@ -3810,7 +3817,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v248-20260827';
+window.__APP_BUILD__='v250-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -3848,8 +3855,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v248-20260827'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v248-20260827'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v250-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v250-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

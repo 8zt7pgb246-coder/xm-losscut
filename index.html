@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v281-20260827">
+<meta name="build-id" content="v282-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v281</title>
+<title>Stop Out positioning｜デラポジ Pro v282</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -225,9 +225,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v281</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v282</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v281 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v282 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -427,7 +427,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v281-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v282-20260827';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -517,8 +517,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2&&fractions[0]===.10&&fractions[1]===.35&&fractions[2]===.73&&fractions[3]===.90};
 }
-window.__DEPLOYMENT_STATE__={build:'v281-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v281-20260827';
+window.__DEPLOYMENT_STATE__={build:'v282-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v282-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -532,7 +532,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v281-20260827', SHORT='v281';
+  const BUILD='v282-20260827', SHORT='v282';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -2175,26 +2175,29 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
   v.autoplay=false; v.controls=false; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
   const objectUrl=URL.createObjectURL(file);
   const cleanup=()=>{try{v.pause()}catch(_){} try{v.removeAttribute('src');v.load()}catch(_){} URL.revokeObjectURL(objectUrl); try{v.remove()}catch(_){} };
-  const waitEvent=(type,timeout=12000)=>new Promise((resolve,reject)=>{
+  const waitEvent=(type,timeout=12000,minReadyState=0)=>new Promise((resolve,reject)=>{
+    if(minReadyState>0&&v.readyState>=minReadyState){resolve();return}
     let done=false;const finish=(err)=>{if(done)return;done=true;clearTimeout(timer);v.removeEventListener(type,onOk);v.removeEventListener('error',onErr);err?reject(err):resolve()};
-    const timer=setTimeout(()=>finish(new Error(`VIDEO_${type.toUpperCase()}_TIMEOUT`)),timeout);
+    const timer=setTimeout(()=>{
+      if(minReadyState>0&&v.readyState>=minReadyState)finish();
+      else finish(new Error(`VIDEO_${type.toUpperCase()}_TIMEOUT`));
+    },timeout);
     const onOk=()=>finish();const onErr=()=>finish(new Error(`VIDEO_${type.toUpperCase()}_ERROR`));
     v.addEventListener(type,onOk,{once:true});v.addEventListener('error',onErr,{once:true});
+    // Safari may advance readyState between the initial check and listener registration.
+    if(minReadyState>0&&v.readyState>=minReadyState)queueMicrotask(()=>finish());
   });
   try{
     // iPhone Safari can dispatch loadedmetadata immediately after src/load.
     // Arm the listener BEFORE assigning/loading the blob URL so the event cannot be missed.
-    const metadataReady=waitEvent('loadedmetadata',15000);
+    const metadataReady=waitEvent('loadedmetadata',15000,1);
     v.src=objectUrl;
     v.load();
-    if(v.readyState<1)await metadataReady;
+    await metadataReady;
     const duration=Number(v.duration),width=Number(v.videoWidth),height=Number(v.videoHeight);
     if(!Number.isFinite(duration)||duration<=0)throw new Error('VIDEO_DURATION_INVALID');
     if(width<=0||height<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
-    if(v.readyState<2){
-      const dataReady=waitEvent('loadeddata',12000);
-      if(v.readyState<2)await dataReady;
-    }
+    if(v.readyState<2)await waitEvent('loadeddata',12000,2);
     // v271 SPEED: OCR only the four regression-proven anchors.
     // 0.10/0.35 cover the quote board; 0.73/0.90 are the protected Trade anchors.
     // The removed 0.22/0.56 candidates were redundant seeks and could add a fifth OCR pass.
@@ -3174,7 +3177,7 @@ function runSafariVideoPipelineSelfTest(){
 }
 function runVideoEventOrderSelfTest(){
   const fn=videoFrameSources.toString();
-  const meta=fn.indexOf("const metadataReady=waitEvent('loadedmetadata'");
+  const meta=fn.indexOf("const metadataReady=waitEvent('loadedmetadata',15000,1)");
   const src=fn.indexOf('v.src=objectUrl');
   const load=fn.indexOf('v.load();');
   const seekWait=fn.indexOf("const seekDone=waitEvent('seeked'");
@@ -3200,7 +3203,7 @@ function runVideoBeforeOCRSelfTest(){
 
 function runVideoLoadOrderSelfTest(){
   const fn=videoFrameSources.toString();
-  const meta=fn.indexOf("const metadataReady=waitEvent('loadedmetadata'");
+  const meta=fn.indexOf("const metadataReady=waitEvent('loadedmetadata',15000,1)");
   const src=fn.indexOf('v.src=objectUrl');
   const load=fn.indexOf('v.load();');
   const seekWait=fn.indexOf("const seekDone=waitEvent('seeked'");
@@ -4157,7 +4160,7 @@ function calcCompare(){
   const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。総合判定はStandardの1 XMP=$1ボーナス価値のみ反映。KIWAMIのXMPは参考表示で、勝敗には加算しません。</span>`;
   $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ反映。総合判定はStandardのボーナス価値のみ使用。KIWAMI XMPは参考表示で勝敗には加算しません。<br>※ スワップは概算。平日は1日分、3倍曜日（現在：${cmpWeekdayName(cmpTripleDay())}）は3日分、土日は0日分として保有期間に反映します。MT5詳細で曜日を認識できた場合は自動上書きします。`;
 }
-// v281 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
+// v282 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
 window.__CMP_V280_CONSISTENCY__=(()=>{
   const src=String(calcCompare);
   return {
@@ -4227,7 +4230,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v281-20260827';
+window.__APP_BUILD__='v282-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -4265,8 +4268,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v281-20260827'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v281-20260827'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v282-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v282-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

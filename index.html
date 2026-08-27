@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v320-20260827">
+<meta name="build-id" content="v321-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v320</title>
+<title>Stop Out positioning｜デラポジ Pro v321</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -93,7 +93,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 /* v106 density pass 2 */
 .posOrderRows .grid{grid-template-columns:.75fr .75fr 1.5fr;gap:4px}.posOrderRows .grid>.wide:not(.small){grid-column:auto}.posOrderRows .grid>.wide.small{grid-column:1/-1;font-size:10px;line-height:1.2}.posOrderCard{padding:7px 9px}.posOrderTools{margin-top:4px}.posOrderTools button{padding:5px 8px}
-/* v320 priority rebalance: scenario is the decision surface, pending list is compact input detail */
+/* v321 priority rebalance: scenario is the decision surface, pending list is compact input detail */
 #scenarioCard{padding:11px 13px;border-width:1px;margin-top:5px!important}
 #scenarioCard>.row:first-child{padding:1px 0 7px;border-bottom:1px solid var(--line)}
 #scenarioCard>.row:first-child>b{font-size:19px;letter-spacing:.2px}
@@ -274,7 +274,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 #pageCompare .cmpSpreadGapArrow{color:#fff;font-size:11px}
 @media(max-width:420px){#pageCompare .cmpSpreadGapValues{gap:3px;font-size:9px}#pageCompare .cmpSpreadGapArrow{font-size:10px}}
 
-/* v320 mobile density: scenario + pending orders share one decision card. */
+/* v321 mobile density: scenario + pending orders share one decision card. */
 #scenarioCard{padding:8px 10px 7px!important;margin-top:5px!important}
 #scenarioCard .scenarioCardHead{padding:0 0 5px!important;border-bottom:1px solid var(--line)}
 #scenarioCard .scenarioCardHead>b{font-size:17px!important;line-height:1.1}
@@ -339,13 +339,20 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   .deadlineHero .price{font-size:31px!important}
 }
 
+
+/* v321 final self-observation gate */
+#finalReleaseGate{margin:8px 0 0;padding:9px 10px;border-radius:12px;border:1px solid #394150;background:#0d1118;font-size:11px;line-height:1.35}
+#finalReleaseGate.ok{border-color:#1f6e49;background:#07150f;color:#67e7a8}
+#finalReleaseGate.err{border-color:#9e3f3f;background:#241010;color:#ff9c96}
+#finalReleaseGate .gateTitle{font-weight:900;font-size:12px;margin-bottom:2px}
+
 </style>
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v320</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v321</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v320 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v321 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -360,7 +367,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   <div class="small" id="rateStatus">保存XM価格を確認中…</div>
 </div>
 
-<div class="card compactCard"><div class="drop"><div id="ocrStatus" class="small">XMの気配値・ポジション・注文を読み込み。</div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
+<div class="card compactCard"><div class="drop"><div id="ocrStatus" class="small">XMの気配値・ポジション・注文を読み込み。</div><div id="finalReleaseGate" style="display:none"></div><div id="dataLock" class="dataLock" style="display:none"></div><div id="orderDataLock" class="dataLock" style="display:none"></div><img id="preview"></div></div>
 <div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">現在保有＋到達前に約定するPendingを反映。</div></div><div id="pendingDeadlineWarning" class="danger" style="display:none;margin-top:10px"></div>
 
 
@@ -553,7 +560,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v320-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v321-20260827';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -647,8 +654,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v320-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v320-20260827';
+window.__DEPLOYMENT_STATE__={build:'v321-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v321-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -669,7 +676,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v320-20260827', SHORT='v320';
+  const BUILD='v321-20260827', SHORT='v321';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1343,7 +1350,7 @@ function detectXMAccountTypeFromText(text){
   const unique=[];const seen=new Set();for(const e of evidence){const k=e.symbol+'|'+e.suffix;if(!seen.has(k)){seen.add(k);unique.push(e)}}
   const suffixes=new Set(unique.map(e=>e.suffix));
 
-  // v320: OCR can DROP the small trailing '#', especially when the same quote frame
+  // v321: OCR can DROP the small trailing '#', especially when the same quote frame
   // is read with different PSM modes. It is much less likely to invent explicit '#'
   // on several different symbols. Therefore strong positive KIWAMI evidence wins
   // before mixed hash/plain ambiguity is considered.
@@ -1677,7 +1684,7 @@ function parseMt5AccountSummaryFallback(text){
   if(nums.length>=3&&Math.abs(nums[0]-nums[1])<=1&&Math.abs(nums[0]-nums[2])<=1){
     return {balance:nums[0],equity:nums[1],credit:0,free:nums[2],evidence:[`fallback-balance:${nums[0]}`,'fallback-flat-summary']};
   }
-  // v320: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
+  // v321: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
   // while preserving the other two, e.g. 154646 / 154646 / 184646.
   // On a pending-order screen with NO open-position row, two matching values
   // are strong evidence of a flat account. Never use this when a position exists.
@@ -1702,7 +1709,7 @@ function parseMt5AccountSummaryFallback(text){
       return {balance:b,equity:e,credit:c,free,evidence:[`fallback-balance:${b}`,`fallback-credit:${c}`,'fallback-live-margin-identity']};
     }
   }
-  // v320: Live no-credit account fallback. iPhone OCR can preserve the four decisive
+  // v321: Live no-credit account fallback. iPhone OCR can preserve the four decisive
   // values while damaging only Margin Level: Balance, Equity, Used Margin, Free Margin.
   // Equity - Free == Used Margin is an exact MT5 accounting identity, so do not discard
   // otherwise coherent current account state merely because the percentage text is noisy.
@@ -1717,7 +1724,7 @@ function parseMt5AccountSummaryFallback(text){
     ]};
   }
 
-  // v320: iPhone ENG OCR can destroy every Japanese account label while preserving
+  // v321: iPhone ENG OCR can destroy every Japanese account label while preserving
   // the five live-account numbers: Balance, Equity, Used Margin, Free Margin, Margin Level.
   // Example from the real user screenshot:
   // 154646, 153486, 2952, 150534, 5199.39
@@ -2390,7 +2397,7 @@ function looksLikeIOSControlCenterCanvas(canvas){
     const sliderLike=(q)=>q.range>90 && q.std>25;
     const top=colStats(.02,.98,.02,.30);
     const hasSlider=sliderLike(sliderL)||sliderLike(sliderR);
-    // v320: the real iPhone Control Center recording is much darker than the
+    // v321: the real iPhone Control Center recording is much darker than the
     // original fixture and contains almost no >210px bright pixels. Accept that
     // dim layout using the global luminance signature as a second path.
     // Normal MT5 Trade/Quotes screens in this app are predominantly white.
@@ -3376,7 +3383,7 @@ $('mediaFile').addEventListener('change',async e=>{
       }catch(fallbackErr){console.warn('order fallback OCR failed',fallbackErr)}
     }
 
-    // v320: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
+    // v321: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
     // required-price gate.  A valid Trade/Order video must not be abandoned just
     // because GOLD appeared in only one early quote frame.
     if(isVideo){
@@ -3433,7 +3440,7 @@ $('mediaFile').addEventListener('change',async e=>{
     let quotes={}, usdjpy=null; window.__quoteMeta={};
     if(isVideo){
       quotes=aggregateVideoQuotes(results); window.__quoteMeta=quotes.__meta||{};
-      // v320: if the normal multi-frame aggregator still misses the SELECTED symbol,
+      // v321: if the normal multi-frame aggregator still misses the SELECTED symbol,
       // recover only an explicit, sane Bid/Ask pair from THIS import's merged OCR text.
       // This never carries an old stored price and therefore cannot create stale-market data.
       if(!(quotes[currentSymbol]?.bid>0&&quotes[currentSymbol]?.ask>0)){
@@ -3831,7 +3838,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const quoteQuality=isVideo?(quoteCount?`安定スプレッド判定済み ${quoteCount}銘柄`:'安定価格を確定できた銘柄なし'):(quoteCount?'スクショ価格を検証済み':(Number.isFinite(tradeScreenPrice)?'トレード画面の現在価格を検証済み':'スクショ価格を検証済み'));
     const mediaState=quoteOnlyMedia
       ? '<span class="ok">✓ 気配値のみ更新完了</span><br><span class="warn">⚠ 現在ポジション/注文が今回の媒体にないためDEAD LINEは計算していません。</span>'
-      : (deadlineReady?'<span class="ok">✓ DEAD LINE計算開始</span>':(()=>{const miss=[];if(!positionDataValid)miss.push('現在ポジション');if(orderDataInvalid)miss.push('注文');if(!accountBalanceUsable())miss.push('口座残高');if(!(Number.isFinite(goldBid)&&Number.isFinite(goldAsk)))miss.push('Bid・Ask');if(!quoteRateFor(cfg()))miss.push('換算レート');return '<span class="warn">⚠ 8/8 読み込み・解析完了。ただし計算前提が揃っていないためDEAD LINEは安全停止中です。</span><br><span class="small">不足データ：'+(miss.join(' / ')||'計算条件')+'</span>'})());
+      : (deadlineReady?'<span class="ok">DEAD LINE計算候補を生成</span>':(()=>{const miss=[];if(!positionDataValid)miss.push('現在ポジション');if(orderDataInvalid)miss.push('注文');if(!accountBalanceUsable())miss.push('口座残高');if(!(Number.isFinite(goldBid)&&Number.isFinite(goldAsk)))miss.push('Bid・Ask');if(!quoteRateFor(cfg()))miss.push('換算レート');return '<span class="warn">⚠ 8/8 読み込み・解析完了。ただし計算前提が揃っていないためDEAD LINEは安全停止中です。</span><br><span class="small">不足データ：'+(miss.join(' / ')||'計算条件')+'</span>'})());
     const excludedText=isVideo?` / 無効フレーム除外 ${mediaQuality.excluded}件${mediaQuality.controlExcluded?`（コントロールセンター${mediaQuality.controlExcluded}件）`:''}`:'';
     const qualityText=isVideo?`有効 ${mediaQuality.usable}/${mediaQuality.expected}フレーム${excludedText}`:'スクショ1フレーム';
     const selectedPriceOk=Number.isFinite(goldBid)&&Number.isFinite(goldAsk);
@@ -3839,7 +3846,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const selectedLabel=currentSymbol.replace(/#$/,'');
     const acctClass=xmAccountType==='unknown'?'warn':'ok';
     const quoteNames=Object.keys(quotes).filter(k=>quotes[k]?.bid>0&&quotes[k]?.ask>0).map(k=>k.replace(/#$/,'')).join(' / ');
-    $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}読み込み完了</div><div class="grid2"><div class="item">${selectedLabel}価格 <b>${selectedPriceOk?'✓':'未取得'}</b></div><div class="item">USDJPY換算 <b>${usdJpyOk?'✓':'未取得'}</b></div><div class="item">口座タイプ <b class="${acctClass}">${accountTypeLabel()}</b></div><div class="item">気配値取得 <b>${quoteNames?quoteNames.split(' / ').length:0}銘柄</b></div><div class="item full"><span class="muted">${quoteNames||'—'}</span></div><div class="item">解析フレーム <b>${qualityText}</b></div><div class="item">現在ポジション <b>${effectivePositionCount}件${retainedPositionOnly?'（継続）':''}</b></div><div class="item">今回のポジション証拠 <b>${positionEvidenceCount}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item">口座残高 <b>${Number.isFinite(accountSnapshot.balance)?Math.round(accountSnapshot.balance).toLocaleString('ja-JP')+'円'+(Number(accountSnapshot.credit)>0?' ＋Credit '+Math.round(accountSnapshot.credit).toLocaleString('ja-JP')+'円':''):'未取得'}</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${mediaState}</div></div></div>${orderUpdateNote}`;
+    $('ocrStatus').innerHTML=`<div class="mediaDone"><div class="title">✓ ${mediaLabel}解析完了</div><div class="grid2"><div class="item">${selectedLabel}価格 <b>${selectedPriceOk?'✓':'未取得'}</b></div><div class="item">USDJPY換算 <b>${usdJpyOk?'✓':'未取得'}</b></div><div class="item">口座タイプ <b class="${acctClass}">${accountTypeLabel()}</b></div><div class="item">気配値取得 <b>${quoteNames?quoteNames.split(' / ').length:0}銘柄</b></div><div class="item full"><span class="muted">${quoteNames||'—'}</span></div><div class="item">解析フレーム <b>${qualityText}</b></div><div class="item">現在ポジション <b>${effectivePositionCount}件${retainedPositionOnly?'（継続）':''}</b></div><div class="item">今回のポジション証拠 <b>${positionEvidenceCount}件</b></div><div class="item">注文 <b>${found.length}件</b></div><div class="item">口座残高 <b>${Number.isFinite(accountSnapshot.balance)?Math.round(accountSnapshot.balance).toLocaleString('ja-JP')+'円'+(Number(accountSnapshot.credit)>0?' ＋Credit '+Math.round(accountSnapshot.credit).toLocaleString('ja-JP')+'円':''):'未取得'}</b></div><div class="item full"><span class="muted">${quoteQuality}</span><br>${mediaState}</div></div></div>${orderUpdateNote}`;
     // Success is one coherent terminal state. Never leave internal progress at 3/8
     // after the UI already says 読み込み完了.
     window.__MEDIA_STAGE='8/8';window.__importStage='8/8';
@@ -4128,33 +4135,26 @@ function runCanonicalStateArchitectureSelfTest(){
     !renderPos.includes('validation.code');
 }
 
-function runPostImportAcceptanceAudit(){
+function inspectRenderedTradingResult(){
   const issues=[];
-  let state=buildCurrentTradeState();
+  const state=buildCurrentTradeState();
   const validation=validateCurrentTradeState(state);
   const stage=String(window.__MEDIA_STAGE||'');
   const resultText=String($('result')?.textContent||'').trim();
   const resultNum=Number(resultText.replace(/,/g,''));
   let decision=null;
+
   if(stage==='8/8'&&validation.ok){
     try{decision=calculateTradeDecision(state)}catch(e){issues.push('CALC_EXCEPTION')}
+
     if(decision){
-      if(decision.sim?.inconsistent?.length){
-        const active=window.__activeMediaResultsForAudit||[];
-        const directQuote=findSelectedQuoteTimeFromResults(active,currentSymbol);
-        const repeated=recoverRepeatedFlatVideoSnapshot(active,currentSymbol);
-        if(repeated.authoritative&&Number.isFinite(Number(directQuote?.time))&&Number(repeated.latestTime)>Number(directQuote.time)+0.15){
-          window.__currentTemporalQuoteBeforeTrade=true;
-          state=buildCurrentTradeState();
-          decision=calculateTradeDecision(state);
-          calc();
-        }
-        if(decision.sim?.inconsistent?.length)issues.push('VALID_STATE_BUT_SCENARIO_INCONSISTENT');
-      }
+      if(decision.sim?.inconsistent?.length)issues.push('VALID_STATE_BUT_SCENARIO_INCONSISTENT');
+
       if(Number.isFinite(decision.lc)){
         if(!Number.isFinite(resultNum))issues.push('DEADLINE_BLANK_AFTER_VALID_IMPORT');
         else if(Math.abs(resultNum-Number(decision.lc))>Math.max(.02,Math.abs(Number(decision.lc))*1e-6))issues.push('DEADLINE_DOM_MISMATCH');
       }
+
       const expectedAdded=(decision.added||[]).length;
       const expectedSkipped=(decision.skipped||[]).length;
       const orderRows=[...document.querySelectorAll('#orders .grid')];
@@ -4163,36 +4163,136 @@ function runPostImportAcceptanceAudit(){
         const renderedSkipped=orderRows.filter(r=>/[×✕]\s*未到達/.test(r.textContent||'')).length;
         if(renderedAdded!==expectedAdded)issues.push('ORDER_STATUS_ADDED_MISMATCH');
         if(renderedSkipped!==expectedSkipped)issues.push('ORDER_STATUS_SKIPPED_MISMATCH');
+
+        if(expectedAdded>0 && renderedAdded===0)issues.push('ALL_ORDERS_FALSE_UNREACHED');
       }
+
       const scenarioFinal=document.querySelector('#scenarioSteps .scenarioFinal b');
       if(Number.isFinite(decision.lc)&&!scenarioFinal)issues.push('SCENARIO_FINAL_MISSING');
+      if(Number.isFinite(decision.lc)&&scenarioFinal){
+        const scenarioNum=Number(String(scenarioFinal.textContent||'').replace(/,/g,''));
+        if(!Number.isFinite(scenarioNum)||Math.abs(scenarioNum-Number(decision.lc))>.03)issues.push('SCENARIO_DEADLINE_MISMATCH');
+      }
+
+      const heroResult=Number(String($('result')?.textContent||'').replace(/,/g,''));
+      if(Number.isFinite(decision.lc)&&Number.isFinite(heroResult)&&Math.abs(heroResult-Number(decision.lc))>.03){
+        issues.push('HERO_DEADLINE_MISMATCH');
+      }
     }
   }
+
   const doneClaimsCalc=/DEAD LINE計算開始/.test(String($('ocrStatus')?.textContent||''));
   if(doneClaimsCalc&&!Number.isFinite(resultNum))issues.push('UI_CLAIMS_CALC_BUT_DEADLINE_BLANK');
+
+  const redConflict=/位置関係が矛盾/.test(String($('distance')?.textContent||'')) ||
+    /位置関係が矛盾/.test(String(document.querySelector('.deadlineHero')?.textContent||''));
+  if(redConflict&&validation.ok)issues.push('VISIBLE_CONTRADICTION_AFTER_VALID_IMPORT');
+
   const horizontalOverflow=document.documentElement.scrollWidth>document.documentElement.clientWidth+2;
   if(horizontalOverflow)issues.push('HORIZONTAL_OVERFLOW');
 
-  const report={
+  return {
     pass:issues.length===0,
     issues,
     stage,
     validation,
     result:Number.isFinite(resultNum)?resultNum:null,
+    state,
+    decision
+  };
+}
+
+function tryRepairRenderedTradingResult(report){
+  if(!report||report.pass)return false;
+  let changed=false;
+
+  // 1) Recover video chronology from the real OCR frames if quoteMeta was lost.
+  if(report.issues.includes('VALID_STATE_BUT_SCENARIO_INCONSISTENT') ||
+     report.issues.includes('VISIBLE_CONTRADICTION_AFTER_VALID_IMPORT') ||
+     report.issues.includes('ALL_ORDERS_FALSE_UNREACHED')){
+    const active=window.__activeMediaResultsForAudit||[];
+    const directQuote=findSelectedQuoteTimeFromResults(active,currentSymbol);
+    const repeated=recoverRepeatedFlatVideoSnapshot(active,currentSymbol);
+    if(repeated.authoritative &&
+       Number.isFinite(Number(directQuote?.time)) &&
+       Number(repeated.latestTime)>Number(directQuote.time)+0.15){
+      if(!window.__currentTemporalQuoteBeforeTrade){
+        window.__currentTemporalQuoteBeforeTrade=true;
+        changed=true;
+      }
+    }
+  }
+
+  // 2) Re-render from canonical state. No OCR re-run, so this stays fast.
+  if(changed ||
+     report.issues.some(x=>[
+       'DEADLINE_BLANK_AFTER_VALID_IMPORT',
+       'DEADLINE_DOM_MISMATCH',
+       'ORDER_STATUS_ADDED_MISMATCH',
+       'ORDER_STATUS_SKIPPED_MISMATCH',
+       'ALL_ORDERS_FALSE_UNREACHED',
+       'SCENARIO_FINAL_MISSING',
+       'SCENARIO_DEADLINE_MISMATCH',
+       'HERO_DEADLINE_MISMATCH',
+       'UI_CLAIMS_CALC_BUT_DEADLINE_BLANK'
+     ].includes(x))){
+    try{calc();changed=true}catch(e){console.error('[XM] FINAL_REPAIR_CALC_FAILED',e)}
+  }
+  return changed;
+}
+
+function setFinalReleaseGate(report){
+  const el=$('finalReleaseGate');
+  if(!el)return;
+  el.style.display='block';
+
+  if(report.pass){
+    el.className='ok';
+    el.innerHTML='<div class="gateTitle">✓ 最終整合性チェック PASS</div><div>DEAD LINE・注文判定・価格シナリオ・スマホ表示の一致を確認しました。</div>';
+    window.__releaseReady=true;
+    return;
+  }
+
+  el.className='err';
+  el.innerHTML='<div class="gateTitle">⚠ 最終整合性チェック NG</div><div>完成扱いにしていません。内部状態と表示が一致するまで再検証が必要です。</div>';
+  window.__releaseReady=false;
+
+  // Never leave a green "complete / calculate" claim visible after final NG.
+  const status=$('ocrStatus');
+  if(status){
+    status.innerHTML=String(status.innerHTML||'')
+      .replace(/✓\s*(動画|画像)読み込み完了/g,'⚠ $1解析は完了・最終検証NG')
+      .replace(/✓\s*DEAD LINE計算開始/g,'⚠ DEAD LINE最終検証NG');
+  }
+}
+
+function runPostImportAcceptanceAudit(){
+  let first=inspectRenderedTradingResult();
+
+  if(!first.pass && !window.__finalRepairInProgress){
+    window.__finalRepairInProgress=true;
+    try{
+      const repaired=tryRepairRenderedTradingResult(first);
+      if(repaired){
+        // DOM writes are synchronous for calc(), so a second inspection is enough here.
+        first=inspectRenderedTradingResult();
+      }
+    }finally{
+      window.__finalRepairInProgress=false;
+    }
+  }
+
+  const report={
+    pass:first.pass,
+    issues:first.issues,
+    stage:first.stage,
+    validation:first.validation,
+    result:first.result,
+    repaired:!!window.__currentTemporalQuoteBeforeTrade,
     at:Date.now()
   };
   window.__POST_IMPORT_AUDIT__=report;
-  const prior=document.querySelector('#postImportAuditBanner');
-  if(prior)prior.remove();
-  if(!report.pass&&stage==='8/8'){
-    const box=document.createElement('div');
-    box.id='postImportAuditBanner';
-    box.className='dataLock';
-    box.style.margin='8px 0';
-    box.innerHTML='<strong>⚠ 内部整合性チェックNG</strong><br>読み込み結果の表示が計算状態と一致していません。完成扱いにせず再検証します。';
-    const host=$('ocrStatus')?.parentElement;
-    if(host)host.appendChild(box);
-  }
+  setFinalReleaseGate(report);
   return report;
 }
 window.__runPostImportAcceptanceAudit=runPostImportAcceptanceAudit;
@@ -4235,6 +4335,19 @@ GOLD# buy limit
   const direct=findSelectedQuoteTimeFromResults(results,'GOLD#');
   return direct?.time===1 &&
     detectQuoteBeforeTradeTemporalEvidence(results,{},'GOLD#')===true;
+}
+function runSelfObservationArchitectureSelfTest(){
+  const inspect=inspectRenderedTradingResult.toString();
+  const repair=tryRepairRenderedTradingResult.toString();
+  const gate=setFinalReleaseGate.toString();
+  return inspect.includes('ALL_ORDERS_FALSE_UNREACHED') &&
+    inspect.includes('DEADLINE_BLANK_AFTER_VALID_IMPORT') &&
+    inspect.includes('VISIBLE_CONTRADICTION_AFTER_VALID_IMPORT') &&
+    repair.includes('findSelectedQuoteTimeFromResults') &&
+    repair.includes('recoverRepeatedFlatVideoSnapshot') &&
+    repair.includes('calc()') &&
+    gate.includes('__releaseReady=true') &&
+    gate.includes('__releaseReady=false');
 }
 function runMediaParserSelfTest(){
   const t=`GOLD# buy 0.01\n4318.10 > 4334.17 2565\nGOLD# buy 0.01\n4367.37 > 4334.17 -5300\nGOLD# buy 0.01\n4356.85 — 4334.17 -3621\nGOLD# buy limit\n0.01 / 0 at 4277.03 placed\nGOLD# buy limit\n0.01 / 0 at 4310.91 placed`;
@@ -4810,6 +4923,7 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const canonicalStateArchitecture=runCanonicalStateArchitectureSelfTest();
     const deliveryGateArchitecture=runDeliveryGateArchitectureSelfTest();
     const temporalEvidenceWithoutQuoteMeta=runTemporalEvidenceWithoutQuoteMetaSelfTest();
+    const selfObservationArchitecture=runSelfObservationArchitectureSelfTest();
     const named={duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     // A production safety gate must be based on observable behavior, not on
     // source-code strings, DOM labels or a version badge. A stale audit assertion
@@ -5492,7 +5606,7 @@ function calcCompare(){
   const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。総合判定はStandardの1 XMP=$1ボーナス価値のみ反映。KIWAMIのXMPは参考表示で、勝敗には加算しません。</span>`;
   $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ反映。総合判定はStandardのボーナス価値のみ使用。KIWAMI XMPは参考表示で勝敗には加算しません。<br>※ スワップは概算。平日は1日分、3倍曜日（現在：${cmpWeekdayName(cmpTripleDay())}）は3日分、土日は0日分として保有期間に反映します。MT5詳細で曜日を認識できた場合は自動上書きします。`;
 }
-// v320 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
+// v321 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
 window.__CMP_V280_CONSISTENCY__=(()=>{
   const src=String(calcCompare);
   return {
@@ -5562,7 +5676,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v320-20260827';
+window.__APP_BUILD__='v321-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -5605,9 +5719,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v320-20260827'
+  build:'v321-20260827'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v320-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v321-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

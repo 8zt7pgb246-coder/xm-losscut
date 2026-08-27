@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v324-20260827">
+<meta name="build-id" content="v325-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v324</title>
+<title>Stop Out positioning｜デラポジ Pro v325</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -93,7 +93,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 /* v106 density pass 2 */
 .posOrderRows .grid{grid-template-columns:.75fr .75fr 1.5fr;gap:4px}.posOrderRows .grid>.wide:not(.small){grid-column:auto}.posOrderRows .grid>.wide.small{grid-column:1/-1;font-size:10px;line-height:1.2}.posOrderCard{padding:7px 9px}.posOrderTools{margin-top:4px}.posOrderTools button{padding:5px 8px}
-/* v324 priority rebalance: scenario is the decision surface, pending list is compact input detail */
+/* v325 priority rebalance: scenario is the decision surface, pending list is compact input detail */
 #scenarioCard{padding:11px 13px;border-width:1px;margin-top:5px!important}
 #scenarioCard>.row:first-child{padding:1px 0 7px;border-bottom:1px solid var(--line)}
 #scenarioCard>.row:first-child>b{font-size:19px;letter-spacing:.2px}
@@ -274,7 +274,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 #pageCompare .cmpSpreadGapArrow{color:#fff;font-size:11px}
 @media(max-width:420px){#pageCompare .cmpSpreadGapValues{gap:3px;font-size:9px}#pageCompare .cmpSpreadGapArrow{font-size:10px}}
 
-/* v324 mobile density: scenario + pending orders share one decision card. */
+/* v325 mobile density: scenario + pending orders share one decision card. */
 #scenarioCard{padding:8px 10px 7px!important;margin-top:5px!important}
 #scenarioCard .scenarioCardHead{padding:0 0 5px!important;border-bottom:1px solid var(--line)}
 #scenarioCard .scenarioCardHead>b{font-size:17px!important;line-height:1.1}
@@ -340,7 +340,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 }
 
 
-/* v324 final self-observation gate */
+/* v325 final self-observation gate */
 #finalReleaseGate{margin:8px 0 0;padding:9px 10px;border-radius:12px;border:1px solid #394150;background:#0d1118;font-size:11px;line-height:1.35}
 #finalReleaseGate.ok{border-color:#1f6e49;background:#07150f;color:#67e7a8}
 #finalReleaseGate.err{border-color:#9e3f3f;background:#241010;color:#ff9c96}
@@ -350,9 +350,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v324</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v325</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v324 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v325 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -560,7 +560,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v324-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v325-20260827';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -654,8 +654,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v324-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v324-20260827';
+window.__DEPLOYMENT_STATE__={build:'v325-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v325-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -676,7 +676,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v324-20260827', SHORT='v324';
+  const BUILD='v325-20260827', SHORT='v325';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1350,7 +1350,7 @@ function detectXMAccountTypeFromText(text){
   const unique=[];const seen=new Set();for(const e of evidence){const k=e.symbol+'|'+e.suffix;if(!seen.has(k)){seen.add(k);unique.push(e)}}
   const suffixes=new Set(unique.map(e=>e.suffix));
 
-  // v324: OCR can DROP the small trailing '#', especially when the same quote frame
+  // v325: OCR can DROP the small trailing '#', especially when the same quote frame
   // is read with different PSM modes. It is much less likely to invent explicit '#'
   // on several different symbols. Therefore strong positive KIWAMI evidence wins
   // before mixed hash/plain ambiguity is considered.
@@ -1684,7 +1684,7 @@ function parseMt5AccountSummaryFallback(text){
   if(nums.length>=3&&Math.abs(nums[0]-nums[1])<=1&&Math.abs(nums[0]-nums[2])<=1){
     return {balance:nums[0],equity:nums[1],credit:0,free:nums[2],evidence:[`fallback-balance:${nums[0]}`,'fallback-flat-summary']};
   }
-  // v324: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
+  // v325: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
   // while preserving the other two, e.g. 154646 / 154646 / 184646.
   // On a pending-order screen with NO open-position row, two matching values
   // are strong evidence of a flat account. Never use this when a position exists.
@@ -1709,7 +1709,7 @@ function parseMt5AccountSummaryFallback(text){
       return {balance:b,equity:e,credit:c,free,evidence:[`fallback-balance:${b}`,`fallback-credit:${c}`,'fallback-live-margin-identity']};
     }
   }
-  // v324: Live no-credit account fallback. iPhone OCR can preserve the four decisive
+  // v325: Live no-credit account fallback. iPhone OCR can preserve the four decisive
   // values while damaging only Margin Level: Balance, Equity, Used Margin, Free Margin.
   // Equity - Free == Used Margin is an exact MT5 accounting identity, so do not discard
   // otherwise coherent current account state merely because the percentage text is noisy.
@@ -1724,7 +1724,7 @@ function parseMt5AccountSummaryFallback(text){
     ]};
   }
 
-  // v324: iPhone ENG OCR can destroy every Japanese account label while preserving
+  // v325: iPhone ENG OCR can destroy every Japanese account label while preserving
   // the five live-account numbers: Balance, Equity, Used Margin, Free Margin, Margin Level.
   // Example from the real user screenshot:
   // 154646, 153486, 2952, 150534, 5199.39
@@ -2413,7 +2413,7 @@ function looksLikeIOSControlCenterCanvas(canvas){
     const sliderLike=(q)=>q.range>90 && q.std>25;
     const top=colStats(.02,.98,.02,.30);
     const hasSlider=sliderLike(sliderL)||sliderLike(sliderR);
-    // v324: the real iPhone Control Center recording is much darker than the
+    // v325: the real iPhone Control Center recording is much darker than the
     // original fixture and contains almost no >210px bright pixels. Accept that
     // dim layout using the global luminance signature as a second path.
     // Normal MT5 Trade/Quotes screens in this app are predominantly white.
@@ -2877,6 +2877,64 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
   if(isVideo)Object.defineProperty(results,'__sources',{value:sources,enumerable:false});
   return results;
 }
+function makeAccountHeaderFocusCanvas(source){
+  if(!source?.width||!source?.height)return source;
+  const w=source.width,h=source.height;
+  // MT5 Trade account summary occupies the upper portion of the screen.
+  // Keep enough vertical room for Balance/Equity/Margin/Free/Margin Level,
+  // while excluding most position/order prices below.
+  const y0=Math.floor(h*0.05),y1=Math.floor(h*0.48);
+  const scale=Math.min(1.7,1800/Math.max(1,w));
+  const crop=document.createElement('canvas');
+  crop.width=Math.max(1,Math.round(w*scale));
+  crop.height=Math.max(1,Math.round((y1-y0)*scale));
+  const ctx=crop.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(source,0,y0,w,y1-y0,0,0,crop.width,crop.height);
+  return crop;
+}
+function bestTradeSourceForAccountRescue(results,sources){
+  let best=null,bestScore=-1;
+  for(const r of filterUsableOCRResults(results||[])){
+    const text=String(r?.data?.text||r?.text||'');
+    const p=parseOCR(text);
+    const pos=(p.positions||[]).length;
+    const ord=(p.pending||[]).length;
+    const strong=(hasStrongOpenPositionRowText(text)?2:0)+(hasRobustPendingOrderRowText(text)?1:0);
+    const score=pos*4+ord*3+strong;
+    if(score>bestScore){bestScore=score;best=r}
+  }
+  if(!best||bestScore<=0)return null;
+  const fi=Number(best.frameIndex);
+  const source=(sources||[]).find(x=>Number(x?.frameIndex)===fi) ||
+    (sources||[]).find((x,i)=>i===fi) || null;
+  return source?{...source,accountFocus:true}:null;
+}
+async function rescueVideoAccountHeader(T,file,results,sources,sharedWorker,onProgress){
+  const src=bestTradeSourceForAccountRescue(results,sources);
+  if(!src?.canvas)return null;
+  const focus={
+    ...src,
+    canvas:makeAccountHeaderFocusCanvas(src.canvas),
+    isControlCenter:false,
+    accountFocus:true
+  };
+  let rr=await recognizeFileFrames(T,file,'trade-fast',m=>{
+    if(m.status==='recognizing text')onProgress?.(Math.round((m.progress||0)*100));
+  },[focus],sharedWorker);
+  rr=filterUsableOCRResults(rr);
+  for(const r of rr){
+    const snap=parseAccountSnapshotFromText(r?.data?.text||'');
+    if(Number.isFinite(snap.balance)&&snap.balance>0){
+      return {snapshot:snap,results:rr};
+    }
+    const fallback=parseMt5AccountSummaryFallback(r?.data?.text||'');
+    if(Number.isFinite(fallback.balance)&&fallback.balance>0){
+      return {snapshot:fallback,results:rr};
+    }
+  }
+  return null;
+}
+
 function makeTradeFocusCanvas(source){
   const w=source.width,h=source.height;
   const y0=Math.floor(h*0.18), y1=Math.floor(h*0.94);
@@ -3399,7 +3457,7 @@ $('mediaFile').addEventListener('change',async e=>{
       }catch(fallbackErr){console.warn('order fallback OCR failed',fallbackErr)}
     }
 
-    // v324: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
+    // v325: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
     // required-price gate.  A valid Trade/Order video must not be abandoned just
     // because GOLD appeared in only one early quote frame.
     if(isVideo){
@@ -3456,7 +3514,7 @@ $('mediaFile').addEventListener('change',async e=>{
     let quotes={}, usdjpy=null; window.__quoteMeta={};
     if(isVideo){
       quotes=aggregateVideoQuotes(results); window.__quoteMeta=quotes.__meta||{};
-      // v324: if the normal multi-frame aggregator still misses the SELECTED symbol,
+      // v325: if the normal multi-frame aggregator still misses the SELECTED symbol,
       // recover only an explicit, sane Bid/Ask pair from THIS import's merged OCR text.
       // This never carries an old stored price and therefore cannot create stale-market data.
       if(!(quotes[currentSymbol]?.bid>0&&quotes[currentSymbol]?.ask>0)){
@@ -3758,13 +3816,36 @@ $('mediaFile').addEventListener('change',async e=>{
     const rawAccountSnapshot=initialAccountSnapshot||parseAccountSnapshotFromText(rawAllText);
     // Prefer one internally coherent frame snapshot. Concatenating OCR from unrelated
     // frames can manufacture a false account summary; per-frame consensus avoids that.
-    const accountSnapshot=Number.isFinite(frameAccountSnapshot.balance)?frameAccountSnapshot:{
+    let accountSnapshot=Number.isFinite(frameAccountSnapshot.balance)?frameAccountSnapshot:{
       balance:Number.isFinite(parsedAccountSnapshot.balance)?parsedAccountSnapshot.balance:rawAccountSnapshot.balance,
       equity:Number.isFinite(parsedAccountSnapshot.equity)?parsedAccountSnapshot.equity:rawAccountSnapshot.equity,
       credit:Number.isFinite(parsedAccountSnapshot.credit)?parsedAccountSnapshot.credit:rawAccountSnapshot.credit,
       free:Number.isFinite(parsedAccountSnapshot.free)?parsedAccountSnapshot.free:rawAccountSnapshot.free,
       evidence:[...(rawAccountSnapshot.evidence||[]),...(parsedAccountSnapshot.evidence||[])],sourceText:''
     };
+
+    // v325: if the Trade basket is clear but the top account header was missed,
+    // OCR only that header once. This is a failure-only rescue and does not slow
+    // successful imports.
+    if(isVideo && !(Number.isFinite(accountSnapshot.balance)&&accountSnapshot.balance>0)){
+      try{
+        setImportStage('7/8','口座残高を再確認中…');
+        const rescuedAccount=await rescueVideoAccountHeader(
+          T,f,results,videoSourcesForReuse,sharedVideoWorker,
+          p=>{$('ocrStatus').textContent=`口座残高再確認OCR中… ${p}%`}
+        );
+        if(rescuedAccount?.snapshot?.balance>0){
+          accountSnapshot={
+            ...rescuedAccount.snapshot,
+            evidence:[...(rescuedAccount.snapshot.evidence||[]),'focused-account-header-rescue'],
+            sourceText:String(rescuedAccount.results?.[0]?.data?.text||'')
+          };
+          results=[...results,...(rescuedAccount.results||[])];
+          window.__activeMediaResultsForAudit=results;
+        }
+      }catch(e){console.warn('[XM] ACCOUNT_HEADER_RESCUE_FAILED',e)}
+    }
+
     const accountCapturedThisImport=Number.isFinite(accountSnapshot.balance)&&accountSnapshot.balance>0;
     if(accountCapturedThisImport){
       setAccountBalance(accountSnapshot.balance,'mt5-ocr',Number.isFinite(accountSnapshot.credit)?accountSnapshot.credit:0);
@@ -4197,6 +4278,10 @@ function inspectRenderedTradingResult(){
   const resultNum=parseRenderedNumber(resultText);
   let decision=null;
 
+  if(stage==='8/8'&&!validation.ok){
+    issues.push(`PREREQUISITE_${validation.code}`);
+  }
+
   if(stage==='8/8'&&validation.ok){
     try{decision=calculateTradeDecision(state)}catch(e){issues.push('CALC_EXCEPTION')}
 
@@ -4275,6 +4360,19 @@ function tryRepairRenderedTradingResult(report){
   if(!report||report.pass)return false;
   let changed=false;
 
+  // 0) If account state is the only missing prerequisite, first re-evaluate the
+  // already captured OCR evidence before giving up. The focused OCR rescue runs
+  // earlier in the async import path; this catches parser/commit drift.
+  if(report.issues.includes('PREREQUISITE_ACCOUNT_UNCONFIRMED')){
+    const active=window.__activeMediaResultsForAudit||[];
+    const recovered=aggregateAccountSnapshotFromResults(active);
+    if(Number.isFinite(recovered?.balance)&&recovered.balance>0){
+      if(setAccountBalance(recovered.balance,'mt5-ocr-final-repair',Number.isFinite(recovered.credit)?recovered.credit:0)){
+        changed=true;
+      }
+    }
+  }
+
   // 1) Recover video chronology from the real OCR frames if quoteMeta was lost.
   if(report.issues.includes('VALID_STATE_BUT_SCENARIO_INCONSISTENT') ||
      report.issues.includes('VISIBLE_CONTRADICTION_AFTER_VALID_IMPORT') ||
@@ -4330,7 +4428,8 @@ function tryRepairRenderedTradingResult(report){
        'HERO_DEADLINE_MISMATCH',
        'UI_CLAIMS_CALC_BUT_DEADLINE_BLANK',
        'SOURCE_POSITION_BASKET_MISMATCH',
-       'SOURCE_POSITION_ROWS_DROPPED'
+       'SOURCE_POSITION_ROWS_DROPPED',
+       'PREREQUISITE_ACCOUNT_UNCONFIRMED'
      ].includes(x))){
     try{calc();changed=true}catch(e){console.error('[XM] FINAL_REPAIR_CALC_FAILED',e)}
   }
@@ -4512,6 +4611,35 @@ function runRenderedDeadlineBlankSelfTest(){
     !Number.isFinite(parseRenderedNumber('')) &&
     !Number.isFinite(parseRenderedNumber(' - ')) &&
     Math.abs(parseRenderedNumber('4,561.67')-4561.67)<1e-9;
+}
+function run1739AccountRecoverySelfTest(){
+  const text=`-43 517 JPY +
+BE: 154 646
+ent 111129
+Tie: 11768
+TIRE: 99 361
+SEMBE (%): 944.33
+GOLD# buy 0.04
+4630.52 — 4598.53
+GOLD# buy 0.04
+4613.46 > 4598.53
+GOLD# buy 0.04
+4597.80 > 4598.53
+GOLD# buy 0.04
+4620.61 — 4598.53
+GOLD# buy limit
+0.04 / 0 at 4584.05`;
+  const snap=parseAccountSnapshotFromText(text);
+  return snap.balance===154646 &&
+    snap.equity===111129 &&
+    snap.free===99361 &&
+    snap.credit===0 &&
+    (snap.evidence||[]).some(x=>String(x).includes('no-credit-margin-identity'));
+}
+function runMissingPrerequisiteGateSelfTest(){
+  const src=inspectRenderedTradingResult.toString();
+  return src.includes("PREREQUISITE_${validation.code}") &&
+    src.includes("stage==='8/8'&&!validation.ok");
 }
 function runMediaParserSelfTest(){
   const t=`GOLD# buy 0.01\n4318.10 > 4334.17 2565\nGOLD# buy 0.01\n4367.37 > 4334.17 -5300\nGOLD# buy 0.01\n4356.85 — 4334.17 -3621\nGOLD# buy limit\n0.01 / 0 at 4277.03 placed\nGOLD# buy limit\n0.01 / 0 at 4310.91 placed`;
@@ -5089,6 +5217,8 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const temporalEvidenceWithoutQuoteMeta=runTemporalEvidenceWithoutQuoteMetaSelfTest();
     const selfObservationArchitecture=runSelfObservationArchitectureSelfTest();
     const renderedDeadlineBlank=runRenderedDeadlineBlankSelfTest();
+    const account1739Recovery=run1739AccountRecoverySelfTest();
+    const missingPrerequisiteGate=runMissingPrerequisiteGateSelfTest();
     const sourceBasketCompleteness=runSourceBasketCompletenessSelfTest();
     const emDashFourPositionBasket=runEmDashFourPositionBasketSelfTest();
     const named={duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
@@ -5773,7 +5903,7 @@ function calcCompare(){
   const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。総合判定はStandardの1 XMP=$1ボーナス価値のみ反映。KIWAMIのXMPは参考表示で、勝敗には加算しません。</span>`;
   $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ反映。総合判定はStandardのボーナス価値のみ使用。KIWAMI XMPは参考表示で勝敗には加算しません。<br>※ スワップは概算。平日は1日分、3倍曜日（現在：${cmpWeekdayName(cmpTripleDay())}）は3日分、土日は0日分として保有期間に反映します。MT5詳細で曜日を認識できた場合は自動上書きします。`;
 }
-// v324 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
+// v325 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
 window.__CMP_V280_CONSISTENCY__=(()=>{
   const src=String(calcCompare);
   return {
@@ -5843,7 +5973,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v324-20260827';
+window.__APP_BUILD__='v325-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -5886,9 +6016,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v324-20260827'
+  build:'v325-20260827'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v324-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v325-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

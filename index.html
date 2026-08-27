@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v274-20260827">
+<meta name="build-id" content="v275-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v274</title>
+<title>Stop Out positioning｜デラポジ Pro v275</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -214,9 +214,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v274</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v275</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v274 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v275 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -332,8 +332,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
       <div class="cmpHeadline" id="cmpWinnerDetail">銘柄・方向・Lotを確認中…</div>
       <div class="cmpAdvantage" id="cmpEntryAdvantage">—</div>
       <div class="compareDecisionGrid" style="margin-top:12px">
-        <div class="compareDecisionBox"><div class="k">ロング BUY</div><div class="v" id="cmpBuyAccount">—</div><div class="small" id="cmpBuyReason">計算中</div></div>
-        <div class="compareDecisionBox"><div class="k">ショート SELL</div><div class="v" id="cmpSellAccount">—</div><div class="small" id="cmpSellReason">計算中</div></div>
+        <div class="compareDecisionBox"><div class="k">新規直後・ロング BUY</div><div class="v" id="cmpBuyAccount">—</div><div class="small" id="cmpBuyReason">計算中</div></div>
+        <div class="compareDecisionBox"><div class="k">新規直後・ショート SELL</div><div class="v" id="cmpSellAccount">—</div><div class="small" id="cmpSellReason">計算中</div></div>
       </div>
       <div class="compareBreakEven"><div class="small">XMP込み・逆転ポイント</div><div class="big" id="cmpBreakEvenHero">—</div><div class="small" id="cmpBreakEvenSub">—</div></div>
       <div id="cmpWhy" class="compareNote" style="margin-top:10px;text-align:left">スプレッドとスワップから自動計算します。</div>
@@ -416,7 +416,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v274-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v275-20260827';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -506,8 +506,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2&&fractions[0]===.10&&fractions[1]===.35&&fractions[2]===.73&&fractions[3]===.90};
 }
-window.__DEPLOYMENT_STATE__={build:'v274-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v274-20260827';
+window.__DEPLOYMENT_STATE__={build:'v275-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v275-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -521,7 +521,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v274-20260827', SHORT='v274';
+  const BUILD='v275-20260827', SHORT='v275';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -3932,10 +3932,13 @@ function calcCompare(){
     const diffAt=(days,includeXmp=true)=>spreadReady?(upfrontGap+(includeXmp&&xmpReady?xmpNetGap:0)+dailyGap*days):NaN;
     const immediate=diffAt(0,false),after5=diffAt(fiveMinDays,true);
     const events=[];
-    if(Number.isFinite(immediate)&&Number.isFinite(after5)&&cmpWinnerName(immediate)!==cmpWinnerName(after5)&&Math.abs(immediate)>=.5&&Math.abs(after5)>=.5){events.push({days:fiveMinDays,label:'XMP反映',to:cmpWinnerName(after5),kind:'xmp'});}
+    if(Number.isFinite(immediate)&&Number.isFinite(after5)&&cmpWinnerName(immediate)!==cmpWinnerName(after5)&&Math.abs(immediate)>=.5&&Math.abs(after5)>=.5){events.push({days:fiveMinDays,label:'5分後 XMP反映',to:cmpWinnerName(after5),kind:'xmp'});}
     if(spreadReady&&xmpReady&&Math.abs(dailyGap)>1e-9){
       const cross=-(upfrontGap+xmpNetGap)/dailyGap;
-      if(Number.isFinite(cross)&&cross>fiveMinDays&&cross<=365){events.push({days:cross,label:`約${cross.toFixed(cross<10?1:0)}日`,to:cmpWinnerName(diffAt(cross+1e-6,true)),kind:'carry'});}
+      if(Number.isFinite(cross)&&cross>fiveMinDays&&cross<=365){
+        const timeLabel=cross<1/24?`約${Math.max(1,Math.round(cross*24*60))}分後`:cross<1?`約${(cross*24).toFixed(cross*24<10?1:0)}時間後`:`約${cross.toFixed(cross<10?1:0)}日後`;
+        events.push({days:cross,label:timeLabel,to:cmpWinnerName(diffAt(cross+1e-6,true)),kind:'carry'});
+      }
     }
     events.sort((a,b)=>a.days-b.days);
     return {sp,kp,ss,ks,dailyGap,diffAt,immediate,after5,events};
@@ -3943,12 +3946,12 @@ function calcCompare(){
   const buy=sideData('buy'),sell=sideData('sell');
 
   const renderSide=(prefix,x,dir)=>{
-    const currentDiff=xmpReady?x.after5:x.immediate,w=Number.isFinite(currentDiff)?cmpWinnerName(currentDiff):'—',el=$(prefix+'Account'),rs=$(prefix+'Reason');
+    const currentDiff=x.immediate,w=Number.isFinite(currentDiff)?cmpWinnerName(currentDiff):'—',el=$(prefix+'Account'),rs=$(prefix+'Reason');
     if(el){el.textContent=w;el.className='v '+(w==='KIWAMI'?'good':w==='Standard'?'warn':'')}
     if(rs){
       const parts=[];
       if(Number.isFinite(x.immediate)&&Math.abs(x.immediate)>=.5)parts.push(`新規直後 ${cmpWinnerName(x.immediate)} ${Math.abs(Math.round(x.immediate)).toLocaleString('ja-JP')}円有利`);
-      if(xmpReady&&cmpWinnerName(x.after5)!==cmpWinnerName(x.immediate))parts.push(`🎁 XMP反映→${cmpWinnerName(x.after5)}`);
+      if(xmpReady&&cmpWinnerName(x.after5)!==cmpWinnerName(x.immediate))parts.push(`5分後 XMP反映→${cmpWinnerName(x.after5)}`);
       if(x.events.length)parts.push(x.events.map(e=>`${e.label}→${e.to}`).join(' / '));
       rs.textContent=parts.join(' ／ ')||`${dir==='buy'?'BUY':'SELL'}はほぼ同等`;
     }
@@ -3993,9 +3996,9 @@ function calcCompare(){
         const buyFlip=cmpWinnerName(buy.immediate)!==cmpWinnerName(buy.after5);
         const sellFlip=cmpWinnerName(sell.immediate)!==cmpWinnerName(sell.after5);
         if(buyFlip||sellFlip){
-          const bp={label:'XMP反映',days:fiveMinDays,xmp:true},br=mkRow(buy,bp),sr=mkRow(sell,bp);
-          const tags=[buyFlip?'BUY':'',sellFlip?'SELL':''].filter(Boolean).join(' / ')+' XMP反映';
-          html+=periodRowHtml('🎁 XMP反映',br,sr,tags);
+          const bp={label:'5分後',days:fiveMinDays,xmp:true},br=mkRow(buy,bp),sr=mkRow(sell,bp);
+          const tags=[buyFlip?'BUY':'',sellFlip?'SELL':''].filter(Boolean).join(' / ')+' XMPで逆転';
+          html+=periodRowHtml('🎁 5分後',br,sr,tags);
         }
       }
       if(i<periods.length-1&&spreadReady){
@@ -4007,7 +4010,7 @@ function calcCompare(){
     }
     list.innerHTML=html;
   }
-  const summary=$('cmpPeriodSummary');if(summary){const buyLast=buyRows[buyRows.length-1], sell3=sellRows.find(r=>r.label==='3日'), sell7=sellRows.find(r=>r.label==='7日');const buyTxt=Number.isFinite(buyLast?.diff)&&buyLast.diff<0?'ロングは全期間で<span class="cmpAccountKiwami">KIWAMI</span>が有利':'ロングは期間により有利口座が変化';const sellCross=sell.events.find(e=>e.kind==='carry');const sellTxt=sellCross?`ショートは約${sellCross.days.toFixed(1)}日までは<span class="cmpAccountKiwami">KIWAMI</span>有利、以降は<span class="cmpAccountStandard">Standard</span>が逆転`:(Number.isFinite(sell7?.diff)&&sell7.diff>0?'ショートは長期で<span class="cmpAccountStandard">Standard</span>有利':'ショートは現在条件では<span class="cmpAccountKiwami">KIWAMI</span>有利');summary.innerHTML=`<b>結論：</b> ${buyTxt}。${sellTxt}。<br><span class="small">🎁 XMP＝決済時に1回　↻ 日数差＝主にスワップ</span>`;}
+  const summary=$('cmpPeriodSummary');if(summary){const buyLast=buyRows[buyRows.length-1], sell3=sellRows.find(r=>r.label==='3日'), sell7=sellRows.find(r=>r.label==='7日');const buyTxt=Number.isFinite(buyLast?.diff)&&buyLast.diff<0?'ロングは全期間で<span class="cmpAccountKiwami">KIWAMI</span>が有利':'ロングは期間により有利口座が変化';const sellCross=sell.events.find(e=>e.kind==='carry');const sellTxt=sellCross?`ショートは約${sellCross.days.toFixed(1)}日までは<span class="cmpAccountKiwami">KIWAMI</span>有利、以降は<span class="cmpAccountStandard">Standard</span>が逆転`:(Number.isFinite(sell7?.diff)&&sell7.diff>0?'ショートは長期で<span class="cmpAccountStandard">Standard</span>有利':'ショートは現在条件では<span class="cmpAccountKiwami">KIWAMI</span>有利');summary.innerHTML=`<b>結論：</b> ${buyTxt}。${sellTxt}。<br><span class="small">🎁 XMP＝5分以上保有後の決済時に1回　↻ その後＝主にスワップ</span>`;}
 
   const spreadGap=spreadReady?kiwSpread-stdSpread:NaN;
   const shortPlain=Number.isFinite(spreadGap)?(spreadGap>0?'<span class="cmpAccountStandard">Standard</span>の方が入口コストが安い':spreadGap<0?'<span class="cmpAccountKiwami">KIWAMI</span>の方が入口コストが安い':'入口はほぼ同等'):'入口コストは比較データ不足';
@@ -4079,7 +4082,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v274-20260827';
+window.__APP_BUILD__='v275-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -4117,8 +4120,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v274-20260827'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v274-20260827'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v275-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v275-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

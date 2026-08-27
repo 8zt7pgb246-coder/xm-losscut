@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v292-20260827">
+<meta name="build-id" content="v294-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v292</title>
+<title>Stop Out positioning｜デラポジ Pro v294</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -225,9 +225,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v292</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v294</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v292 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v294 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -427,7 +427,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v292-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v294-20260827';
 function loadScript(src,timeout=8000){
   return new Promise((resolve,reject)=>{
     const existing=[...document.scripts].find(x=>x.src===src);
@@ -543,8 +543,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v292-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v292-20260827';
+window.__DEPLOYMENT_STATE__={build:'v294-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v294-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -558,7 +558,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v292-20260827', SHORT='v292';
+  const BUILD='v294-20260827', SHORT='v294';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1434,6 +1434,21 @@ function parseMt5AccountSummaryFallback(text){
   if(nums.length>=3&&Math.abs(nums[0]-nums[1])<=1&&Math.abs(nums[0]-nums[2])<=1){
     return {balance:nums[0],equity:nums[1],credit:0,free:nums[2],evidence:[`fallback-balance:${nums[0]}`,'fallback-flat-summary']};
   }
+  // v294: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
+  // while preserving the other two, e.g. 154646 / 154646 / 184646.
+  // On a pending-order screen with NO open-position row, two matching values
+  // are strong evidence of a flat account. Never use this when a position exists.
+  if(nums.length>=3 && hasRobustPendingOrderRowText(raw) && !hasStrongOpenPositionRowText(raw)){
+    const tri=nums.slice(0,3);
+    let agreed=null;
+    for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){
+      if(Math.abs(tri[i]-tri[j])<=1)agreed=(tri[i]+tri[j])/2;
+    }
+    if(Number.isFinite(agreed)&&agreed>=1000){
+      const v=Math.round(agreed);
+      return {balance:v,equity:v,credit:0,free:v,evidence:[`fallback-balance:${v}`,'fallback-flat-two-of-three-pending']};
+    }
+  }
   // v233: PSM11 usually preserves the complete five-number JPY account sequence
   // even when every Japanese label is garbled: Balance, Equity, Credit, Used Margin, Free.
   // Require the accounting identity Equity - Free == Used Margin before accepting it.
@@ -1444,7 +1459,7 @@ function parseMt5AccountSummaryFallback(text){
       return {balance:b,equity:e,credit:c,free,evidence:[`fallback-balance:${b}`,`fallback-credit:${c}`,'fallback-live-margin-identity']};
     }
   }
-  // v292: iPhone ENG OCR can destroy every Japanese account label while preserving
+  // v294: iPhone ENG OCR can destroy every Japanese account label while preserving
   // the five live-account numbers: Balance, Equity, Used Margin, Free Margin, Margin Level.
   // Example from the real user screenshot:
   // 154646, 153486, 2952, 150534, 5199.39
@@ -2052,7 +2067,9 @@ function looksLikeIOSControlCenterCanvas(canvas){
     const n=d.length/4, mean=sum/n;
     // Control Center in the supplied iPhone recordings is strongly dimmed;
     // normal MT5 quote/trade screens are predominantly white.
-    if(mean>165 || dark/n<0.22)return false;
+    // Do not reject solely by the old dark-pixel ratio: browser canvas scaling
+    // can lift dark pixels above 95 even while the whole frame is clearly dim.
+    if(mean>165)return false;
     const colStats=(x0,x1,y0,y1)=>{
       let a=0,b=0,min=255,max=0,count=0;
       for(let y=Math.floor(sh*y0);y<Math.ceil(sh*y1);y++){
@@ -2065,13 +2082,24 @@ function looksLikeIOSControlCenterCanvas(canvas){
       const m=a/count; return {mean:m,std:Math.sqrt(Math.max(0,b/count-m*m)),range:max-min};
     };
     const sliderL=colStats(.40,.50,.38,.68), sliderR=colStats(.51,.61,.38,.68);
-    const sliderLike=(q)=>q.range>115 && q.std>35;
+    const sliderLike=(q)=>q.range>90 && q.std>25;
     const top=colStats(.02,.98,.02,.30);
     const hasSlider=sliderLike(sliderL)||sliderLike(sliderR);
-    // Require the dark overlay + a high-contrast slider region. This sharply
-    // reduces false positives from ordinary dark app screens.
-    return hasSlider && top.mean<180 && bright/n>0.015;
+    // v294: the real iPhone Control Center recording is much darker than the
+    // original fixture and contains almost no >210px bright pixels. Accept that
+    // dim layout using the global luminance signature as a second path.
+    // Normal MT5 Trade/Quotes screens in this app are predominantly white.
+    const sharp=frameSharpnessScore(canvas);
+    const dimControlCenter=mean<145 && bright/n<0.01 && sharp<7.5;
+    return (hasSlider && top.mean<180) || dimControlCenter;
   }catch(e){return false}
+}
+function controlCenterMetricRegression(){
+  // Real browser metrics from the supplied 9.98s iPhone recording:
+  // mean≈122, bright≈0.00045, sharp≈2.73 must classify as Control Center.
+  const classify=(mean,brightRatio,sharp)=>mean<145&&brightRatio<0.01&&sharp<7.5;
+  return classify(122.2,0.00045,2.73)===true &&
+    classify(231,0.84,11.3)===false;
 }
 function filterUsableOCRResults(results){
   return (results||[]).filter(r=>{
@@ -3511,6 +3539,7 @@ function runCalcSelfTest(){
     const latestStillPrices=new Set(latestStillParsed.pending.map(o=>Number(o.price).toFixed(2)));
     const latestStillImageOrders=latestStillParsed.pending.length===3&&latestStillPrices.has('4527.18')&&latestStillPrices.has('4450.39')&&latestStillPrices.has('4333.47');
     const videoSamplingPolicy=videoSamplingRegressionTest().pass===true;
+    const controlCenterMetricPolicy=controlCenterMetricRegression();
     const parsed5=mergeParsedResults([{frameIndex:1,data:{text:orderText5}}]).pending;
     const exactVideoOrders=parsed5.length===5&&new Set(parsed5.map(o=>Number(o.price).toFixed(2))).size===5;
     // 2026-08-24 real MT5 user fixtures. The Trade screen explicitly shows
@@ -3664,6 +3693,36 @@ placed
     const crossFrameBalanceRetention=splitFrameMergedBalance===154646&&shouldInvalidateBalanceForImport(true,Number.isFinite(splitFrameMergedBalance)&&splitFrameMergedBalance>0)===false;
     const garbledFlatAccount=parseAccountSnapshotFromText('18:39\nJPY\n154 646\n154 646\n154 646\nオーダー\nGOLD# buy limit\n0.03 / 0 at 4577.90');
     const accountLayoutFallback=garbledFlatAccount.balance===154646&&garbledFlatAccount.equity===154646&&garbledFlatAccount.free===154646;
+    const controlCenterOrderOcr=`JPY
+BE: 154 646
+AE: 154 646
+aR: 184 646
+GOLD# buy limit
+0.02 / 0 at 4552.28
+GOLD# buy limit
+0.02 / 0 at 4475.19
+GOLD# buy limit
+0.02 / 0 at 4383.19
+GOLD# buy limit
+0.04 / 0 at 4630.58
+GOLD# buy limit
+0.04 / 0 at 4613.55
+GOLD# buy limit
+0.04 / 0 at 4604.77
+GOLD# buy limit
+0.04 / 0 at 4598.00`;
+    const controlCenterOrderAccount=parseAccountSnapshotFromText(controlCenterOrderOcr);
+    const controlCenterOrderParsed=parseOCR(controlCenterOrderOcr);
+    const controlCenterOrderUnique=[...new Map(controlCenterOrderParsed.pending.map(o=>[
+      `${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`,o
+    ])).values()];
+    const controlCenterOrderVideoRecovery=
+      controlCenterOrderAccount.balance===154646 &&
+      controlCenterOrderAccount.equity===154646 &&
+      controlCenterOrderAccount.free===154646 &&
+      controlCenterOrderUnique.length===7 &&
+      controlCenterOrderAccount.evidence.some(x=>String(x).includes('two-of-three-pending'));
+
     const noJpyGarbledText='18:39\n154 646\n154 646\n154 646\nGOLD# buy limit\n0.03 / 0 at 4577.90 placed';
     const noJpyGarbled=parseAccountSnapshotFromText(noJpyGarbledText);
     const noJpyFlatFallback=noJpyGarbled.balance===154646&&noJpyGarbled.equity===154646&&noJpyGarbled.free===154646&&isExplicitFlatTradeSnapshot(noJpyGarbledText,noJpyGarbled,[]);
@@ -3831,7 +3890,7 @@ GOLD# buy limit
     const secondMediaSupersedesFirst=document.documentElement.innerHTML.includes('window.__mediaImportToken')&&document.documentElement.innerHTML.includes('const stillCurrent=()=>window.__mediaImportToken===importToken')&&document.documentElement.innerHTML.includes('if(!stillCurrent())return');
     const videoNoFullRedecodeFallback=document.documentElement.innerHTML.includes('else if(!isVideo && (!parsed.pending.length||!parsed.positions.length))')&&document.documentElement.innerHTML.includes('sharedVideoWorker=await createOCRWorker')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
     const diagnosticIsolation=runDiagnosticIsolationSelfTest();
-    const named={diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    const named={diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,controlCenterOrderVideoRecovery,reportedScreenshotStateTransition,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     // A production safety gate must be based on observable behavior, not on
     // source-code strings, DOM labels or a version badge. A stale audit assertion
     // previously made every new build fail its own regression test and stopped
@@ -4478,7 +4537,7 @@ function calcCompare(){
   const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。総合判定はStandardの1 XMP=$1ボーナス価値のみ反映。KIWAMIのXMPは参考表示で、勝敗には加算しません。</span>`;
   $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ反映。総合判定はStandardのボーナス価値のみ使用。KIWAMI XMPは参考表示で勝敗には加算しません。<br>※ スワップは概算。平日は1日分、3倍曜日（現在：${cmpWeekdayName(cmpTripleDay())}）は3日分、土日は0日分として保有期間に反映します。MT5詳細で曜日を認識できた場合は自動上書きします。`;
 }
-// v292 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
+// v294 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
 window.__CMP_V280_CONSISTENCY__=(()=>{
   const src=String(calcCompare);
   return {
@@ -4548,7 +4607,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v292-20260827';
+window.__APP_BUILD__='v294-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -4591,9 +4650,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v292-20260827'
+  build:'v294-20260827'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v292-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v294-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

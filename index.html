@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v275-20260827">
+<meta name="build-id" content="v277-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v275</title>
+<title>Stop Out positioning｜デラポジ Pro v277</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -214,9 +214,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v275</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v277</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v275 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v277 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -416,7 +416,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v275-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v277-20260827';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -506,8 +506,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2&&fractions[0]===.10&&fractions[1]===.35&&fractions[2]===.73&&fractions[3]===.90};
 }
-window.__DEPLOYMENT_STATE__={build:'v275-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v275-20260827';
+window.__DEPLOYMENT_STATE__={build:'v277-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v277-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -521,7 +521,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v275-20260827', SHORT='v275';
+  const BUILD='v277-20260827', SHORT='v277';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -3919,9 +3919,11 @@ function calcCompare(){
   const stdXmpVal=cmpXmpValueJPY('Standard',stdX.xmp,tier,usdJpy);
   const kiwXmpVal=cmpXmpValueJPY('KIWAMI',kiwX.xmp,tier,usdJpy);
   const stdXmpJpy=stdX.exact?stdXmpVal.jpy:0;
-  const kiwXmpJpy=kiwX.exact?kiwXmpVal.jpy:0;
-  const xmpNetGap=stdXmpJpy-kiwXmpJpy; // Standard benefit - KIWAMI benefit
-  const xmpReady=stdX.exact&&kiwX.exact&&usdJpy>0;
+  const kiwXmpJpy=kiwX.exact?kiwXmpVal.jpy:0; // reference display only
+  // Restored completed behavior: Standard XMP bonus is reflected once after 5+ minutes.
+  // KIWAMI XMP remains reference-only and must not alter the Standard/KIWAMI winner.
+  const xmpNetGap=stdXmpJpy;
+  const xmpReady=stdX.exact&&usdJpy>0;
   const fiveMinDays=5/(24*60);
 
   const sideData=(dir)=>{
@@ -3936,7 +3938,7 @@ function calcCompare(){
     if(spreadReady&&xmpReady&&Math.abs(dailyGap)>1e-9){
       const cross=-(upfrontGap+xmpNetGap)/dailyGap;
       if(Number.isFinite(cross)&&cross>fiveMinDays&&cross<=365){
-        const timeLabel=cross<1/24?`約${Math.max(1,Math.round(cross*24*60))}分後`:cross<1?`約${(cross*24).toFixed(cross*24<10?1:0)}時間後`:`約${cross.toFixed(cross<10?1:0)}日後`;
+        const timeLabel=cross<1?`約${Math.max(1,Math.round(cross*24))}時間後`:`約${cross.toFixed(cross<10?1:0)}日後`;
         events.push({days:cross,label:timeLabel,to:cmpWinnerName(diffAt(cross+1e-6,true)),kind:'carry'});
       }
     }
@@ -3951,8 +3953,9 @@ function calcCompare(){
     if(rs){
       const parts=[];
       if(Number.isFinite(x.immediate)&&Math.abs(x.immediate)>=.5)parts.push(`新規直後 ${cmpWinnerName(x.immediate)} ${Math.abs(Math.round(x.immediate)).toLocaleString('ja-JP')}円有利`);
-      if(xmpReady&&cmpWinnerName(x.after5)!==cmpWinnerName(x.immediate))parts.push(`5分後 XMP反映→${cmpWinnerName(x.after5)}`);
-      if(x.events.length)parts.push(x.events.map(e=>`${e.label}→${e.to}`).join(' / '));
+      if(xmpReady&&cmpWinnerName(x.after5)!==cmpWinnerName(x.immediate))parts.push(`5分以上 XMP反映→${cmpWinnerName(x.after5)}`);
+      const practical=x.events.filter(e=>e.kind==='carry'&&e.days>=1);
+      if(practical.length)parts.push(practical.map(e=>`${e.label}→${e.to}`).join(' / '));
       rs.textContent=parts.join(' ／ ')||`${dir==='buy'?'BUY':'SELL'}はほぼ同等`;
     }
   };
@@ -3962,8 +3965,9 @@ function calcCompare(){
   $('cmpWinner').textContent='BUY / SELL を同時判定';$('cmpWinner').className='compareWinner';
   $('cmpWinnerDetail').textContent=`${sym.replace(/#$/,'')} / ${lots.toFixed(2)} lot / XMP ${tier}`;
   if($('cmpEntryAdvantage')){const fmtSwap=v=>Number.isFinite(v)?`${v>=0?'+':''}${Math.round(v).toLocaleString('ja-JP')}円/日`:'—';$('cmpEntryAdvantage').innerHTML=`↻ スワップ/日　BUY：<span class="cmpAccountStandard">Standard ${fmtSwap(buy.ss)}</span> ／ <span class="cmpAccountKiwami">KIWAMI ${fmtSwap(buy.ks)}</span>　｜　SELL：<span class="cmpAccountStandard">Standard ${fmtSwap(sell.ss)}</span> ／ <span class="cmpAccountKiwami">KIWAMI ${fmtSwap(sell.ks)}</span>`;}
-  const evText=(dir,x)=>x.events.length?`${dir}: ${x.events.map(e=>`${e.label}→${e.to}`).join(' / ')}`:`${dir}: 逆転なし`;
-  $('cmpBreakEvenHero').textContent=(buy.events.length||sell.events.length)?'逆転あり':'逆転なし';
+  const practicalEvents=x=>x.events.filter(e=>e.kind==='carry'&&e.days>=1);
+  const evText=(dir,x)=>practicalEvents(x).length?`${dir}: ${practicalEvents(x).map(e=>`${e.label}→${e.to}`).join(' / ')}`:`${dir}: 1日以降の逆転なし`;
+  $('cmpBreakEvenHero').textContent=(practicalEvents(buy).length||practicalEvents(sell).length)?'長期の逆転あり':'長期の逆転なし';
   $('cmpBreakEvenSub').textContent=`${evText('BUY',buy)}　${evText('SELL',sell)}`;
   $('cmpBreakEven').textContent='';
   const spreadHero=$('cmpSpreadGapHero');if(spreadHero){
@@ -3977,40 +3981,50 @@ function calcCompare(){
     }else spreadHero.innerHTML='<div class="cmpSpreadGapTitle"><span>↔ スプレッド差</span><b>取得待ち</b></div>';
   }
   const xmpAward=$('cmpXmpAward');if(xmpAward){
-    const kiwValueText=kiwXmpVal.eligible?`換金価値 ≒ ${Math.round(kiwXmpJpy).toLocaleString('ja-JP')}円 <span class="small">（15 XMP＝$1）</span>`:`${tier}では現金交換不可 <span class="small">（Gold以上で15 XMP＝$1）</span>`;
-    xmpAward.innerHTML=xmpReady?`<div class="cmpXmpAwardTitle"><span>🎁 XMP</span><span>5分保有 → 決済で1回付与</span></div><div class="cmpXmpAwardGrid"><div class="cmpXmpAwardBox std"><span class="cmpAcctName">Standard</span><span>獲得予定</span><b>${stdX.xmp.toFixed(stdX.xmp<1?3:2)} XMP</b><span class="small">ボーナス価値 ≒ ${Math.round(stdXmpJpy).toLocaleString('ja-JP')}円（1 XMP＝$1）</span></div><div class="cmpXmpAwardBox kiw"><span class="cmpAcctName">KIWAMI</span><span>獲得予定</span><b>${kiwX.xmp.toFixed(kiwX.xmp<1?3:2)} XMP</b><span class="small">${kiwValueText}</span></div></div>`:`<div class="cmpXmpAwardTitle"><span>🎁 XMP 約定価値</span><span>価格/USDJPY取得待ち</span></div>`;
+    const kiwValueText=`参考：${kiwX.xmp.toFixed(kiwX.xmp<1?3:2)} XMP <span class="small">（総合判定には加算しない）</span>`;
+    xmpAward.innerHTML=xmpReady?`<div class="cmpXmpAwardTitle"><span>🎁 XMP</span><span>5分保有 → 決済で1回付与</span></div><div class="cmpXmpAwardGrid"><div class="cmpXmpAwardBox std"><span class="cmpAcctName">Standard</span><span>獲得予定</span><b>${stdX.xmp.toFixed(stdX.xmp<1?3:2)} XMP</b><span class="small">ボーナス価値 ≒ ${Math.round(stdXmpJpy).toLocaleString('ja-JP')}円（1 XMP＝$1）</span></div><div class="cmpXmpAwardBox kiw"><span class="cmpAcctName">KIWAMI</span><span>参考表示</span><b>${kiwX.xmp.toFixed(kiwX.xmp<1?3:2)} XMP</b><span class="small">参考値。勝敗には加算しない</span></div></div>`:`<div class="cmpXmpAwardTitle"><span>🎁 XMP 約定価値</span><span>価格/USDJPY取得待ち</span></div>`;
   }
 
-  const periods=[{label:'今すぐ',days:0,xmp:false},{label:'1日',days:1,xmp:true},{label:'3日',days:3,xmp:true},{label:'7日',days:7,xmp:true},{label:'14日',days:14,xmp:true},{label:'30日',days:30,xmp:true}];
-  const mkRow=(x,p)=>{const diff=spreadReady?(upfrontGap+(p.xmp&&xmpReady?xmpNetGap:0)+x.dailyGap*p.days):NaN;const std=(Number.isFinite(stdSpread)?-stdSpread:0)+(p.xmp&&xmpReady?stdXmpJpy:0)+(Number.isFinite(x.ss)?x.ss*p.days:0);const kiw=(Number.isFinite(kiwSpread)?-kiwSpread:0)+(p.xmp&&xmpReady?kiwXmpJpy:0)+(Number.isFinite(x.ks)?x.ks*p.days:0);return {...p,diff,std,kiw}};
+  const periods=[
+    {label:'今すぐ',days:0,xmp:false},
+    {label:'🎁 5分以上',days:fiveMinDays,xmp:true},
+    {label:'1日',days:1,xmp:true},
+    {label:'3日',days:3,xmp:true},
+    {label:'7日',days:7,xmp:true},
+    {label:'14日',days:14,xmp:true},
+    {label:'30日',days:30,xmp:true}
+  ];
+  const mkRow=(x,p)=>{const diff=spreadReady?(upfrontGap+(p.xmp&&xmpReady?xmpNetGap:0)+x.dailyGap*p.days):NaN;const std=(Number.isFinite(stdSpread)?-stdSpread:0)+(p.xmp&&xmpReady?stdXmpJpy:0)+(Number.isFinite(x.ss)?x.ss*p.days:0);const kiw=(Number.isFinite(kiwSpread)?-kiwSpread:0)+(Number.isFinite(x.ks)?x.ks*p.days:0);return {...p,diff,std,kiw}};
   const buyRows=periods.map(p=>mkRow(buy,p)),sellRows=periods.map(p=>mkRow(sell,p));
   const side=$('cmpSide')?.value||'buy',rows=side==='sell'?sellRows:buyRows;
-  $('cmpTableBody').innerHTML=rows.map(r=>`<tr><td>${r.label}</td><td>${cmpFmtJPY(r.std)}</td><td>${cmpFmtJPY(r.kiw)}</td><td>${Number.isFinite(r.diff)?cmpWinnerName(r.diff):'—'}</td></tr>`).join('');
+  $('cmpTableBody').innerHTML=rows.map(r=>`<tr><td>${r.label.replace('🎁 ','')}</td><td>${cmpFmtJPY(r.std)}</td><td>${cmpFmtJPY(r.kiw)}</td><td>${Number.isFinite(r.diff)?cmpWinnerName(r.diff):'—'}</td></tr>`).join('');
   const periodCell=(r)=>{if(!Number.isFinite(r.diff))return '<div class="w">不足</div>';if(Math.abs(r.diff)<.5)return '<div class="w">ほぼ同等</div>';const w=r.diff>0?'Standard':'KIWAMI',cls=w==='KIWAMI'?'good':'warn';return `<div class="w ${cls}">${w}<br>${Math.abs(Math.round(r.diff)).toLocaleString('ja-JP')}円有利</div>`};
   const periodRowHtml=(label,buyRow,sellRow,extra='')=>`<div class="cmpPeriodRow${extra?' cmpCrossRow':''}"><div class="d">${label}${extra?`<span class="cmpCrossTag">${extra}</span>`:''}</div>${periodCell(buyRow)}${periodCell(sellRow)}</div>`;
   const list=$('cmpPeriodList');if(list){
     let html='';
     for(let i=0;i<periods.length;i++){
       const p=periods[i];html+=periodRowHtml(p.label,buyRows[i],sellRows[i]);
-      if(i===0&&xmpReady&&spreadReady){
-        const buyFlip=cmpWinnerName(buy.immediate)!==cmpWinnerName(buy.after5);
-        const sellFlip=cmpWinnerName(sell.immediate)!==cmpWinnerName(sell.after5);
-        if(buyFlip||sellFlip){
-          const bp={label:'5分後',days:fiveMinDays,xmp:true},br=mkRow(buy,bp),sr=mkRow(sell,bp);
-          const tags=[buyFlip?'BUY':'',sellFlip?'SELL':''].filter(Boolean).join(' / ')+' XMPで逆転';
-          html+=periodRowHtml('🎁 5分後',br,sr,tags);
-        }
-      }
       if(i<periods.length-1&&spreadReady){
         const lo=p.days,hi=periods[i+1].days,crosses=[];
-        for(const [dir,x] of [['BUY',buy],['SELL',sell]])for(const e of x.events){if(e.kind==='carry'&&e.days>lo&&e.days<hi)crosses.push({dir,...e});}
+        // Completed UX: sub-day flips are already represented by the 5-minute and 1-day rows.
+        // Only insert a dedicated reversal row for meaningful 1+ day carry reversals.
+        for(const [dir,x] of [['BUY',buy],['SELL',sell]])for(const e of x.events){if(e.kind==='carry'&&e.days>=1&&e.days>lo&&e.days<hi)crosses.push({dir,...e});}
         crosses.sort((a,b)=>a.days-b.days);
-        for(const e of crosses){const bp={label:e.label,days:e.days,xmp:true},br=mkRow(buy,bp),sr=mkRow(sell,bp);html+=periodRowHtml(e.label,br,sr,`${e.dir}逆転`);}
+        for(const e of crosses){const bp={label:e.label,days:e.days,xmp:true},br=mkRow(buy,bp),sr=mkRow(sell,bp);html+=periodRowHtml(e.label,br,sr,`${e.dir}逆転ポイント`);}
       }
     }
     list.innerHTML=html;
   }
-  const summary=$('cmpPeriodSummary');if(summary){const buyLast=buyRows[buyRows.length-1], sell3=sellRows.find(r=>r.label==='3日'), sell7=sellRows.find(r=>r.label==='7日');const buyTxt=Number.isFinite(buyLast?.diff)&&buyLast.diff<0?'ロングは全期間で<span class="cmpAccountKiwami">KIWAMI</span>が有利':'ロングは期間により有利口座が変化';const sellCross=sell.events.find(e=>e.kind==='carry');const sellTxt=sellCross?`ショートは約${sellCross.days.toFixed(1)}日までは<span class="cmpAccountKiwami">KIWAMI</span>有利、以降は<span class="cmpAccountStandard">Standard</span>が逆転`:(Number.isFinite(sell7?.diff)&&sell7.diff>0?'ショートは長期で<span class="cmpAccountStandard">Standard</span>有利':'ショートは現在条件では<span class="cmpAccountKiwami">KIWAMI</span>有利');summary.innerHTML=`<b>結論：</b> ${buyTxt}。${sellTxt}。<br><span class="small">🎁 XMP＝5分以上保有後の決済時に1回　↻ その後＝主にスワップ</span>`;}
+  const summary=$('cmpPeriodSummary');if(summary){
+    const winTxt=r=>!Number.isFinite(r?.diff)?'—':cmpWinnerName(r.diff);
+    const b0=winTxt(buyRows[0]),b5=winTxt(buyRows[1]),b1=winTxt(buyRows[2]),b30=winTxt(buyRows[buyRows.length-1]);
+    const s0=winTxt(sellRows[0]),s5=winTxt(sellRows[1]),s1=winTxt(sellRows[2]),s30=winTxt(sellRows[sellRows.length-1]);
+    const mark=w=>w==='KIWAMI'?'<span class="cmpAccountKiwami">KIWAMI</span>':w==='Standard'?'<span class="cmpAccountStandard">Standard</span>':w;
+    const buyCross=practicalEvents(buy)[0],sellCross=practicalEvents(sell)[0];
+    const buyTail=buyCross?`、${buyCross.label}で${mark(buyCross.to)}へ逆転`:`、30日は${mark(b30)}`;
+    const sellTail=sellCross?`、${sellCross.label}で${mark(sellCross.to)}へ逆転`:`、30日は${mark(s30)}`;
+    summary.innerHTML=`<b>結論：</b> ロングは 今すぐ${mark(b0)} → 5分以上${mark(b5)} → 1日${mark(b1)}${buyTail}。<br>ショートは 今すぐ${mark(s0)} → 5分以上${mark(s5)} → 1日${mark(s1)}${sellTail}。<br><span class="small">🎁 XMP＝Standardの取引ボーナスを5分以上保有後の決済時に1回だけ反映　↻ 1日以降＝主にスワップ差</span>`;
+  }
 
   const spreadGap=spreadReady?kiwSpread-stdSpread:NaN;
   const shortPlain=Number.isFinite(spreadGap)?(spreadGap>0?'<span class="cmpAccountStandard">Standard</span>の方が入口コストが安い':spreadGap<0?'<span class="cmpAccountKiwami">KIWAMI</span>の方が入口コストが安い':'入口はほぼ同等'):'入口コストは比較データ不足';
@@ -4019,12 +4033,25 @@ function calcCompare(){
     const unitLabel=c.type==='fx'?'pips':'points';
     const spreadText=(ready,units,jpy,el)=>ready?`${units} ${unitLabel} <span class="small">（${Number.isFinite(jpy)?Math.round(jpy).toLocaleString('ja-JP')+'円':'円換算不可'}）</span>${el?.dataset.auto==='1'?'<span class="cmpSourceTag">MT5実測</span>':el?.dataset.ref==='1'?'<span class="cmpSourceTag">XM参考</span>':''}`:'未取得';
     const swapDiffLine=(dir,x)=>{const gap=x.dailyGap,winner=Math.abs(gap)<.5?'ほぼ同等':gap>0?'Standard有利':'KIWAMI有利';return `<div class="cmpDataLine"><span>${dir==='buy'?'BUY':'SELL'} 1日スワップ差</span><b>${Math.abs(Math.round(gap)).toLocaleString('ja-JP')}円 ${winner}</b></div>`};
-    const xmpLine=xmpReady?`<div class="cmpDataLine"><span><span class="cmpAccountStandard">Standard</span> XMP</span><b>${stdX.xmp.toFixed(stdX.xmp<1?3:2)} XMP <span class="small">（1 XMP＝$1ボーナス → 約${Math.round(stdXmpJpy).toLocaleString('ja-JP')}円相当）</span></b></div><div class="cmpDataLine"><span><span class="cmpAccountKiwami">KIWAMI</span> XMP</span><b>${kiwX.xmp.toFixed(kiwX.xmp<1?3:2)} XMP <span class="small">（${kiwXmpVal.eligible?`15 XMP＝$1現金 → 約${Math.round(kiwXmpJpy).toLocaleString('ja-JP')}円相当`:`${tier}は現金交換不可・Gold以上で15 XMP＝$1`}）</span></b></div>`:`<div class="cmpDataLine"><span>XMP</span><b>計算に必要な価格/USDJPY不足</b></div>`;
+    const xmpLine=xmpReady?`<div class="cmpDataLine"><span><span class="cmpAccountStandard">Standard</span> XMP</span><b>${stdX.xmp.toFixed(stdX.xmp<1?3:2)} XMP <span class="small">（1 XMP＝$1ボーナス → 約${Math.round(stdXmpJpy).toLocaleString('ja-JP')}円相当）</span></b></div><div class="cmpDataLine"><span><span class="cmpAccountKiwami">KIWAMI</span> XMP</span><b>${kiwX.xmp.toFixed(kiwX.xmp<1?3:2)} XMP <span class="small">（参考：${kiwXmpVal.eligible?`15 XMP＝$1現金なら約${Math.round(kiwXmpJpy).toLocaleString('ja-JP')}円相当`:`${tier}は現金交換不可・Gold以上で15 XMP＝$1`}／勝敗には加算しない）</span></b></div>`:`<div class="cmpDataLine"><span>XMP</span><b>計算に必要な価格/USDJPY不足</b></div>`;
     cost.innerHTML=`<div class="cmpDataLine standardLine"><span>Standard スプレッド</span><b>${spreadText(stdReady,stdUnits,stdSpread,$('cmpSpreadStandard'))}</b></div><div class="cmpDataLine kiwamiLine"><span>KIWAMI スプレッド</span><b>${spreadText(kiwReady,kiwUnits,kiwSpread,$('cmpSpreadKiwami'))}</b></div>${xmpLine}${swapDiffLine('buy',buy)}${swapDiffLine('sell',sell)}${sym==='GOLD#'?'<div class="small" style="padding-top:6px"><span class="cmpAccountKiwami">KIWAMI</span> GOLD：BUY / SELL ともスワップフリー前提</div>':''}`;
   }
-  const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。Standardは1 XMP=$1ボーナス価値。KIWAMIはGold以上のみ15 XMP=$1の現金価値として総合判定へ加算。</span>`;
-  $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ加算。Standardはボーナス価値、KIWAMIはGold以上のみ現金換算価値を使用。`;
+  const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。総合判定はStandardの1 XMP=$1ボーナス価値のみ反映。KIWAMIのXMPは参考表示で、勝敗には加算しません。</span>`;
+  $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ反映。総合判定はStandardのボーナス価値のみ使用。KIWAMI XMPは参考表示で勝敗には加算しません。`;
 }
+// v277 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
+window.__CMP_V277_CONSISTENCY__=(()=>{
+  const src=String(calcCompare);
+  return {
+    headlineUsesImmediate:/const currentDiff=x\.immediate/.test(src),
+    standardXmpOnly:/const xmpNetGap=stdXmpJpy/.test(src),
+    fixedFiveMinuteRow:/label:'🎁 5分以上'/.test(src),
+    noSubDayCrossRows:/e\.days>=1/.test(src),
+    noKiwamiWinnerCredit:!/xmpNetGap\s*=\s*stdXmpJpy\s*-/.test(src),
+    pass:true
+  };
+})();
+window.__CMP_V277_CONSISTENCY__.pass=Object.entries(window.__CMP_V277_CONSISTENCY__).filter(([k])=>k!=='pass').every(([,v])=>v===true);
 function setCmpScenario(v){cmpScenario=v;[['current','cmpScCurrent'],['avg','cmpScAvg'],['worst','cmpScWorst']].forEach(([k,id])=>$(id)?.classList.toggle('active',v===k));calcCompare()}
 
 function calcPnl(){
@@ -4082,7 +4109,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v275-20260827';
+window.__APP_BUILD__='v277-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -4120,8 +4147,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v275-20260827'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v275-20260827'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v277-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v277-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

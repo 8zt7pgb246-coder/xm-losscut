@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v267-20260827">
+<meta name="build-id" content="v270-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v267</title>
+<title>Stop Out positioning｜デラポジ Pro v270</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -214,9 +214,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v267</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v270</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v267 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v270 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -416,7 +416,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v267-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v270-20260827';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -461,6 +461,14 @@ async function ensureOCR(){
   })();
   return window.__ocrPromise;
 }
+// v270 SPEED: fetch the OCR engine while the user is looking at the UI.
+// This does not start a worker or run OCR, so import accuracy/state is untouched.
+(function warmOCRScriptOnIdle(){
+  const warm=()=>ensureOCR().catch(e=>console.warn('[XM] OCR idle warmup skipped',e));
+  if('requestIdleCallback' in window) requestIdleCallback(warm,{timeout:1800});
+  else setTimeout(warm,350);
+})();
+
 function ocrWorkerOptions(logger){
   return {logger:logger||(()=>{})};
 }
@@ -491,13 +499,15 @@ async function createOCRWorker(T,logger){
 function videoSamplingRegressionTest(){
   const f=window.__VIDEO_REGRESSION_FIXTURE__;
   const endTime=Math.max(0,Number(f.duration)-0.05);
-  const fractions=[0.10,0.22,0.35,0.56,0.73,0.90];
+  // v270: production sampler is intentionally four fixed anchors.
+  // 0.10/0.35 protect quote-board coverage; 0.73/0.90 protect Trade coverage.
+  const fractions=[0.10,0.35,0.73,0.90];
   const times=fractions.map(x=>Math.min(endTime,Math.max(0.02,endTime*x)));
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
-  return {count:times.length,pos,times,pass:times.length===6&&pos>=2&&fractions.includes(.73)&&fractions.includes(.90)};
+  return {count:times.length,pos,times,pass:times.length===4&&pos>=2&&fractions[0]===.10&&fractions[1]===.35&&fractions[2]===.73&&fractions[3]===.90};
 }
-window.__DEPLOYMENT_STATE__={build:'v267-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v267-20260827';
+window.__DEPLOYMENT_STATE__={build:'v270-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v270-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -511,7 +521,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v267-20260827', SHORT='v267';
+  const BUILD='v270-20260827', SHORT='v270';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -2155,19 +2165,18 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     if(!Number.isFinite(duration)||duration<=0)throw new Error('VIDEO_DURATION_INVALID');
     if(width<=0||height<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
     if(v.readyState<2){const p=waitEvent('loadeddata');if(v.readyState<2)await p}
-    // v252: cheap candidate scan first, OCR only five selected frames. Six seeks are
-    // cheaper than extra OCR passes and still capture one additional quote-scroll state beyond the proven 4 anchors.
-    const targetCount=Math.min(5,Math.max(4,maxFrames));
-    // Keep the exact v239 anchors, then add cheap early quote candidates.
-    // This restores the proven Trade coverage while still seeing more quote-scroll states.
-    const fractions=[0.10,0.22,0.35,0.56,0.73,0.90];
+    // v270 SPEED: OCR only the four regression-proven anchors.
+    // 0.10/0.35 cover the quote board; 0.73/0.90 are the protected Trade anchors.
+    // The removed 0.22/0.56 candidates were redundant seeks and could add a fifth OCR pass.
+    const targetCount=4;
+    const fractions=[0.10,0.35,0.73,0.90];
     const endTime=Math.max(0,duration-.05),times=fractions.map(f=>Math.min(endTime,Math.max(.02,endTime*f)));
     const scale=Math.min(1,1280/Math.max(width,height));
     const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));
     const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)throw new Error('VIDEO_CANVAS_UNAVAILABLE');
     const candidates=[];
     for(let i=0;i<times.length;i++){
-      const t=times[i];if(Math.abs(Number(v.currentTime)-t)>.02){v.currentTime=t;await waitEvent('seeked',10000)}
+      const t=times[i];if(Math.abs(Number(v.currentTime)-t)>.02){const seekDone=waitEvent('seeked',10000);v.currentTime=t;await seekDone}
       if(v.readyState<2)await waitEvent('loadeddata',10000);
       ctx.drawImage(v,0,0,canvas.width,canvas.height);
       const copy=document.createElement('canvas');copy.width=canvas.width;copy.height=canvas.height;copy.getContext('2d').drawImage(canvas,0,0);
@@ -2430,12 +2439,12 @@ $('mediaFile').addEventListener('change',async e=>{
     const ocrEnginePromise=ensureOCR();
     if(isVideo){
       $('ocrStatus').textContent='2/8 動画デコーダーとOCRエンジンを並列準備中…';
-      videoSourcesForReuse=await videoFrameSources(f,5,(done,total)=>{if(stillCurrent())setImportStage('3/8',`動画フレーム読込 ${done}/${total}`)}); if(!stillCurrent())return;
+      videoSourcesForReuse=await videoFrameSources(f,4,(done,total)=>{if(stillCurrent())setImportStage('3/8',`動画フレーム読込 ${done}/${total}`)}); if(!stillCurrent())return;
       $('ocrStatus').textContent=`3/8 動画読み込み完了（${videoSourcesForReuse.length}フレーム）。OCRエンジンを起動中…`;
     }else{
       $('ocrStatus').textContent='2/8 画像データを確認中…';
     }
-    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…（適応4アンカー / 必要フレームのみOCR）';
+    $('ocrStatus').textContent='4/8 OCRエンジンを起動中…（固定4アンカー / 重複OCRなし）';
     const T=await Promise.race([
       ocrEnginePromise,
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('TESSERACT_SCRIPT_TIMEOUT')),12000))
@@ -2466,7 +2475,7 @@ $('mediaFile').addEventListener('change',async e=>{
       // rows, but it is both slower and less reliable on the dense Trade pane. Read
       // quote anchors with PSM11 and Trade anchors with PSM6 using the SAME worker.
       // This avoids paying for a weak PSM11 Trade pass that usually triggered PSM3
-      // immediately afterwards, while preserving all five sampled frames.
+      // immediately afterwards, while preserving all four sampled frames.
       const quoteSources=initialVideoSources.filter(src=>Number(src?.fraction)<0.66);
       const tradeSources=initialVideoSources.filter(src=>Number(src?.fraction)>=0.66);
       const quoteResults=quoteSources.length?await recognizeFileFrames(T,f,'price',m=>{
@@ -3144,14 +3153,16 @@ function runVideoBeforeOCRSelfTest(){
   const end=src.indexOf("\n});",start);
   if(start<0||end<0)return false;
   const h=src.slice(start,end);
-  const v=h.indexOf("videoFrameSources(f,3,(done,total)=>setImportStage('3/8',`動画フレーム読込 ${done}/${total}`))");
-  const o=h.indexOf("ensureOCR()");
-  return v>=0 && o>v;
+  const preload=h.indexOf('const ocrEnginePromise=ensureOCR()');
+  const frames=h.indexOf('videoFrameSources(f,4');
+  const awaitEngine=h.indexOf('const T=await Promise.race');
+  // OCR script fetch starts early, while video seeking runs in parallel; worker OCR waits for both.
+  return preload>=0 && frames>preload && awaitEngine>frames;
 }
 
 function runVideoLoadOrderSelfTest(){
   const fn=videoFrameSources.toString();
-  return fn.includes("waitFor(['loadedmetadata']") && fn.includes('v.src=url') && fn.indexOf('v.src=url')<fn.indexOf('v.load();') && fn.includes("v.addEventListener('seeked',onSeeked)") && fn.indexOf("v.addEventListener('seeked',onSeeked)")<fn.indexOf('v.currentTime=t') && !/\.play\s*\(/.test(fn);
+  return fn.includes("waitEvent('loadedmetadata'") && fn.includes('v.src=objectUrl') && fn.indexOf('v.src=objectUrl')<fn.indexOf('v.load();') && fn.includes("const seekDone=waitEvent('seeked'") && fn.includes('v.currentTime=t') && fn.indexOf("const seekDone=waitEvent('seeked'")<fn.indexOf('v.currentTime=t') && !/\.play\s*\(/.test(fn);
 }
 
 function runMediaPickerSelfTest(){
@@ -3357,7 +3368,7 @@ placed
     const realTwoSellSim=chooseLCScenario(54935,20,realTwoSellPending,realTwoSellTrusted.rows,c,1000,100,4622.19,0,4621.64);
     const realTwoSellDeadline=realTwoSellSim.direction==='up'&&realTwoSellSim.added.length===3&&realTwoSellSim.filled.length===5&&Number.isFinite(realTwoSellSim.lc)&&Math.abs(realTwoSellSim.lc-4714.26)<0.20;
     window.__testRate=159.53;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v267-20260827$/.test(buildId)&&/v267/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v270-20260827$/.test(buildId)&&/v270/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3449,7 +3460,7 @@ placed
     const mixedType=detectXMAccountTypeFromText('GOLD#\n4621.68\n4622.23\nUSDJPY\n159.157\n159.182\nSILVER\n68.708\n68.777');
     const accountTypeAmbiguityFailsClosed=splitLineStandard.type==='standard'&&splitLineKiwami.type==='kiwami'&&mixedType.type==='unknown';
     const importRollbackScopeSafe=(()=>{const src=document.documentElement.innerHTML;return src.includes('let importSnapshot=null,sharedVideoWorker=null')&&src.includes('if(importSnapshot)restoreImportSnapshot(importSnapshot)')&&captureImportSnapshot.toString().includes('xmAccountType')&&restoreImportSnapshot.toString().includes('setXMAccountType')})();
-    const quoteScrollSamplingPolicy=videoFrameSources.toString().includes('[0.10,0.22,0.35,0.56,0.73,0.90]')&&selectAdaptiveVideoFrames.toString().includes('anchorFractions=[0.10,0.35,0.73,0.90]')&&document.documentElement.innerHTML.includes('videoFrameSources(f,5');
+    const quoteScrollSamplingPolicy=videoFrameSources.toString().includes('const fractions=[0.10,0.35,0.73,0.90]')&&selectAdaptiveVideoFrames.toString().includes('anchorFractions=[0.10,0.35,0.73,0.90]')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
     const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     const failed=Object.entries(named).filter(([,ok])=>!ok).map(([k])=>k);
     const ok=failed.length===0;
@@ -4019,7 +4030,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v267-20260827';
+window.__APP_BUILD__='v270-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -4057,8 +4068,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v267-20260827'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v267-20260827'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v270-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v270-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

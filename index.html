@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v342-20260827">
+<meta name="build-id" content="v345-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v342</title>
+<title>Stop Out positioning｜デラポジ Pro v345</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -93,7 +93,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 /* v106 density pass 2 */
 .posOrderRows .grid{grid-template-columns:.75fr .75fr 1.5fr;gap:4px}.posOrderRows .grid>.wide:not(.small){grid-column:auto}.posOrderRows .grid>.wide.small{grid-column:1/-1;font-size:10px;line-height:1.2}.posOrderCard{padding:7px 9px}.posOrderTools{margin-top:4px}.posOrderTools button{padding:5px 8px}
-/* v342 priority rebalance: scenario is the decision surface, pending list is compact input detail */
+/* v345 priority rebalance: scenario is the decision surface, pending list is compact input detail */
 #scenarioCard{padding:11px 13px;border-width:1px;margin-top:5px!important}
 #scenarioCard>.row:first-child{padding:1px 0 7px;border-bottom:1px solid var(--line)}
 #scenarioCard>.row:first-child>b{font-size:19px;letter-spacing:.2px}
@@ -278,7 +278,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 #pageCompare .cmpSpreadGapArrow{color:#fff;font-size:11px}
 @media(max-width:420px){#pageCompare .cmpSpreadGapValues{gap:3px;font-size:9px}#pageCompare .cmpSpreadGapArrow{font-size:10px}}
 
-/* v342 mobile density: scenario + pending orders share one decision card. */
+/* v345 mobile density: scenario + pending orders share one decision card. */
 #scenarioCard{padding:8px 10px 7px!important;margin-top:5px!important}
 #scenarioCard .scenarioCardHead{padding:0 0 5px!important;border-bottom:1px solid var(--line)}
 #scenarioCard .scenarioCardHead>b{font-size:17px!important;line-height:1.1}
@@ -344,14 +344,14 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 }
 
 
-/* v342 final self-observation gate */
+/* v345 final self-observation gate */
 #finalReleaseGate{margin:8px 0 0;padding:9px 10px;border-radius:12px;border:1px solid #394150;background:#0d1118;font-size:11px;line-height:1.35}
 #finalReleaseGate.ok{border-color:#1f6e49;background:#07150f;color:#67e7a8}
 #finalReleaseGate.err{border-color:#9e3f3f;background:#241010;color:#ff9c96}
 #finalReleaseGate .gateTitle{font-weight:900;font-size:12px;margin-bottom:2px}
 
 
-/* v342: current-position scenario readability. UI-only. */
+/* v345: current-position scenario readability. UI-only. */
 #scenarioCard{
   padding:11px 12px 10px!important;
   border-color:rgba(86,103,125,.58)!important;
@@ -444,7 +444,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   #scenarioSteps .scenarioFinal b{font-size:23px!important}
 }
 
-/* v342: visually connect Scenario and Current Positions without changing calculations. */
+/* v345: visually connect Scenario and Current Positions without changing calculations. */
 #scenarioCard{
   position:relative;
   margin-bottom:0!important;
@@ -492,7 +492,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   #positionsCard h2,.card:has(#positions) h2{font-size:19px!important}
 }
 
-/* v342: integrated scenario/current-position hierarchy */
+/* v345: integrated scenario/current-position hierarchy */
 #scenarioCard{
   border-bottom-left-radius:5px!important;
   border-bottom-right-radius:5px!important;
@@ -534,7 +534,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 #scenarioSteps .scenarioFill b{font-size:16px!important;color:#f0f3f7}
 #scenarioSteps .scenarioFill{padding-top:10px!important;padding-bottom:10px!important}
 
-/* v342: clearer break-even and total-position wording */
+/* v345: clearer break-even and total-position wording */
 #scenarioSteps .scenarioFill b{font-size:13px!important;color:#cfd6df!important;font-weight:750!important;line-height:1.2!important}
 #scenarioSteps .scenarioBreakEven span{font-size:15px!important}
 #scenarioSteps .scenarioBreakEven b{font-size:24px!important}
@@ -542,7 +542,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   #scenarioSteps .scenarioFill b{font-size:12px!important}
 }
 
-/* v342: scenario header alignment + matching current-position terminology */
+/* v345: scenario header alignment + matching current-position terminology */
 #scenarioCard>.row:first-child{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) minmax(150px,.78fr)!important;
@@ -581,7 +581,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   }
 }
 
-/* v342: clean one-line scenario heading */
+/* v345: clean one-line scenario heading */
 #scenarioCard>.row:first-child>b{
   font-size:0!important;
   white-space:nowrap!important;
@@ -607,7 +607,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   #scenarioStatus{font-size:10.5px!important}
 }
 
-/* v342: analysis panel auto-collapses on successful completion */
+/* v345: analysis panel auto-collapses on successful completion */
 .analysisShell{padding:0!important;overflow:hidden}
 #analysisDetails{margin:0}
 #analysisDetails>summary{
@@ -629,7 +629,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   #analysisSummaryMain{font-size:15px}
 }
 
-/* v342: unify expandable affordance with the app's + / − language */
+/* v345: unify expandable affordance with the app's + / − language */
 #analysisDetails>summary{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) auto auto!important;
@@ -676,9 +676,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v342</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v345</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v342 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v345 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -916,7 +916,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v342-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v345-20260827';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1010,8 +1010,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v342-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v342-20260827';
+window.__DEPLOYMENT_STATE__={build:'v345-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v345-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1032,7 +1032,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v342-20260827', SHORT='v342';
+  const BUILD='v345-20260827', SHORT='v345';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1560,51 +1560,27 @@ function currentPositionBreakEvenBid(positions,spread=0){
   );
   if(!valid.length)return null;
 
-  const c=cfg();
-  const qr=quoteRateFor(c);
-  const contract=Number(c.contract);
-  const bid=Number(goldBid);
-  const brokerRaw=$('brokerPnl')?.value?.trim?.()||'';
-  const brokerPnl=brokerRaw===''?NaN:Number(brokerRaw);
-
-  // Preferred: reverse-calculate the zero-P/L price from MT5's ACTUAL floating P/L.
-  // This naturally absorbs spread, swap/commission drift and tiny broker-side rounding.
-  if(Number.isFinite(brokerPnl)&&Number.isFinite(bid)&&bid>0&&Number.isFinite(qr)&&qr>0&&Number.isFinite(contract)&&contract>0){
-    const netLots=valid.reduce((sum,o)=>sum+(/^buy$/i.test(String(o.side))?1:-1)*Number(o.lot),0);
-    const slope=netLots*contract*qr; // JPY P/L change for +1.00 Bid move
-    if(Math.abs(slope)>1e-9){
-      const brokerBe=bid-(brokerPnl/slope);
-
-      // Independent weighted-entry model as a stale-OCR sanity check.
-      let modelSlope=0,modelConstant=0;
-      const spr=Math.max(0,Number(spread)||0);
-      for(const o of valid){
-        const lot=Number(o.lot),entry=Number(o.price),side=String(o.side).toLowerCase();
-        if(side==='buy'){modelSlope+=lot;modelConstant-=entry*lot}
-        else{modelSlope-=lot;modelConstant+=(entry-spr)*lot}
-      }
-      const modelBe=Math.abs(modelSlope)>1e-12?(-modelConstant/modelSlope):NaN;
-
-      // MT5 P/L should only calibrate the model when it is plausibly from this same state.
-      // A stale previous-video P/L is rejected instead of corrupting break-even.
-      if(Number.isFinite(brokerBe)&&brokerBe>0 &&
-         (!Number.isFinite(modelBe) || Math.abs(brokerBe-modelBe)<=Math.max(2,Math.abs(modelBe)*0.0005))){
-        return brokerBe;
-      }
-    }
-  }
-
-  // Fallback: exact lot-weighted zero-P/L price from the accepted current positions.
+  // Canonical break-even is derived from the accepted POSITION BASKET itself.
+  // Do not calibrate the displayed result with brokerPnl unless its market price
+  // is proven to be from the exact same frame. Quote and Trade frames can be
+  // seconds apart in an iPhone recording, which previously shifted break-even.
   let slope=0,constant=0;
   const spr=Math.max(0,Number(spread)||0);
   for(const o of valid){
     const lot=Number(o.lot),entry=Number(o.price),side=String(o.side).toLowerCase();
-    if(side==='buy'){slope+=lot;constant-=entry*lot}
-    else{slope-=lot;constant+=(entry-spr)*lot}
+    if(side==='buy'){
+      // Buy P/L is based on Bid.
+      slope+=lot;
+      constant-=entry*lot;
+    }else{
+      // Sell P/L is based on Ask = Bid + spread.
+      slope-=lot;
+      constant+=(entry-spr)*lot;
+    }
   }
   if(Math.abs(slope)<1e-12)return null;
-  const fallback=-constant/slope;
-  return Number.isFinite(fallback)&&fallback>0?fallback:null;
+  const be=-constant/slope;
+  return Number.isFinite(be)&&be>0?be:null;
 }
 function breakEvenDirectionText(be,bid){
   if(!Number.isFinite(be)||!Number.isFinite(bid))return '';
@@ -1780,7 +1756,7 @@ function detectXMAccountTypeFromText(text){
   const unique=[];const seen=new Set();for(const e of evidence){const k=e.symbol+'|'+e.suffix;if(!seen.has(k)){seen.add(k);unique.push(e)}}
   const suffixes=new Set(unique.map(e=>e.suffix));
 
-  // v342: OCR can DROP the small trailing '#', especially when the same quote frame
+  // v345: OCR can DROP the small trailing '#', especially when the same quote frame
   // is read with different PSM modes. It is much less likely to invent explicit '#'
   // on several different symbols. Therefore strong positive KIWAMI evidence wins
   // before mixed hash/plain ambiguity is considered.
@@ -2114,7 +2090,7 @@ function parseMt5AccountSummaryFallback(text){
   if(nums.length>=3&&Math.abs(nums[0]-nums[1])<=1&&Math.abs(nums[0]-nums[2])<=1){
     return {balance:nums[0],equity:nums[1],credit:0,free:nums[2],evidence:[`fallback-balance:${nums[0]}`,'fallback-flat-summary']};
   }
-  // v342: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
+  // v345: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
   // while preserving the other two, e.g. 154646 / 154646 / 184646.
   // On a pending-order screen with NO open-position row, two matching values
   // are strong evidence of a flat account. Never use this when a position exists.
@@ -2139,7 +2115,7 @@ function parseMt5AccountSummaryFallback(text){
       return {balance:b,equity:e,credit:c,free,evidence:[`fallback-balance:${b}`,`fallback-credit:${c}`,'fallback-live-margin-identity']};
     }
   }
-  // v342: Live no-credit account fallback. iPhone OCR can preserve the four decisive
+  // v345: Live no-credit account fallback. iPhone OCR can preserve the four decisive
   // values while damaging only Margin Level: Balance, Equity, Used Margin, Free Margin.
   // Equity - Free == Used Margin is an exact MT5 accounting identity, so do not discard
   // otherwise coherent current account state merely because the percentage text is noisy.
@@ -2154,7 +2130,7 @@ function parseMt5AccountSummaryFallback(text){
     ]};
   }
 
-  // v342: iPhone ENG OCR can destroy every Japanese account label while preserving
+  // v345: iPhone ENG OCR can destroy every Japanese account label while preserving
   // the five live-account numbers: Balance, Equity, Used Margin, Free Margin, Margin Level.
   // Example from the real user screenshot:
   // 154646, 153486, 2952, 150534, 5199.39
@@ -2872,7 +2848,7 @@ function looksLikeIOSControlCenterCanvas(canvas){
     const sliderLike=(q)=>q.range>90 && q.std>25;
     const top=colStats(.02,.98,.02,.30);
     const hasSlider=sliderLike(sliderL)||sliderLike(sliderR);
-    // v342: the real iPhone Control Center recording is much darker than the
+    // v345: the real iPhone Control Center recording is much darker than the
     // original fixture and contains almost no >210px bright pixels. Accept that
     // dim layout using the global luminance signature as a second path.
     // Normal MT5 Trade/Quotes screens in this app are predominantly white.
@@ -3258,7 +3234,7 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     if(!Number.isFinite(duration)||duration<=0)throw new Error('VIDEO_DURATION_INVALID');
     if(width<=0||height<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
     if(v.readyState<2)await waitEvent('loadeddata',12000,2);
-    // v342: cheap visual pre-scan across the whole video. Fixed anchors are fallback coverage,
+    // v345: cheap visual pre-scan across the whole video. Fixed anchors are fallback coverage,
     // not assumptions about where Quotes/Balance/Positions/Orders must appear.
     const baseFractions=[0.10,0.35,0.58,0.73,0.90];
     const scanFractions=[];
@@ -3948,7 +3924,7 @@ $('mediaFile').addEventListener('change',async e=>{
       }catch(fallbackErr){console.warn('order fallback OCR failed',fallbackErr)}
     }
 
-    // v342: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
+    // v345: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
     // required-price gate.  A valid Trade/Order video must not be abandoned just
     // because GOLD appeared in only one early quote frame.
     if(isVideo){
@@ -4005,7 +3981,7 @@ $('mediaFile').addEventListener('change',async e=>{
     let quotes={}, usdjpy=null; window.__quoteMeta={};
     if(isVideo){
       quotes=aggregateVideoQuotes(results); window.__quoteMeta=quotes.__meta||{};
-      // v342: if the normal multi-frame aggregator still misses the SELECTED symbol,
+      // v345: if the normal multi-frame aggregator still misses the SELECTED symbol,
       // recover only an explicit, sane Bid/Ask pair from THIS import's merged OCR text.
       // This never carries an old stored price and therefore cannot create stale-market data.
       if(!(quotes[currentSymbol]?.bid>0&&quotes[currentSymbol]?.ask>0)){
@@ -4315,7 +4291,7 @@ $('mediaFile').addEventListener('change',async e=>{
       evidence:[...(rawAccountSnapshot.evidence||[]),...(parsedAccountSnapshot.evidence||[])],sourceText:''
     };
 
-    // v342: if the Trade basket is clear but the top account header was missed,
+    // v345: if the Trade basket is clear but the top account header was missed,
     // OCR only that header once. This is a failure-only rescue and does not slow
     // successful imports.
     if(isVideo && !(Number.isFinite(accountSnapshot.balance)&&accountSnapshot.balance>0)){
@@ -5330,29 +5306,125 @@ function runFlexibleVideoDiscoverySelfTest(){
     vc.includes('fingerprintDistance');
 }
 function run203455BreakEvenRegressionSelfTest(){
-  const oldBid=goldBid,oldAsk=goldAsk,oldUsd=$('usdjpy')?.value,oldPnl=$('brokerPnl')?.value;
-  try{
-    goldBid=4596.17; goldAsk=4596.27;
-    if($('usdjpy'))$('usdjpy').value='159.438';
-    if($('brokerPnl'))$('brokerPnl').value='-14383';
-    const pos=[
-      {side:'Buy',lot:.04,price:4630.52},
-      {side:'Buy',lot:.04,price:4613.46},
-      {side:'Buy',lot:.04,price:4582.03},
-      {side:'Buy',lot:.04,price:4597.80},
-      {side:'Buy',lot:.04,price:4620.61},
-      {side:'Buy',lot:.02,price:4575.02},
-      {side:'Buy',lot:.02,price:4578.78},
-      {side:'Buy',lot:.02,price:4576.41},
-      {side:'Buy',lot:.04,price:4584.29}
-    ];
-    const be=currentPositionBreakEvenBid(pos,.10);
-    return Number.isFinite(be)&&Math.abs(be-4599.1770)<.02;
-  }finally{
-    goldBid=oldBid;goldAsk=oldAsk;
-    if($('usdjpy'))$('usdjpy').value=oldUsd||'';
-    if($('brokerPnl'))$('brokerPnl').value=oldPnl||'';
+  const pos=[
+    {side:'Buy',lot:.04,price:4630.52},
+    {side:'Buy',lot:.04,price:4613.46},
+    {side:'Buy',lot:.04,price:4582.03},
+    {side:'Buy',lot:.04,price:4597.80},
+    {side:'Buy',lot:.04,price:4620.61},
+    {side:'Buy',lot:.02,price:4575.02},
+    {side:'Buy',lot:.02,price:4578.78},
+    {side:'Buy',lot:.02,price:4576.41},
+    {side:'Buy',lot:.04,price:4584.29}
+  ];
+  const be=currentPositionBreakEvenBid(pos,.10);
+  return Number.isFinite(be)&&Math.abs(be-4599.175333333334)<.00001;
+}
+
+function runRecentBreakEvenAuditSelfTest(){
+  const cases=[
+    {
+      name:'18:46_5pos',
+      pos:[
+        ['Buy',.04,4630.52],['Buy',.04,4613.46],['Buy',.04,4582.03],
+        ['Buy',.04,4597.80],['Buy',.04,4620.61]
+      ], expected:4608.884
+    },
+    {
+      name:'19:08_6pos',
+      pos:[
+        ['Buy',.04,4630.52],['Buy',.04,4613.46],['Buy',.04,4582.03],
+        ['Buy',.04,4597.80],['Buy',.04,4620.61],['Buy',.02,4575.02]
+      ], expected:4605.805454545454
+    },
+    {
+      name:'19:15_7pos',
+      pos:[
+        ['Buy',.04,4630.52],['Buy',.04,4613.46],['Buy',.04,4582.03],
+        ['Buy',.04,4597.80],['Buy',.04,4620.61],['Buy',.02,4575.02],
+        ['Buy',.02,4578.78]
+      ], expected:4603.553333333334
+    },
+    {
+      name:'19:40_8pos',
+      pos:[
+        ['Buy',.04,4630.52],['Buy',.04,4613.46],['Buy',.04,4582.03],
+        ['Buy',.04,4597.80],['Buy',.04,4620.61],['Buy',.02,4575.02],
+        ['Buy',.02,4578.78],['Buy',.02,4576.41]
+      ], expected:4601.465384615385
+    },
+    {
+      name:'19:43_9pos',
+      pos:[
+        ['Buy',.04,4630.52],['Buy',.04,4613.46],['Buy',.04,4582.03],
+        ['Buy',.04,4597.80],['Buy',.04,4620.61],['Buy',.02,4575.02],
+        ['Buy',.02,4578.78],['Buy',.02,4576.41],['Buy',.04,4584.29]
+      ], expected:4599.175333333334
+    }
+  ];
+  const failures=[];
+  for(const c of cases){
+    const pos=c.pos.map(([side,lot,price])=>({side,lot,price}));
+    const got=currentPositionBreakEvenBid(pos,.10);
+    if(!Number.isFinite(got)||Math.abs(got-c.expected)>.00001)failures.push({name:c.name,got,expected:c.expected});
   }
+  return {pass:failures.length===0,failures};
+}
+
+function runBrokerPnlCrossCheckSamplesSelfTest(){
+  // Independent check against real MT5 account P/L snapshots supplied by the user.
+  // be = currentBid - totalPnl / (totalLots * 100 * USDJPY), for the all-Buy GOLD samples.
+  const samples=[
+    ['18:46',4584.09,-79081,.20,159.46,4608.884],
+    ['19:05',4571.80,-118289,.20,159.46,4608.884],
+    ['19:08',4575.08,-107814,.22,159.46,4605.805454545454],
+    ['19:12',4580.96,-86473,.24,159.45,4603.553333333334],
+    ['19:15',4580.60,-87842,.24,159.46,4603.553333333334],
+    ['19:40',4577.22,-100554,.26,159.49,4601.465384615385],
+    ['19:43',4584.08,-72230,.30,159.49,4599.175333333334],
+    ['19:46',4586.63,-60025,.30,159.49,4599.175333333334],
+    ['19:50',4587.60,-55389,.30,159.503,4599.175333333334],
+    ['20:35',4596.08,-14814,.30,159.5305,4599.175333333334],
+    ['20:37',4596.30,-13763,.30,159.5525,4599.175333333334]
+  ];
+  const failures=[];
+  for(const [name,bid,pnl,lots,usd,expected] of samples){
+    const inferred=bid-(pnl/(lots*100*usd));
+    if(Math.abs(inferred-expected)>.02)failures.push({name,inferred,expected});
+  }
+  return {pass:failures.length===0,failures};
+}
+
+function runFuturePositionMatrixSelfTest(){
+  const eps=1e-8, failures=[];
+  const cases=[
+    ['BUY single', [{side:'Buy',lot:.04,price:4600}], .10, 4600],
+    ['BUY weighted', [{side:'Buy',lot:.04,price:4600},{side:'Buy',lot:.02,price:4570}], .10, 4590],
+    ['SELL single spread', [{side:'Sell',lot:.04,price:4600}], .10, 4599.90],
+    ['SELL weighted spread', [{side:'Sell',lot:.04,price:4600},{side:'Sell',lot:.02,price:4570}], .10, 4589.90],
+    ['SELL unequal lots', [{side:'Sell',lot:.10,price:4620},{side:'Sell',lot:.02,price:4560}], .10, 4609.90]
+  ];
+  for(const [name,ps,spr,want] of cases){
+    const got=currentPositionBreakEvenBid(ps,spr);
+    if(!Number.isFinite(got)||Math.abs(got-want)>eps) failures.push({name,got,want});
+  }
+  return {pass:failures.length===0,failures};
+}
+function runMixedSideSafetySelfTest(){
+  const neutral=currentPositionBreakEvenBid([{side:'Buy',lot:.10,price:4600},{side:'Sell',lot:.10,price:4610}],.10);
+  const netBuy=currentPositionBreakEvenBid([{side:'Buy',lot:.10,price:4600},{side:'Sell',lot:.04,price:4610}],.10);
+  return {pass:neutral===null && Number.isFinite(netBuy),neutral,netBuy};
+}
+function runNinePositionBreakEvenStabilitySelfTest(){
+  const pos=[
+    {side:'Buy',lot:.04,price:4630.52},{side:'Buy',lot:.04,price:4613.46},
+    {side:'Buy',lot:.04,price:4582.03},{side:'Buy',lot:.04,price:4597.80},
+    {side:'Buy',lot:.04,price:4620.61},{side:'Buy',lot:.02,price:4575.02},
+    {side:'Buy',lot:.02,price:4578.78},{side:'Buy',lot:.02,price:4576.41},
+    {side:'Buy',lot:.04,price:4584.29}
+  ];
+  const got=currentPositionBreakEvenBid(pos,.10);
+  return Number.isFinite(got)&&Math.abs(got-4599.175333333334)<.000001;
 }
 function runMediaParserSelfTest(){
   const t=`GOLD# buy 0.01\n4318.10 > 4334.17 2565\nGOLD# buy 0.01\n4367.37 > 4334.17 -5300\nGOLD# buy 0.01\n4356.85 — 4334.17 -3621\nGOLD# buy limit\n0.01 / 0 at 4277.03 placed\nGOLD# buy limit\n0.01 / 0 at 4310.91 placed`;
@@ -6625,7 +6697,7 @@ function calcCompare(){
   const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。総合判定はStandardの1 XMP=$1ボーナス価値のみ反映。KIWAMIのXMPは参考表示で、勝敗には加算しません。</span>`;
   $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ反映。総合判定はStandardのボーナス価値のみ使用。KIWAMI XMPは参考表示で勝敗には加算しません。<br>※ スワップは概算。平日は1日分、3倍曜日（現在：${cmpWeekdayName(cmpTripleDay())}）は3日分、土日は0日分として保有期間に反映します。MT5詳細で曜日を認識できた場合は自動上書きします。`;
 }
-// v342 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
+// v345 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
 window.__CMP_V280_CONSISTENCY__=(()=>{
   const src=String(calcCompare);
   return {
@@ -6695,7 +6767,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v342-20260827';
+window.__APP_BUILD__='v345-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -6738,9 +6810,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v342-20260827'
+  build:'v345-20260827'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v342-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v345-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

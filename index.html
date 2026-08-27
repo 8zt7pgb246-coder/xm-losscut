@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v316-20260827">
+<meta name="build-id" content="v318-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v316</title>
+<title>Stop Out positioning｜デラポジ Pro v318</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -93,7 +93,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 /* v106 density pass 2 */
 .posOrderRows .grid{grid-template-columns:.75fr .75fr 1.5fr;gap:4px}.posOrderRows .grid>.wide:not(.small){grid-column:auto}.posOrderRows .grid>.wide.small{grid-column:1/-1;font-size:10px;line-height:1.2}.posOrderCard{padding:7px 9px}.posOrderTools{margin-top:4px}.posOrderTools button{padding:5px 8px}
-/* v316 priority rebalance: scenario is the decision surface, pending list is compact input detail */
+/* v318 priority rebalance: scenario is the decision surface, pending list is compact input detail */
 #scenarioCard{padding:11px 13px;border-width:1px;margin-top:5px!important}
 #scenarioCard>.row:first-child{padding:1px 0 7px;border-bottom:1px solid var(--line)}
 #scenarioCard>.row:first-child>b{font-size:19px;letter-spacing:.2px}
@@ -274,7 +274,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 #pageCompare .cmpSpreadGapArrow{color:#fff;font-size:11px}
 @media(max-width:420px){#pageCompare .cmpSpreadGapValues{gap:3px;font-size:9px}#pageCompare .cmpSpreadGapArrow{font-size:10px}}
 
-/* v316 mobile density: scenario + pending orders share one decision card. */
+/* v318 mobile density: scenario + pending orders share one decision card. */
 #scenarioCard{padding:8px 10px 7px!important;margin-top:5px!important}
 #scenarioCard .scenarioCardHead{padding:0 0 5px!important;border-bottom:1px solid var(--line)}
 #scenarioCard .scenarioCardHead>b{font-size:17px!important;line-height:1.1}
@@ -343,9 +343,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v316</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v318</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v316 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v318 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -553,7 +553,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v316-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v318-20260827';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -647,8 +647,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v316-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v316-20260827';
+window.__DEPLOYMENT_STATE__={build:'v318-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v318-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -669,7 +669,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v316-20260827', SHORT='v316';
+  const BUILD='v318-20260827', SHORT='v318';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1198,20 +1198,101 @@ function renderScenarioSteps(positions,pending,filled,added,lc,simMeta=null){
   if(simMeta?.skipped?.length){const px=simMeta.skipped.map(o=>formatPrice(Number(o.price))).join(' / ');lines.push(`<div class="scenarioRow"><span>Stop Outより${up?'上':'下'}の未到達注文</span><b>${simMeta.skipped.length}件：${px}</b></div>`);if(Number.isFinite(simMeta.allFilledLc))lines.push(`<div class="scenarioRow scenarioTheory"><span>全注文を仮約定した理論LC</span><b>${formatPrice(simMeta.allFilledLc)}（実際には到達不能）</b></div>`);}
   if(Number.isFinite(lc)){lines.push(`<div class="scenarioRow scenarioFinal"><span>実際の${dir}経路でStop Out開始予測</span><b>${formatPrice(lc)}</b></div>`);st.textContent=`${dir} / Pending反映 ${added.length}/${pending.length}件 / Stop Out時 ${filled.length}件`}else st.textContent='計算未確定';el.innerHTML=lines.join('');
 }
+
+function buildCurrentTradeState(){
+  const c=cfg();
+  const cashBalance=Number($('balance')?.value||0);
+  const state={
+    version:1,
+    symbol:currentSymbol,
+    capturedAt:Date.now(),
+    account:{
+      cashBalance:Number.isFinite(cashBalance)?cashBalance:0,
+      credit:Number(accountCredit)||0,
+      balance:(Number.isFinite(cashBalance)?cashBalance:0)+(Number(accountCredit)||0),
+      usable:accountBalanceUsable(),
+      source:accountDataSource||'none'
+    },
+    market:{
+      bid:Number(goldBid),
+      ask:Number(goldAsk),
+      usdJpy:Number($('usdjpy')?.value||0),
+      priceFresh:!!mediaPriceFresh,
+      usdJpyFresh:!!mediaUsdJpyFresh,
+      temporalQuoteBeforeTrade:window.__currentTemporalQuoteBeforeTrade===true
+    },
+    positions:getPositions()
+      .filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0)
+      .map(o=>({side:String(o.side),lot:Number(o.lot),price:Number(o.price),symbol:o.symbol||currentSymbol})),
+    pendingOrders:getOrders()
+      .filter(o=>/^(?:buy|sell)\s*limit$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0)
+      .map(o=>({side:String(o.side),lot:Number(o.lot),price:Number(o.price),symbol:o.symbol||currentSymbol})),
+    validity:{
+      positions:!!positionDataValid,
+      orders:!orderDataInvalid,
+      account:accountBalanceUsable()
+    },
+    contract:{
+      stopout:Number($('stopout')?.value||20),
+      leverage:Number($('symbolLeverage')?.value||0),
+      size:Number($('contractSize')?.value||0),
+      quoteRate:quoteRateFor(c)
+    }
+  };
+  return Object.freeze(state);
+}
+function validateCurrentTradeState(state){
+  if(!state?.validity?.positions)return {ok:false,code:'POSITION_UNCONFIRMED'};
+  if(!state?.validity?.orders)return {ok:false,code:'ORDER_UNCONFIRMED'};
+  if(!state?.validity?.account)return {ok:false,code:'ACCOUNT_UNCONFIRMED'};
+  if(!state.positions.length&&!state.pendingOrders.length)return {ok:false,code:'NO_EXPOSURE'};
+  if(!(Number.isFinite(state.market.bid)&&Number.isFinite(state.market.ask)&&state.market.ask>=state.market.bid))return {ok:false,code:'PRICE_UNCONFIRMED'};
+  if(!(Number(state.contract.quoteRate)>0&&Number(state.contract.leverage)>0&&Number(state.contract.size)>0&&Number(state.account.balance)>0&&Number(state.contract.stopout)>0))return {ok:false,code:'CONTRACT_UNCONFIRMED'};
+  return {ok:true,code:'OK'};
+}
+function calculateTradeDecision(state){
+  const c=cfg();
+  const sim=chooseLCScenario(
+    state.account.balance,
+    state.contract.stopout,
+    state.pendingOrders,
+    state.positions,
+    c,
+    state.contract.leverage,
+    state.contract.size,
+    state.market.ask,
+    0,
+    state.market.bid,
+    state.market.temporalQuoteBeforeTrade
+  );
+  return Object.freeze({
+    state,
+    sim,
+    lc:sim.lc,
+    filled:sim.filled,
+    added:sim.added,
+    skipped:sim.skipped||[],
+    direction:sim.direction
+  });
+}
+window.__getCurrentTradeState=buildCurrentTradeState;
+window.__calculateTradeDecision=calculateTradeDecision;
+
 function calc(){
   // Regression tests are developer diagnostics only.
   // They must NEVER stop a valid user's DEAD LINE calculation.
-  const cashBal=+$('balance').value||0,bal=cashBal+(Number(accountCredit)||0),stop=+$('stopout').value||20,c=cfg(),lev=+$('symbolLeverage').value||0,contract=+$('contractSize').value||0;
-  const pending=getOrders().filter(o=>/^(?:buy|sell)\s*limit$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0);
-  const positions=getPositions().filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0),qr=quoteRateFor(c);renderDataLock();
+  const state=buildCurrentTradeState(),validation=validateCurrentTradeState(state),c=cfg();
+  const bal=state.account.balance,stop=state.contract.stopout,lev=state.contract.leverage,contract=state.contract.size;
+  const pending=state.pendingOrders,positions=state.positions,qr=state.contract.quoteRate;
+  renderDataLock();
   const blank=(msg,count)=>{const pw=$('pendingDeadlineWarning');if(pw){pw.style.display='none';pw.innerHTML=''};['result','avg','lots','lcAvg','lcLots','currentPnl','lcLoss','qty','lcTotalPositions'].forEach(id=>{if($(id))$(id).textContent='—'});$('distance').textContent=msg;if(count)$('count').textContent=count};
-  if(!positionDataValid){blank('ポジション認識未確定のため計算停止',`${pending.length}件 / 現在ポジション未確認`);renderOrderStatus([],pending,null);return}
-  if(orderDataInvalid){blank('注文認識未確定のため計算停止',`${pending.length}件 / 想定追加約定 —`);renderOrderStatus([],pending,null);renderOrderDataLock();return}
-  if(!accountBalanceUsable()){blank('口座残高が未確認のため計算停止');renderBalanceStatus();renderOrderStatus([],pending,null);return}
-  if((!positions.length&&!pending.length)||!Number.isFinite(goldBid)||!Number.isFinite(goldAsk)||!qr||!lev||!contract||!bal||!stop){blank('換算レート・気配値・口座条件を確認してください');$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);renderOrderStatus([],pending,null);return}
+  if(validation.code==='POSITION_UNCONFIRMED'){blank('ポジション認識未確定のため計算停止',`${pending.length}件 / 現在ポジション未確認`);renderOrderStatus([],pending,null);return}
+  if(validation.code==='ORDER_UNCONFIRMED'){blank('注文認識未確定のため計算停止',`${pending.length}件 / 想定追加約定 —`);renderOrderStatus([],pending,null);renderOrderDataLock();return}
+  if(validation.code==='ACCOUNT_UNCONFIRMED'){blank('口座残高が未確認のため計算停止');renderBalanceStatus();renderOrderStatus([],pending,null);return}
+  if(!validation.ok){blank('換算レート・気配値・口座条件を確認してください');$('usedRate').textContent=(+$('usdjpy').value||0).toFixed(3);renderOrderStatus([],pending,null);return}
   const modelCurrentPnl=positions.reduce((sum,o)=>sum+(currentPositionPnlJPY(o,c,goldBid,goldAsk)||0),0),brokerRaw=$('brokerPnl').value.trim(),brokerPnl=brokerRaw===''?NaN:Number(brokerRaw);
   if(Number.isFinite(brokerPnl)){const diff=brokerPnl-modelCurrentPnl,tol=Math.max(300,Math.abs(modelCurrentPnl)*0.25);$('pnlAdjustStatus').textContent=`自動補正なし / MT5 OCR ${formatJPYLoss(brokerPnl)} / モデル ${formatJPYLoss(modelCurrentPnl)}${Math.abs(diff)>tol?' / ⚠ 差異あり':''}`}else $('pnlAdjustStatus').textContent='MT5実測なし / 自動補正なし';
-  const sim=chooseLCScenario(bal,stop,pending,positions,c,lev,contract,goldAsk,0,goldBid,window.__currentTemporalQuoteBeforeTrade===true);if(sim.inconsistent?.length){blank(`⚠ 現在価格と未約定${sim.direction==='up'?'Sell':'Buy'} Limitの位置関係が矛盾しています。動画の時系列または注文状態を再確認してください。`,`${pending.length}件 / 想定追加約定 —`);$('currentPnl').textContent=formatJPYLoss(modelCurrentPnl);renderOrderStatus([],pending,null);return}
+  const decision=calculateTradeDecision(state),sim=decision.sim;if(sim.inconsistent?.length){blank(`⚠ 現在価格と未約定${sim.direction==='up'?'Sell':'Buy'} Limitの位置関係が矛盾しています。動画の時系列または注文状態を再確認してください。`,`${pending.length}件 / 想定追加約定 —`);$('currentPnl').textContent=formatJPYLoss(modelCurrentPnl);renderOrderStatus([],pending,null);return}
   const lc=sim.lc,filled=sim.filled,added=sim.added;
   if(sim.staleQuote){
     $('specWarning').style.display='block';
@@ -1262,7 +1343,7 @@ function detectXMAccountTypeFromText(text){
   const unique=[];const seen=new Set();for(const e of evidence){const k=e.symbol+'|'+e.suffix;if(!seen.has(k)){seen.add(k);unique.push(e)}}
   const suffixes=new Set(unique.map(e=>e.suffix));
 
-  // v316: OCR can DROP the small trailing '#', especially when the same quote frame
+  // v318: OCR can DROP the small trailing '#', especially when the same quote frame
   // is read with different PSM modes. It is much less likely to invent explicit '#'
   // on several different symbols. Therefore strong positive KIWAMI evidence wins
   // before mixed hash/plain ambiguity is considered.
@@ -1596,7 +1677,7 @@ function parseMt5AccountSummaryFallback(text){
   if(nums.length>=3&&Math.abs(nums[0]-nums[1])<=1&&Math.abs(nums[0]-nums[2])<=1){
     return {balance:nums[0],equity:nums[1],credit:0,free:nums[2],evidence:[`fallback-balance:${nums[0]}`,'fallback-flat-summary']};
   }
-  // v316: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
+  // v318: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
   // while preserving the other two, e.g. 154646 / 154646 / 184646.
   // On a pending-order screen with NO open-position row, two matching values
   // are strong evidence of a flat account. Never use this when a position exists.
@@ -1621,7 +1702,7 @@ function parseMt5AccountSummaryFallback(text){
       return {balance:b,equity:e,credit:c,free,evidence:[`fallback-balance:${b}`,`fallback-credit:${c}`,'fallback-live-margin-identity']};
     }
   }
-  // v316: Live no-credit account fallback. iPhone OCR can preserve the four decisive
+  // v318: Live no-credit account fallback. iPhone OCR can preserve the four decisive
   // values while damaging only Margin Level: Balance, Equity, Used Margin, Free Margin.
   // Equity - Free == Used Margin is an exact MT5 accounting identity, so do not discard
   // otherwise coherent current account state merely because the percentage text is noisy.
@@ -1636,7 +1717,7 @@ function parseMt5AccountSummaryFallback(text){
     ]};
   }
 
-  // v316: iPhone ENG OCR can destroy every Japanese account label while preserving
+  // v318: iPhone ENG OCR can destroy every Japanese account label while preserving
   // the five live-account numbers: Balance, Equity, Used Margin, Free Margin, Margin Level.
   // Example from the real user screenshot:
   // 154646, 153486, 2952, 150534, 5199.39
@@ -2308,7 +2389,7 @@ function looksLikeIOSControlCenterCanvas(canvas){
     const sliderLike=(q)=>q.range>90 && q.std>25;
     const top=colStats(.02,.98,.02,.30);
     const hasSlider=sliderLike(sliderL)||sliderLike(sliderR);
-    // v316: the real iPhone Control Center recording is much darker than the
+    // v318: the real iPhone Control Center recording is much darker than the
     // original fixture and contains almost no >210px bright pixels. Accept that
     // dim layout using the global luminance signature as a second path.
     // Normal MT5 Trade/Quotes screens in this app are predominantly white.
@@ -3260,7 +3341,7 @@ $('mediaFile').addEventListener('change',async e=>{
       }catch(fallbackErr){console.warn('order fallback OCR failed',fallbackErr)}
     }
 
-    // v316: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
+    // v318: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
     // required-price gate.  A valid Trade/Order video must not be abandoned just
     // because GOLD appeared in only one early quote frame.
     if(isVideo){
@@ -3317,7 +3398,7 @@ $('mediaFile').addEventListener('change',async e=>{
     let quotes={}, usdjpy=null; window.__quoteMeta={};
     if(isVideo){
       quotes=aggregateVideoQuotes(results); window.__quoteMeta=quotes.__meta||{};
-      // v316: if the normal multi-frame aggregator still misses the SELECTED symbol,
+      // v318: if the normal multi-frame aggregator still misses the SELECTED symbol,
       // recover only an explicit, sane Bid/Ask pair from THIS import's merged OCR text.
       // This never carries an old stored price and therefore cannot create stale-market data.
       if(!(quotes[currentSymbol]?.bid>0&&quotes[currentSymbol]?.ask>0)){
@@ -3988,6 +4069,18 @@ function runOcrReliabilityBudgetSelfTest(){
   const safeReload=typeof deploymentReloadWhenIdle==='function'&&deploymentReloadWhenIdle.toString().includes('__mediaBusy');
   return cdnBudget&&workerBudget&&noOuterAbort&&safeReload;
 }
+
+function runCanonicalStateArchitectureSelfTest(){
+  const calcSrc=calc.toString(),builder=buildCurrentTradeState.toString(),decision=calculateTradeDecision.toString(),renderPos=renderPositions.toString();
+  return calcSrc.includes('const state=buildCurrentTradeState()') &&
+    calcSrc.includes('calculateTradeDecision(state)') &&
+    !calcSrc.includes('getOrders().filter') &&
+    !calcSrc.includes('getPositions().filter') &&
+    builder.includes('pendingOrders:getOrders()') &&
+    builder.includes('positions:getPositions()') &&
+    decision.includes('chooseLCScenario(') &&
+    !renderPos.includes('validation.code');
+}
 function runMediaParserSelfTest(){
   const t=`GOLD# buy 0.01\n4318.10 > 4334.17 2565\nGOLD# buy 0.01\n4367.37 > 4334.17 -5300\nGOLD# buy 0.01\n4356.85 — 4334.17 -3621\nGOLD# buy limit\n0.01 / 0 at 4277.03 placed\nGOLD# buy limit\n0.01 / 0 at 4310.91 placed`;
   const p=parseOCR(t);
@@ -4559,6 +4652,7 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const compareAggregate=runCompareAggregateSelfTest();
     const staleQuotePending=runStaleQuotePendingSelfTest();
     const ocrReliabilityBudget=runOcrReliabilityBudgetSelfTest();
+    const canonicalStateArchitecture=runCanonicalStateArchitectureSelfTest();
     const named={duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     // A production safety gate must be based on observable behavior, not on
     // source-code strings, DOM labels or a version badge. A stale audit assertion
@@ -5241,7 +5335,7 @@ function calcCompare(){
   const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。総合判定はStandardの1 XMP=$1ボーナス価値のみ反映。KIWAMIのXMPは参考表示で、勝敗には加算しません。</span>`;
   $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ反映。総合判定はStandardのボーナス価値のみ使用。KIWAMI XMPは参考表示で勝敗には加算しません。<br>※ スワップは概算。平日は1日分、3倍曜日（現在：${cmpWeekdayName(cmpTripleDay())}）は3日分、土日は0日分として保有期間に反映します。MT5詳細で曜日を認識できた場合は自動上書きします。`;
 }
-// v316 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
+// v318 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
 window.__CMP_V280_CONSISTENCY__=(()=>{
   const src=String(calcCompare);
   return {
@@ -5311,7 +5405,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v316-20260827';
+window.__APP_BUILD__='v318-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -5354,9 +5448,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v316-20260827'
+  build:'v318-20260827'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v316-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v318-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

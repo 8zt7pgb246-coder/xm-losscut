@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v300-20260827">
+<meta name="build-id" content="v302-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v300</title>
+<title>Stop Out positioning｜デラポジ Pro v302</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -93,6 +93,58 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 
 /* v106 density pass 2 */
 .posOrderRows .grid{grid-template-columns:.75fr .75fr 1.5fr;gap:4px}.posOrderRows .grid>.wide:not(.small){grid-column:auto}.posOrderRows .grid>.wide.small{grid-column:1/-1;font-size:10px;line-height:1.2}.posOrderCard{padding:7px 9px}.posOrderTools{margin-top:4px}.posOrderTools button{padding:5px 8px}
+/* v302 priority rebalance: scenario is the decision surface, pending list is compact input detail */
+#scenarioCard{padding:11px 13px;border-width:1px;margin-top:5px!important}
+#scenarioCard>.row:first-child{padding:1px 0 7px;border-bottom:1px solid var(--line)}
+#scenarioCard>.row:first-child>b{font-size:19px;letter-spacing:.2px}
+#scenarioStatus{font-size:12px!important;line-height:1.2;text-align:right}
+#scenarioSteps{font-size:13px!important;line-height:1.25}
+#scenarioSteps .scenarioRow{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+#scenarioSteps .scenarioRow:last-child{border-bottom:0}
+#scenarioSteps .scenarioRow span{color:var(--muted);font-size:13px;line-height:1.22}
+#scenarioSteps .scenarioRow b{font-size:15px;line-height:1.18;text-align:right}
+#scenarioSteps .scenarioFinal{margin:3px -4px -2px;padding:10px 7px 8px;border-radius:10px;background:rgba(255,107,99,.06);border-bottom:0}
+#scenarioSteps .scenarioFinal span{font-size:14px;color:#d9dee8;font-weight:800}
+#scenarioSteps .scenarioFinal b{font-size:22px;letter-spacing:.3px;color:#ff6b63!important}
+#scenarioSteps .scenarioTheory{padding-top:5px;padding-bottom:5px}
+#scenarioSteps .scenarioTheory span,#scenarioSteps .scenarioTheory b{font-size:11px;color:var(--muted)}
+/* Pending orders: keep editability but collapse each order to a dense two-line unit. */
+.page#pageLC .posOrderCard:nth-of-type(5){padding:7px 9px 6px}
+#orders{margin-top:3px}
+#orders .grid{margin-top:4px!important;gap:3px 4px;padding:5px 0;border-top:1px solid rgba(120,130,145,.18)}
+#orders .grid:first-child{border-top:0;padding-top:2px}
+#orders label{font-size:9px;line-height:1;margin:0 0 2px}
+#orders input{padding:5px 6px;font-size:14px!important;min-height:31px}
+#orders .wide.small{font-size:9.5px!important;line-height:1.12!important;padding:0!important;margin-top:0!important}
+#orders .orderMetaCompact{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:3px 8px;grid-column:1/-1;margin-top:1px}
+#orders .orderMetaCompact .status{font-weight:900}
+#orders .orderMetaCompact .loss{color:var(--muted);white-space:nowrap}
+.pendingCompactCard{padding-top:6px;padding-bottom:5px}
+.orderColumnHead{display:grid;grid-template-columns:.75fr .75fr 1.5fr;gap:4px;padding:1px 0 2px;color:var(--muted);font-size:9px;line-height:1;border-bottom:1px solid rgba(120,130,145,.18)}
+#orders .grid{grid-template-columns:.75fr .75fr 1.5fr!important;padding:3px 0!important;margin-top:0!important}
+#orders .grid>div:not(.orderMetaCompact){min-width:0}
+#orders .grid label{display:none}
+#orders input{padding:4px 6px!important;min-height:29px!important;line-height:1.05}
+#orders .orderMetaCompact{margin-top:0!important;font-size:9px!important;line-height:1.05!important}
+#orders .orderMetaCompact .loss{font-size:8.5px}
+#scenarioCard{border-color:rgba(255,107,99,.38);box-shadow:0 0 0 1px rgba(255,107,99,.05) inset}
+#scenarioCard>.row:first-child>b{font-size:21px}
+#scenarioStatus{font-weight:800}
+#scenarioSteps .scenarioFinal{margin-top:5px}
+#scenarioSteps .scenarioFinal b{font-size:24px}
+
+.posOrderHead{min-height:23px}
+.posOrderHead>span:first-child{font-size:16px}
+.posOrderTools{margin-top:3px}
+@media(max-width:420px){
+ #scenarioCard>.row:first-child>b{font-size:18px}
+ #scenarioSteps .scenarioRow{grid-template-columns:minmax(0,1.22fr) minmax(0,1fr);gap:7px;padding:6px 0}
+ #scenarioSteps .scenarioRow span{font-size:12px}
+ #scenarioSteps .scenarioRow b{font-size:14px}
+ #scenarioSteps .scenarioFinal b{font-size:21px}
+ #orders input{font-size:15px!important}
+}
+
 .compactInfoGrid .row span{font-size:10px}.compactInfoGrid .row b{font-size:12px}
 
 /* v220: critical unreachable-order warning. Intentionally impossible to miss on mobile. */
@@ -225,9 +277,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v300</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v302</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
-<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v300 を確認中…</div>
+<div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v302 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -246,8 +298,9 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">現在保有＋到達前に約定するPendingを反映。</div></div><div id="pendingDeadlineWarning" class="danger" style="display:none;margin-top:10px"></div>
 
 
+<div class="card compactCard" id="scenarioCard"><div class="row"><b>価格シナリオ</b><span id="scenarioStatus" class="small">—</span></div><div id="scenarioSteps" class="small">現在 → Pending → Stop Out</div></div>
 <div class="card posOrderCard"><div class="posOrderHead"><span>現在ポジション</span><span class="count" id="positionCount">0件</span></div><div id="positions" class="posOrderRows"></div><div class="posOrderTools"><button type="button" class="secondary" onclick="addPosition()">＋ 追加</button><button type="button" class="secondary" onclick="resetPositions()">リセット</button></div></div>
-<div class="card posOrderCard"><div class="posOrderHead"><span>未約定注文</span><span class="count" id="count">0件 / 追加0件</span></div><div id="orders" class="posOrderRows"></div><div class="posOrderTools"><button type="button" class="secondary" onclick="addOrder()">＋ 追加</button><button type="button" class="secondary" onclick="resetOrders()">リセット</button></div></div>
+<div class="card posOrderCard pendingCompactCard"><div class="posOrderHead"><span>未約定注文</span><span class="count" id="count">0件 / 追加0件</span></div><div class="orderColumnHead"><span>方向</span><span>Lot</span><span>価格</span></div><div id="orders" class="posOrderRows"></div><div class="posOrderTools"><button type="button" class="secondary" onclick="addOrder()">＋ 追加</button><button type="button" class="secondary" onclick="resetOrders()">リセット</button></div></div>
 <div class="card compactCard"><div class="grid">
 <div><label>口座残高（JPY）</label><input id="balance" type="number" min="0" step="1" value="" placeholder="MT5から自動 / 手動入力"><div id="balanceStatus" class="small">未確認</div></div>
 <div><label>口座レバレッジ（参考）</label><input id="leverage" type="number" value="1000"></div>
@@ -257,7 +310,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 <div><label>損益補正</label><span id="pnlAdjustStatus" class="small">なし</span></div>
 </div></div>
 
-<div class="card compactCard" id="scenarioCard"><div class="row"><b>価格シナリオ</b><span id="scenarioStatus" class="small">—</span></div><div id="scenarioSteps" class="small">現在 → Pending → Stop Out</div></div><div class="card compactCard">
+<div class="card compactCard">
 <div class="compactInfoGrid">
 <div class="row"><span id="bidLabel">XM Bid</span><b id="goldBid">—</b></div>
 <div class="row"><span id="askLabel">XM Ask</span><b id="goldAsk">—</b></div>
@@ -427,7 +480,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v300-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v302-20260827';
 function loadScript(src,timeout=8000){
   return new Promise((resolve,reject)=>{
     const existing=[...document.scripts].find(x=>x.src===src);
@@ -543,8 +596,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v300-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v300-20260827';
+window.__DEPLOYMENT_STATE__={build:'v302-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v302-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -558,7 +611,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v300-20260827', SHORT='v300';
+  const BUILD='v302-20260827', SHORT='v302';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -879,7 +932,7 @@ function renderPositions(lc=null,c=cfg()){const arr=getPositions();$('positionCo
 window.editPosition=function(i,k,v){const a=getPositions();a[i][k]=v;setPositions(a);renderPositions();calc()}
 window.addPosition=function(){const a=getPositions();a.push({side:'Buy',lot:.01,price:Number.isFinite(goldBid)?goldBid:0});setPositions(a);renderPositions();calc()}
 window.resetPositions=function(){setPositions([]);renderPositions();calc()}
-function renderOrders(){const arr=getOrders();$('count').textContent=`${arr.length}件 / 想定追加約定 0件`;$('orders').innerHTML=arr.length?arr.map((o,i)=>`<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editOrder(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editOrder(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>価格</label><input type="number" step="any" value="${o.price}" onchange="editOrder(${i},'price',parseFloat(this.value)||0)"></div></div>`).join(''):'<div class="small">この銘柄の未約定注文はありません。</div>';calc()}
+function renderOrders(){const arr=getOrders();$('count').textContent=`${arr.length}件 / 想定追加約定 0件`;$('orders').innerHTML=arr.length?arr.map((o,i)=>`<div class="grid"><div><input aria-label="方向" value="${o.side}" onchange="editOrder(${i},'side',this.value)"></div><div><input aria-label="Lot" type="number" step=".01" value="${o.lot}" onchange="editOrder(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><input aria-label="価格" type="number" step="any" value="${o.price}" onchange="editOrder(${i},'price',parseFloat(this.value)||0)"></div></div>`).join(''):'<div class="small">この銘柄の未約定注文はありません。</div>';calc()}
 window.editOrder=function(i,k,v){const a=getOrders();a[i][k]=v;setOrders(a);calc()}
 window.addOrder=function(){const a=getOrders();a.push({side:'Buy Limit',lot:.01,price:Number.isFinite(goldBid)?Math.max(0,goldBid-1):0});setOrders(a);renderOrders()}
 window.resetOrders=function(){setOrders([]);renderOrders()}
@@ -1052,11 +1105,11 @@ function renderPendingDeadlineWarning(pending,lc,simMeta=null){
 function renderScenarioSteps(positions,pending,filled,added,lc,simMeta=null){
   const el=$('scenarioSteps'),st=$('scenarioStatus');if(!el||!st)return;const curLots=positions.reduce((a,o)=>a+Number(o.lot||0),0),lines=[];
   const up=simMeta?.direction==='up',dir=up?'上昇':'下落';
-  lines.push(`<div class="row"><span>現在</span><b>${positions.length}件 / ${curLots.toFixed(2)} lot</b></div>`);
-  added.forEach((o,i)=>{const lots=curLots+added.slice(0,i+1).reduce((a,x)=>a+Number(x.lot||0),0);lines.push(`<div class="row"><span>${dir}して ${formatPrice(Number(o.price))} 到達</span><b>${i+1}件目 約定 → ${lots.toFixed(2)} lot</b></div>`)});
-  if(!added.length&&pending.length)lines.push(`<div class="row"><span>Pending</span><b>Stop Out到達前の追加約定なし</b></div>`);
-  if(simMeta?.skipped?.length){const px=simMeta.skipped.map(o=>formatPrice(Number(o.price))).join(' / ');lines.push(`<div class="row"><span>Stop Outより${up?'上':'下'}の未到達注文</span><b>${simMeta.skipped.length}件：${px}</b></div>`);if(Number.isFinite(simMeta.allFilledLc))lines.push(`<div class="row"><span>全注文を仮約定した理論LC</span><b>${formatPrice(simMeta.allFilledLc)}（実際には到達不能）</b></div>`);}
-  if(Number.isFinite(lc)){lines.push(`<div class="row"><span>実際の${dir}経路でStop Out開始予測</span><b style="color:#ff6b63">${formatPrice(lc)}</b></div>`);st.textContent=`${dir} / Pending反映 ${added.length}/${pending.length}件 / Stop Out時 ${filled.length}件`}else st.textContent='計算未確定';el.innerHTML=lines.join('');
+  lines.push(`<div class="scenarioRow"><span>現在</span><b>${positions.length}件 / ${curLots.toFixed(2)} lot</b></div>`);
+  added.forEach((o,i)=>{const lots=curLots+added.slice(0,i+1).reduce((a,x)=>a+Number(x.lot||0),0);lines.push(`<div class="scenarioRow"><span>${dir}して ${formatPrice(Number(o.price))} 到達</span><b>${i+1}件目 約定 → ${lots.toFixed(2)} lot</b></div>`)});
+  if(!added.length&&pending.length)lines.push(`<div class="scenarioRow"><span>Pending</span><b>Stop Out到達前の追加約定なし</b></div>`);
+  if(simMeta?.skipped?.length){const px=simMeta.skipped.map(o=>formatPrice(Number(o.price))).join(' / ');lines.push(`<div class="scenarioRow"><span>Stop Outより${up?'上':'下'}の未到達注文</span><b>${simMeta.skipped.length}件：${px}</b></div>`);if(Number.isFinite(simMeta.allFilledLc))lines.push(`<div class="scenarioRow scenarioTheory"><span>全注文を仮約定した理論LC</span><b>${formatPrice(simMeta.allFilledLc)}（実際には到達不能）</b></div>`);}
+  if(Number.isFinite(lc)){lines.push(`<div class="scenarioRow scenarioFinal"><span>実際の${dir}経路でStop Out開始予測</span><b>${formatPrice(lc)}</b></div>`);st.textContent=`${dir} / Pending反映 ${added.length}/${pending.length}件 / Stop Out時 ${filled.length}件`}else st.textContent='計算未確定';el.innerHTML=lines.join('');
 }
 function calc(){
   // Regression tests are developer diagnostics only.
@@ -1085,8 +1138,9 @@ function renderOrderStatus(added,all,lc){
   const keys=new Set(added.map(o=>o.price+'|'+o.lot+'|'+o.side)),c=cfg();
   $('orders').innerHTML=all.length?all.map((o,i)=>{
     const f=keys.has(o.price+'|'+o.lot+'|'+o.side),loss=f?lossAtLCJPY(o,lc,c):null;
-    const lossHtml=f?`<div class="wide small" style="margin-top:3px;color:#b42318">シナリオStop Out時 想定含み損：<b>${formatJPYLoss(loss)}</b>（${Number(o.lot).toFixed(2)} lot）</div>`:`<div class="wide small" style="margin-top:3px">Stop Out前に価格到達しないため想定含み損：—</div>`;
-    return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${o.side}" onchange="editOrder(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editOrder(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>価格</label><input type="number" step="any" value="${o.price}" onchange="editOrder(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small"><b class="${f?'ok':'warn'}">${f?'✓ 想定経路で追加約定':'✕ Stop Out前に価格到達しない'}</b></div>${lossHtml}</div>`;
+    const status=f?'✓ 追加約定':'✕ Stop Out前に未到達';
+    const lossText=f?`SO時 ${formatJPYLoss(loss)}`:'想定含み損 —';
+    return `<div class="grid"><div><input aria-label="方向" value="${o.side}" onchange="editOrder(${i},'side',this.value)"></div><div><input aria-label="Lot" type="number" step=".01" value="${o.lot}" onchange="editOrder(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><input aria-label="価格" type="number" step="any" value="${o.price}" onchange="editOrder(${i},'price',parseFloat(this.value)||0)"></div><div class="orderMetaCompact small"><span class="status ${f?'ok':'warn'}">${status}</span><span class="loss">${lossText}</span></div></div>`;
   }).join(''):'<div class="small">この銘柄の未約定注文はありません。</div>';
 }
 function pointStepFor(sym,c){if(c.type==='fx')return /JPY#$/.test(sym)?0.01:0.0001;return Number.isFinite(+c.point)&&+c.point>0?+c.point:(c.type==='index'?1:0.01)}
@@ -1116,7 +1170,7 @@ function detectXMAccountTypeFromText(text){
   const unique=[];const seen=new Set();for(const e of evidence){const k=e.symbol+'|'+e.suffix;if(!seen.has(k)){seen.add(k);unique.push(e)}}
   const suffixes=new Set(unique.map(e=>e.suffix));
 
-  // v300: OCR can DROP the small trailing '#', especially when the same quote frame
+  // v302: OCR can DROP the small trailing '#', especially when the same quote frame
   // is read with different PSM modes. It is much less likely to invent explicit '#'
   // on several different symbols. Therefore strong positive KIWAMI evidence wins
   // before mixed hash/plain ambiguity is considered.
@@ -1450,7 +1504,7 @@ function parseMt5AccountSummaryFallback(text){
   if(nums.length>=3&&Math.abs(nums[0]-nums[1])<=1&&Math.abs(nums[0]-nums[2])<=1){
     return {balance:nums[0],equity:nums[1],credit:0,free:nums[2],evidence:[`fallback-balance:${nums[0]}`,'fallback-flat-summary']};
   }
-  // v300: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
+  // v302: Real iPhone ENG OCR can corrupt exactly one of Balance/Equity/Free
   // while preserving the other two, e.g. 154646 / 154646 / 184646.
   // On a pending-order screen with NO open-position row, two matching values
   // are strong evidence of a flat account. Never use this when a position exists.
@@ -1475,7 +1529,7 @@ function parseMt5AccountSummaryFallback(text){
       return {balance:b,equity:e,credit:c,free,evidence:[`fallback-balance:${b}`,`fallback-credit:${c}`,'fallback-live-margin-identity']};
     }
   }
-  // v300: iPhone ENG OCR can destroy every Japanese account label while preserving
+  // v302: iPhone ENG OCR can destroy every Japanese account label while preserving
   // the five live-account numbers: Balance, Equity, Used Margin, Free Margin, Margin Level.
   // Example from the real user screenshot:
   // 154646, 153486, 2952, 150534, 5199.39
@@ -2103,7 +2157,7 @@ function looksLikeIOSControlCenterCanvas(canvas){
     const sliderLike=(q)=>q.range>90 && q.std>25;
     const top=colStats(.02,.98,.02,.30);
     const hasSlider=sliderLike(sliderL)||sliderLike(sliderR);
-    // v300: the real iPhone Control Center recording is much darker than the
+    // v302: the real iPhone Control Center recording is much darker than the
     // original fixture and contains almost no >210px bright pixels. Accept that
     // dim layout using the global luminance signature as a second path.
     // Normal MT5 Trade/Quotes screens in this app are predominantly white.
@@ -3039,7 +3093,7 @@ $('mediaFile').addEventListener('change',async e=>{
       }catch(fallbackErr){console.warn('order fallback OCR failed',fallbackErr)}
     }
 
-    // v300: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
+    // v302: PRICE RESCUE MUST RUN BEFORE worker termination and before the final
     // required-price gate.  A valid Trade/Order video must not be abandoned just
     // because GOLD appeared in only one early quote frame.
     if(isVideo){
@@ -3096,7 +3150,7 @@ $('mediaFile').addEventListener('change',async e=>{
     let quotes={}, usdjpy=null; window.__quoteMeta={};
     if(isVideo){
       quotes=aggregateVideoQuotes(results); window.__quoteMeta=quotes.__meta||{};
-      // v300: if the normal multi-frame aggregator still misses the SELECTED symbol,
+      // v302: if the normal multi-frame aggregator still misses the SELECTED symbol,
       // recover only an explicit, sane Bid/Ask pair from THIS import's merged OCR text.
       // This never carries an old stored price and therefore cannot create stale-market data.
       if(!(quotes[currentSymbol]?.bid>0&&quotes[currentSymbol]?.ask>0)){
@@ -4764,7 +4818,7 @@ function calcCompare(){
   const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。総合判定はStandardの1 XMP=$1ボーナス価値のみ反映。KIWAMIのXMPは参考表示で、勝敗には加算しません。</span>`;
   $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ反映。総合判定はStandardのボーナス価値のみ使用。KIWAMI XMPは参考表示で勝敗には加算しません。<br>※ スワップは概算。平日は1日分、3倍曜日（現在：${cmpWeekdayName(cmpTripleDay())}）は3日分、土日は0日分として保有期間に反映します。MT5詳細で曜日を認識できた場合は自動上書きします。`;
 }
-// v300 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
+// v302 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
 window.__CMP_V280_CONSISTENCY__=(()=>{
   const src=String(calcCompare);
   return {
@@ -4834,7 +4888,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v300-20260827';
+window.__APP_BUILD__='v302-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -4877,9 +4931,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v300-20260827'
+  build:'v302-20260827'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v300-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v302-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

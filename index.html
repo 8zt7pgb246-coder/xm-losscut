@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v272-20260827">
+<meta name="build-id" content="v273-20260827">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v272</title>
+<title>Stop Out positioning｜デラポジ Pro v273</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -214,7 +214,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 </head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v272</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v273</span></h1>
 <div class="sub">XM画面 → ポジション・注文 → 推定Stop Out</div>
 <div id="deployStatus" class="small" style="margin:-4px 0 6px;opacity:.9">公開版 v271 を確認中…</div>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
@@ -416,7 +416,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v272-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v273-20260827';
 function loadScript(src){return new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=resolve;sc.onerror=()=>reject(new Error('SCRIPT_LOAD_FAILED:'+src));document.head.appendChild(sc)})}
 async function loadTesseract(){
   if(window.Tesseract)return window.Tesseract;
@@ -506,8 +506,8 @@ function videoSamplingRegressionTest(){
   const pos=times.filter(t=>t>=f.decisivePositionWindow[0]&&t<=f.decisivePositionWindow[1]).length;
   return {count:times.length,pos,times,pass:times.length===4&&pos>=2&&fractions[0]===.10&&fractions[1]===.35&&fractions[2]===.73&&fractions[3]===.90};
 }
-window.__DEPLOYMENT_STATE__={build:'v272-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v272-20260827';
+window.__DEPLOYMENT_STATE__={build:'v273-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v273-20260827';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -521,7 +521,7 @@ window.__VIDEO_REGRESSION_FIXTURE__={
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v272-20260827', SHORT='v272';
+  const BUILD='v273-20260827', SHORT='v273';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1283,16 +1283,27 @@ function extractAccountHeaderIntegers(head){
   }
   return nums;
 }
+function hasRobustPendingOrderRowText(text){
+  const lines=String(text||'').replace(/\r/g,'\n').split(/\n+/).map(normalizeOcrLine).filter(Boolean);
+  return lines.some(line=>{
+    const side=detectPendingSideFromLine(line);
+    if(!side)return false;
+    return /(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i.test(line) && /\b(?:limit|stop)\b/i.test(line);
+  });
+}
 function parseMt5AccountSummaryFallback(text){
   const raw=String(text||'').replace(/\r/g,'\n');
   // Fallback is allowed only on an unmistakable MT5 Trade/Orders frame. Japanese
   // account labels and even the literal 'JPY' can be lost by OCR, so the anchor is
   // the MT5 order/position structure itself, not one fragile label token.
-  const hasTradeRows=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)(?:\s+limit)?/i.test(raw);
+  const hasTradeRows=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)(?:\s+limit)?/i.test(raw) || hasRobustPendingOrderRowText(raw) || hasStrongOpenPositionRowText(raw);
   const hasTradeHeader=/(?:オーダー|orders?|\bposition\b|ポジション)/i.test(raw);
   if(!hasTradeRows && !hasTradeHeader)return {balance:null,equity:null,credit:null,free:null,evidence:[]};
   const jpy=raw.search(/\bJPY\b/i);
-  const firstTradeRow=raw.search(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)/i);
+  let firstTradeRow=raw.search(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)/i);
+  if(firstTradeRow<0){
+    let off=0;for(const line of raw.split(/\n/)){if(detectPendingSideFromLine(line)||detectTradeSideFromLine(line)){firstTradeRow=off;break}off+=line.length+1}
+  }
   const orderHeader=raw.search(/(?:オーダー|orders?)/i);
   // Account summary sits above the first order/position row. If JPY survives OCR,
   // start there; otherwise inspect only the pre-trade header region.
@@ -1482,7 +1493,7 @@ function isAuthoritativeFlatStillOrderSnapshot({isVideo=false,accountSnapshot=nu
   // blue `GOLD# buy limit` rows perfectly. A flat account summary + explicit pending
   // rows + no open-position rows is an equally authoritative current-order snapshot.
   // Do not let an old saved order count veto that fresh screenshot.
-  const hasExplicitPendingRows=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)\s*(?:limit|stop)\b/i.test(raw);
+  const hasExplicitPendingRows=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)\s*(?:limit|stop)\b/i.test(raw) || hasRobustPendingOrderRowText(raw);
   const noOpenRows=!Array.isArray(positionsRaw)||positionsRaw.length===0;
   return !!(flat&&(hasOrderHeader||hasExplicitPendingRows)&&noOpenRows);
 }
@@ -1557,7 +1568,7 @@ function isExplicitFlatTradeSnapshot(text,snapshot,positionRows){
   const cr=Number.isFinite(snapshot?.credit)?snapshot.credit:0;
   const accountFlat=hasAccount&&Math.abs(snapshot.equity-snapshot.free)<=1&&(Math.abs(snapshot.balance-snapshot.equity)<=1||Math.abs((snapshot.balance+cr)-snapshot.equity)<=1);
   const hasOrderHeader=/(?:オーダー|orders?)/i.test(raw);
-  const hasPendingRows=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)\s*(?:limit|stop)\b/i.test(raw);
+  const hasPendingRows=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)\s*(?:limit|stop)\b/i.test(raw) || hasRobustPendingOrderRowText(raw);
   const hasTradeRows=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)/i.test(raw);
   const hasBalanceLabel=/(?:残高|balance)/i.test(raw),hasEquityLabel=/(?:有効額|equity)/i.test(raw),hasFreeLabel=/(?:可能額|free\s*margin)/i.test(raw);
   const hasAccountLabels=(hasBalanceLabel&&hasEquityLabel)||(hasEquityLabel&&hasFreeLabel);
@@ -3262,6 +3273,9 @@ function runCalcSelfTest(){
     const accountFixtureText='JPY\n残高: 154 646\n有効額: 154 646\n可能額: 154 646\nオーダー\nGOLD# buy limit\n0.03 / 0 at 4577.90 placed';
     const accountFixture=parseAccountSnapshotFromText(accountFixtureText);
     const flatAccountParse=accountFixture.balance===154646&&accountFixture.equity===154646&&accountFixture.free===154646&&isExplicitFlatTradeSnapshot(accountFixtureText,accountFixture,[]);
+    const fuzzyFlatRaw='JPY\n154 646\n154 646\n154 646\nGOLD# buv limit 0.02 / 0 at 4554.19\nGOLD# buv limit 0.02 / 0 at 4475.19\nGOLD# buv limit 0.02 / 0 at 4383.19';
+    const fuzzyFlatAccount=parseAccountSnapshotFromText(fuzzyFlatRaw);
+    const fuzzyFlatPendingEvidence=hasRobustPendingOrderRowText(fuzzyFlatRaw)&&isExplicitFlatTradeSnapshot(fuzzyFlatRaw,fuzzyFlatAccount,[]);
 
     const creditFlatText='JPY\n残高: 50 000\n有効額: 54 935\nクレジット: 4 935\n可能額: 54 935\nオーダー\nGOLD sell limit\n0.01 / 0 at 4644.09 placed';
     const creditFlatSnap=parseAccountSnapshotFromText(creditFlatText);
@@ -3368,7 +3382,7 @@ placed
     const realTwoSellSim=chooseLCScenario(54935,20,realTwoSellPending,realTwoSellTrusted.rows,c,1000,100,4622.19,0,4621.64);
     const realTwoSellDeadline=realTwoSellSim.direction==='up'&&realTwoSellSim.added.length===3&&realTwoSellSim.filled.length===5&&Number.isFinite(realTwoSellSim.lc)&&Math.abs(realTwoSellSim.lc-4714.26)<0.20;
     window.__testRate=159.53;
-    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v272-20260827$/.test(buildId)&&/v271/.test(document.querySelector('h1')?.textContent||'');
+    const buildId=document.querySelector('meta[name="build-id"]')?.content||''; const buildOk=window.__APP_BUILD__===buildId&&/^v273-20260827$/.test(buildId)&&/v271/.test(document.querySelector('h1')?.textContent||'');
     const apiOk=['getPositions','getOrders','setPositions','setOrders'].every(k=>typeof window[k]==='function');
     const domOk=['symbol','mediaFile','mediaChoose','ocrStatus','dataLock','orderDataLock','result','pendingDeadlineWarning','positions','orders','balance','stopout','usdjpy'].every(id=>!!$(id));
 
@@ -3464,7 +3478,7 @@ placed
     const orderMutationUpdatePath=window.editOrder.toString().includes('calc()')&&window.addOrder.toString().includes('renderOrders()')&&window.resetOrders.toString().includes('renderOrders()')&&renderOrders.toString().includes('calc()');
     const secondMediaSupersedesFirst=document.documentElement.innerHTML.includes('window.__mediaImportToken')&&document.documentElement.innerHTML.includes('const stillCurrent=()=>window.__mediaImportToken===importToken')&&document.documentElement.innerHTML.includes('if(!stillCurrent())return');
     const videoNoFullRedecodeFallback=document.documentElement.innerHTML.includes('else if(!isVideo && (!parsed.pending.length||!parsed.positions.length))')&&document.documentElement.innerHTML.includes('sharedVideoWorker=await createOCRWorker')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
-    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    const named={calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,exactReportedScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,reportedScreenshotStateTransition,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,importRollbackScopeSafe,quoteScrollSamplingPolicy,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     const failed=Object.entries(named).filter(([,ok])=>!ok).map(([k])=>k);
     const ok=failed.length===0;
     window.__regressionOK=ok;
@@ -4050,7 +4064,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v272-20260827';
+window.__APP_BUILD__='v273-20260827';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -4088,8 +4102,8 @@ GOLD sell limit
   }catch(e){window.__V229_IMPORT_REGRESSION__={pass:false,error:String(e)};window.__regressionOK=false}
 })();
 
-window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v272-20260827'};
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v272-20260827'};
+window.__V125_SELFTEST__={tradeOCRUsesFullFrame:true,build:'v273-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v273-20260827'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

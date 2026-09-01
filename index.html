@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v368-20260901">
+<meta name="build-id" content="v369-20260901">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v368</title>
+<title>Stop Out positioning｜デラポジ Pro v369</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -816,7 +816,7 @@ h1 { margin-bottom: 2px !important; line-height: 1.02 !important; }
 </style></head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v368</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v369</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1059,7 +1059,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v368-20260901';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v369-20260901';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1132,6 +1132,25 @@ async function createOCRWorker(T,logger){
   }
   const err=new Error('OCR_WORKER_UNAVAILABLE'); err.cause=last; throw err;
 }
+let reusableOcrWorker=null,reusableOcrWorkerBusy=false,reusableOcrWorkerTimer=null;
+async function acquireReusableOcrWorker(T,logger){
+  if(reusableOcrWorker&&!reusableOcrWorkerBusy){
+    clearTimeout(reusableOcrWorkerTimer);reusableOcrWorkerTimer=null;reusableOcrWorkerBusy=true;
+    return reusableOcrWorker;
+  }
+  const worker=await createOCRWorker(T,logger);reusableOcrWorker=worker;reusableOcrWorkerBusy=true;return worker;
+}
+function releaseReusableOcrWorker(worker){
+  if(!worker||worker!==reusableOcrWorker)return;
+  reusableOcrWorkerBusy=false;clearTimeout(reusableOcrWorkerTimer);
+  reusableOcrWorkerTimer=setTimeout(async()=>{const w=reusableOcrWorker;reusableOcrWorker=null;reusableOcrWorkerBusy=false;try{await w?.terminate()}catch(_){}},90000);
+}
+async function discardReusableOcrWorker(worker){
+  clearTimeout(reusableOcrWorkerTimer);reusableOcrWorkerTimer=null;
+  if(worker===reusableOcrWorker){reusableOcrWorker=null;reusableOcrWorkerBusy=false}
+  try{await worker?.terminate()}catch(_){}
+}
+addEventListener('pagehide',()=>{const w=reusableOcrWorker;reusableOcrWorker=null;reusableOcrWorkerBusy=false;clearTimeout(reusableOcrWorkerTimer);try{w?.terminate()}catch(_){}});
 </script>
 <script>
 // v37 runtime hardening: Safari/iOS can retain an older classic-script global environment.
@@ -1153,8 +1172,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v368-20260901',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v368-20260901';
+window.__DEPLOYMENT_STATE__={build:'v369-20260901',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v369-20260901';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1175,7 +1194,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v368-20260901', SHORT='v368';
+  const BUILD='v369-20260901', SHORT='v369';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -4022,7 +4041,7 @@ $('mediaFile').addEventListener('change',async e=>{
     sharedVideoWorker=null;
     let ocrEnginePromise=ensureOCR();
     let prewarmedVideoWorkerPromise=isVideo
-      ? ocrEnginePromise.then(T=>createOCRWorker(T,m=>{
+      ? ocrEnginePromise.then(T=>acquireReusableOcrWorker(T,m=>{
           if(m.status==='recognizing text'&&stillCurrent())$('ocrStatus').textContent=`XM画面動画OCR準備中… ${Math.round((m.progress||0)*100)}%`;
         })).catch(e=>{console.warn('[XM] OCR worker prewarm skipped',e);return null})
       : null;
@@ -4058,7 +4077,7 @@ $('mediaFile').addEventListener('change',async e=>{
     if(isVideo){
       sharedVideoWorker=prewarmedVideoWorkerPromise?await prewarmedVideoWorkerPromise:null;
       if(!sharedVideoWorker){
-        sharedVideoWorker=await createOCRWorker(T,m=>{
+        sharedVideoWorker=await acquireReusableOcrWorker(T,m=>{
           if(m.status==='recognizing text')$('ocrStatus').textContent=`XM画面動画OCR中… ${Math.round((m.progress||0)*100)}%`;
         });
       }
@@ -4345,7 +4364,7 @@ $('mediaFile').addEventListener('change',async e=>{
         usdjpy:prelimQuotes['USDJPY#']||mergedUsd||null
       };
     }
-    if(sharedVideoWorker){try{await sharedVideoWorker.terminate()}catch(e){console.warn('[XM] shared OCR worker terminate skipped',e)} sharedVideoWorker=null;}
+    if(sharedVideoWorker){releaseReusableOcrWorker(sharedVideoWorker);sharedVideoWorker=null;}
     if(isVideo){
       const allUsable=filterUsableOCRResults(results);
       // Count physical sampled frames, not OCR passes. The same frame can be read by
@@ -4861,7 +4880,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const donePreview=$('preview'); if(donePreview){donePreview.removeAttribute('src');donePreview.style.display='none';}
     resetMediaPicker();
   }catch(err){
-    if(sharedVideoWorker){try{await sharedVideoWorker.terminate()}catch(_){} sharedVideoWorker=null;}
+    if(sharedVideoWorker){await discardReusableOcrWorker(sharedVideoWorker);sharedVideoWorker=null;}
     if(!stillCurrent())return;
     // v267: a newly selected movie must never appear to have "not updated" by
     // silently restoring the previous movie as current trading truth. Keep stored
@@ -4891,7 +4910,7 @@ $('mediaFile').addEventListener('change',async e=>{
   }
   }catch(topErr){
     if(stillCurrent()){
-      if(sharedVideoWorker){try{await sharedVideoWorker.terminate()}catch(_){} sharedVideoWorker=null;}
+      if(sharedVideoWorker){await discardReusableOcrWorker(sharedVideoWorker);sharedVideoWorker=null;}
       if(importSnapshot)restoreImportSnapshot(importSnapshot);
       // A failed new selection must never silently leave the previous media looking current.
       mediaPriceFresh=false; mediaUsdJpyFresh=false; mediaPriceEvidence=null;window.__currentTemporalQuoteBeforeTrade=false;
@@ -6155,7 +6174,7 @@ function runReleaseVersionConsistencySelfTest(){
   const title=document.title||'';
   const h1=document.querySelector('h1')?.innerText||'';
   const stale=/\bv(?:35[0-8])\b/i.test(title+' '+h1);
-  const current=/\bv368\b/i.test(title+' '+h1);
+  const current=/\bv369\b/i.test(title+' '+h1);
   return {pass:current&&!stale,current,stale,title,h1};
 }
 
@@ -7078,7 +7097,7 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const lateTradeAnchorRetention=videoFrameSources.toString().includes('merged.slice(0,8).sort((a,b)=>a.time-b.time)')&&!videoFrameSources.toString().includes('merged.sort((a,b)=>a.time-b.time).slice(0,8)');
     const orderMutationUpdatePath=window.editOrder.toString().includes('calc()')&&window.addOrder.toString().includes('renderOrders()')&&window.resetOrders.toString().includes('renderOrders()')&&renderOrders.toString().includes('calc()');
     const secondMediaSupersedesFirst=document.documentElement.innerHTML.includes('window.__mediaImportToken')&&document.documentElement.innerHTML.includes('const stillCurrent=()=>window.__mediaImportToken===importToken')&&document.documentElement.innerHTML.includes('if(!stillCurrent())return');
-    const videoNoFullRedecodeFallback=document.documentElement.innerHTML.includes('else if(!isVideo && (!parsed.pending.length||!parsed.positions.length))')&&document.documentElement.innerHTML.includes('sharedVideoWorker=await createOCRWorker')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
+    const videoNoFullRedecodeFallback=document.documentElement.innerHTML.includes('else if(!isVideo && (!parsed.pending.length||!parsed.positions.length))')&&document.documentElement.innerHTML.includes('sharedVideoWorker=await acquireReusableOcrWorker')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
     const importCompletionStage=runImportCompletionStageSelfTest();
     const priceGateOrder=runPriceGateOrderSelfTest();
     const diagnosticIsolation=runDiagnosticIsolationSelfTest();
@@ -7856,7 +7875,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v368-20260901';
+window.__APP_BUILD__='v369-20260901';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -7899,9 +7918,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v368-20260901'
+  build:'v369-20260901'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v368-20260901'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v369-20260901'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

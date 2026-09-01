@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v364-20260827">
+<meta name="build-id" content="v365-20260901">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v364</title>
+<title>Stop Out positioning｜デラポジ Pro v365</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -816,7 +816,7 @@ h1 { margin-bottom: 2px !important; line-height: 1.02 !important; }
 </style></head>
 <body>
 <div class="app">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v364</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v365</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1059,7 +1059,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v364-20260827';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v365-20260901';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1153,8 +1153,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v364-20260827',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v364-20260827';
+window.__DEPLOYMENT_STATE__={build:'v365-20260901',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v365-20260901';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1175,7 +1175,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v364-20260827', SHORT='v364';
+  const BUILD='v365-20260901', SHORT='v365';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -3540,7 +3540,11 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
       if(x&&!x.isControlCenter&&!merged.some(y=>Math.abs(y.fraction-x.fraction)<0.035))merged.push(x);
     }
     // Bound OCR work so flexibility does not make iPhone/Safari materially slower.
-    const frames=merged.sort((a,b)=>a.time-b.time).slice(0,8).map((x,i)=>({canvas:x.canvas,time:x.time,frameIndex:i,isControlCenter:false,fraction:x.fraction,sharpness:x.sharpness}));
+    // v365: `merged` is deliberately ordered as protected anchors first and
+    // visual-change extras second.  Sorting before truncation could discard the
+    // latest protected Trade anchor whenever four quote-scroll changes were found.
+    // Bound the work first, then restore chronological OCR order.
+    const frames=merged.slice(0,8).sort((a,b)=>a.time-b.time).map((x,i)=>({canvas:x.canvas,time:x.time,frameIndex:i,isControlCenter:false,fraction:x.fraction,sharpness:x.sharpness}));
     Object.defineProperties(frames,{expectedFrameCount:{value:frames.length,enumerable:false},candidateFrameCount:{value:candidates.length,enumerable:false},videoDuration:{value:duration,enumerable:false}});
     return frames;
   }catch(e){console.error('[XM] VIDEO_PIPELINE_FAILED',e);throw e}
@@ -6068,7 +6072,7 @@ function runReleaseVersionConsistencySelfTest(){
   const title=document.title||'';
   const h1=document.querySelector('h1')?.innerText||'';
   const stale=/\bv(?:35[0-8])\b/i.test(title+' '+h1);
-  const current=/\bv364\b/i.test(title+' '+h1);
+  const current=/\bv365\b/i.test(title+' '+h1);
   return {pass:current&&!stale,current,stale,title,h1};
 }
 
@@ -6988,6 +6992,7 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const accountTypeAmbiguityFailsClosed=splitLineStandard.type==='standard'&&splitLineKiwami.type==='kiwami'&&mixedType.type==='unknown';
     const importRollbackScopeSafe=(()=>{const src=document.documentElement.innerHTML;return src.includes('let importSnapshot=null,sharedVideoWorker=null')&&src.includes('if(importSnapshot)restoreImportSnapshot(importSnapshot)')&&captureImportSnapshot.toString().includes('xmAccountType')&&restoreImportSnapshot.toString().includes('setXMAccountType')})();
     const quoteScrollSamplingPolicy=videoFrameSources.toString().includes('const baseFractions=[0.10,0.35,0.58,0.73,0.90]')&&selectAdaptiveVideoFrames.toString().includes("for(const f of [0.10,0.35,0.58,0.73,0.90])")&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
+    const lateTradeAnchorRetention=videoFrameSources.toString().includes('merged.slice(0,8).sort((a,b)=>a.time-b.time)')&&!videoFrameSources.toString().includes('merged.sort((a,b)=>a.time-b.time).slice(0,8)');
     const orderMutationUpdatePath=window.editOrder.toString().includes('calc()')&&window.addOrder.toString().includes('renderOrders()')&&window.resetOrders.toString().includes('renderOrders()')&&renderOrders.toString().includes('calc()');
     const secondMediaSupersedesFirst=document.documentElement.innerHTML.includes('window.__mediaImportToken')&&document.documentElement.innerHTML.includes('const stillCurrent=()=>window.__mediaImportToken===importToken')&&document.documentElement.innerHTML.includes('if(!stillCurrent())return');
     const videoNoFullRedecodeFallback=document.documentElement.innerHTML.includes('else if(!isVideo && (!parsed.pending.length||!parsed.positions.length))')&&document.documentElement.innerHTML.includes('sharedVideoWorker=await createOCRWorker')&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
@@ -7016,7 +7021,7 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const analysisPlusMinusUi=runAnalysisPlusMinusUiSelfTest();
     const sourceBasketCompleteness=runSourceBasketCompletenessSelfTest();
     const emDashFourPositionBasket=runEmDashFourPositionBasketSelfTest();
-    const named={duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    const named={duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     // A production safety gate must be based on observable behavior, not on
     // source-code strings, DOM labels or a version badge. A stale audit assertion
     // previously made every new build fail its own regression test and stopped
@@ -7768,7 +7773,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v364-20260827';
+window.__APP_BUILD__='v365-20260901';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -7811,9 +7816,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v364-20260827'
+  build:'v365-20260901'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v364-20260827'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v365-20260901'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

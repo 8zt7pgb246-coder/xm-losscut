@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v375-20260914">
+<meta name="build-id" content="v376-20260914">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v375</title>
+<title>Stop Out positioning｜デラポジ Pro v376</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -815,7 +815,7 @@ h1 { margin-bottom: 2px !important; line-height: 1.02 !important; }
 .posOrderTools{display:flex;gap:6px;flex-wrap:wrap}
 @media(max-width:420px){.posOrderTools button{font-size:10px;padding:5px 7px}}
 
-/* v375: private-beta gate and unobtrusive legal drawer. */
+/* v376: private-beta gate and unobtrusive legal drawer. */
 [hidden]{display:none!important}
 body.accessLocked{overflow:hidden}
 body.accessLocked .app{visibility:hidden;pointer-events:none}
@@ -851,7 +851,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v375</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v376</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1107,11 +1107,11 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 </div>
 
 <script>
-// v375 access gate: a client-side deterrent for private beta URLs. It is not server-side authentication.
+// v376 access gate: a client-side deterrent for private beta URLs. It is not server-side authentication.
 (function setupAccessGate(){
   'use strict';
-  const CFG=Object.freeze({salt:'delapoji-v375-access-20260914',iterations:120000,hash:'c91716bcaf5152aed9d1ba41d6e1216176c2809d0901cdc2922d359b81dc92c3',rememberMs:30*24*60*60*1000,maxAttempts:5,cooldownMs:30000});
-  const LOCAL_KEY='delapoji_access_v375_until',SESSION_KEY='delapoji_access_v375_session';
+  const CFG=Object.freeze({salt:'delapoji-v376-access-20260914',iterations:120000,hash:'c6de93906de155875e84197529139ed92cc303831f167a2d9b2225361d3dfbcb',rememberMs:30*24*60*60*1000,maxAttempts:5,cooldownMs:30000});
+  const LOCAL_KEY='delapoji_access_v376_until',SESSION_KEY='delapoji_access_v376_session';
   const gate=document.getElementById('accessGate'),form=document.getElementById('accessForm'),input=document.getElementById('accessCode'),button=document.getElementById('accessUnlock'),remember=document.getElementById('accessRemember'),status=document.getElementById('accessStatus');
   let failures=0,cooldownUntil=0,cooldownTimer=null;
   window.__accessGranted=false;
@@ -1200,7 +1200,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v375-20260914';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v376-20260914';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1314,8 +1314,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v375-20260914',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v375-20260914';
+window.__DEPLOYMENT_STATE__={build:'v376-20260914',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v376-20260914';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1336,7 +1336,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v375-20260914', SHORT='v375';
+  const BUILD='v376-20260914', SHORT='v376';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1611,22 +1611,81 @@ function additiveMergeMultiset(existing,incoming,isPending=false){
   }
   return {merged:[...base,...additions],additions};
 }
-function applyAdditiveTradeEvidence(snapshotPositions,snapshotOrders){
+
+// v376: an additive Trade screenshot is partial for rows, but its account header
+// and entry→current column are current at the same instant. Preserve off-screen
+// rows while refreshing only a mathematically coherent same-frame account anchor.
+function deriveAdditiveSnapshotRefresh(accountSnapshot,tradePriceEvidence,finalPositions,priorBid=goldBid,priorAsk=goldAsk){
+  const a=accountSnapshot||{},ev=tradePriceEvidence||{};
+  const balance=Number(a.balance),equity=Number(a.equity),credit=Number.isFinite(Number(a.credit))?Number(a.credit):0,
+    margin=Number(a.margin),free=Number(a.free),marginLevel=Number(a.marginLevel);
+  const expectedLevel=equity>0&&margin>0?equity/margin*100:NaN;
+  const identityTol=Math.max(2,Math.abs(equity||0)*0.0005),levelTol=Math.max(2,Math.abs(expectedLevel||0)*0.005);
+  const accountSafe=balance>0&&equity>0&&margin>0&&free>=0&&
+    Math.abs((equity-margin)-free)<=identityTol&&
+    (!Number.isFinite(marginLevel)||Math.abs(marginLevel-expectedLevel)<=levelTol);
+
+  const rows=(Array.isArray(finalPositions)?finalPositions:[]).filter(o=>/^(?:buy|sell)$/i.test(String(o?.side||''))&&Number(o?.lot)>0&&Number(o?.price)>0);
+  const allSell=rows.length>0&&rows.every(o=>/^sell$/i.test(String(o.side))),allBuy=rows.length>0&&rows.every(o=>/^buy$/i.test(String(o.side)));
+  const close=Number(ev.price),sampleCount=Number(ev.sampleCount||0),dispersion=Number(ev.dispersion||0),side=String(ev.side||'').toLowerCase();
+  const c=cfg(),dispersionTol=c.type==='fx'?0.02:c.type==='crypto'?50:c.type==='index'?5:0.75;
+  const sideSafe=(allSell&&side==='sell')||(allBuy&&side==='buy');
+  const oldBid=Number(priorBid),oldAsk=Number(priorAsk),spread=oldAsk>=oldBid&&oldBid>0?oldAsk-oldBid:0;
+  const moveSafe=!(oldBid>0)||Math.abs(close-oldBid)/oldBid<=0.35;
+  const priceSafe=close>0&&sampleCount>0&&dispersion<=dispersionTol&&sideSafe&&moveSafe;
+  const market=priceSafe
+    ? (allSell?{bid:Math.max(1e-9,close-spread),ask:close,observedSide:'ask'}:{bid:close,ask:close+spread,observedSide:'bid'})
+    : null;
+  return {
+    account:accountSafe?{balance,equity,credit,margin,free,marginLevel:Number.isFinite(marginLevel)?marginLevel:expectedLevel}:null,
+    market,
+    evidence:{sampleCount,dispersion,side,frameIndex:Number.isFinite(a.frameIndex)?Number(a.frameIndex):null,time:Number.isFinite(a.time)?Number(a.time):null},
+    accountSafe,priceSafe
+  };
+}
+function applyAdditiveSnapshotRefresh(refreshContext,finalPositions,positionChanged=false){
+  const ctx=refreshContext||{},derived=deriveAdditiveSnapshotRefresh(ctx.accountSnapshot,ctx.tradePriceEvidence,finalPositions,ctx.priorBid,ctx.priorAsk);
+  let marketUpdated=false,accountUpdated=false,anchorUpdated=false;
+  if(derived.market){
+    goldBid=derived.market.bid;goldAsk=derived.market.ask;priceSource='trade-screen-inferred';marketAskInferred=true;mediaPriceFresh=true;
+    window.__currentTemporalQuoteBeforeTrade=false;
+    priceUpdatedAt=new Date().toISOString();
+    mediaPriceEvidence={source:'additive-trade-same-frame',time:derived.evidence.time,frameIndex:derived.evidence.frameIndex,sampleCount:derived.evidence.sampleCount,observedSide:derived.market.observedSide};
+    const rate=Number($('usdjpy')?.value||0);
+    priceStore[currentSymbol]={bid:goldBid,ask:goldAsk,updatedAt:priceUpdatedAt,source:'additive-trade-same-frame',...(rate>0?{usdjpy:rate}:{})};
+    marketUpdated=true;
+  }
+  if(derived.account){
+    setAccountBalance(derived.account.balance,'mt5-ocr',derived.account.credit);
+    accountUpdated=true;
+    if(marketUpdated){
+      brokerAccountSnapshot={
+        symbol:currentSymbol,positionFingerprint:normalizedPositionFingerprint(finalPositions),
+        equity:derived.account.equity,margin:derived.account.margin,marginLevel:derived.account.marginLevel,
+        anchorBid:goldBid,anchorFrameIndex:derived.evidence.frameIndex,anchorVideoTime:derived.evidence.time,
+        accountUpdatedAt,at:Date.now(),source:'mt5-ocr'
+      };
+      anchorUpdated=true;
+    }else clearBrokerAccountSnapshot('additive-account-without-price');
+  }else if(positionChanged){
+    clearBrokerAccountSnapshot('position-additive-without-coherent-account');
+  }
+  return {...derived,marketUpdated,accountUpdated,anchorUpdated,updated:marketUpdated||accountUpdated};
+}
+function applyAdditiveTradeEvidence(snapshotPositions,snapshotOrders,refreshContext=null){
   if(!fullVideoBaselineReady)return {ok:false,reason:'VIDEO_BASELINE_REQUIRED',positionsAdded:[],ordersAdded:[]};
   const pos=additiveMergeMultiset(getPositions(),snapshotPositions,false);
   const ord=additiveMergeMultiset(getOrders(),snapshotOrders,true);
-  if(!pos.additions.length&&!ord.additions.length){
-    return {ok:true,changed:false,positionsAdded:[],ordersAdded:[]};
-  }
-  if(pos.additions.length)clearBrokerAccountSnapshot('position-additive');
-  positionStore[currentSymbol]=pos.merged;
-  orderStore[currentSymbol]=ord.merged;
+  const changed=!!(pos.additions.length||ord.additions.length);
+  if(changed){positionStore[currentSymbol]=pos.merged;orderStore[currentSymbol]=ord.merged;}
+  const refresh=applyAdditiveSnapshotRefresh(refreshContext,pos.merged,!!pos.additions.length);
+  if(!changed&&!refresh.updated)return {ok:true,changed:false,positionsAdded:[],ordersAdded:[],refresh};
   mediaSessionActive=true;positionDataValid=true;positionDataSource='ocr-additive';
   positionImportError='';orderDataInvalid=false;orderImportError='';
   try{window.resetTargetPnlExclusions?.()}catch(e){}
   saveAll();writeVerifiedPositionSession('ocr-additive');
-  renderDataLock();renderOrderDataLock();renderPositions();renderOrders();calc();
-  return {ok:true,changed:true,positionsAdded:pos.additions,ordersAdded:ord.additions};
+  renderDataLock();renderOrderDataLock();updatePriceUI();updatePipValue();renderPositions();renderOrders();calc();
+  return {ok:true,changed,positionsAdded:pos.additions,ordersAdded:ord.additions,refresh};
 }
 function updateAddTradeScreenshotUI(){
   const btn=$('addTradeScreenshotBtn'),st=$('addTradeScreenshotStatus');
@@ -1722,7 +1781,7 @@ function updatePriceUI(){
     ? `動画内 ${evidence.time.toFixed(2)}秒 / frame ${Number(evidence.frameIndex)+1}`
     : (priceUpdatedAt?new Date(priceUpdatedAt).toLocaleString('ja-JP'):'未取得');
   $('priceUpdated').textContent=evidenceText;
-  const sourceText=priceSource==='trade-screen-inferred'?'取引画面の現在価格（Bid/Ask非表示・Ask推定）':priceSource==='previous-quote-carried'?'前回読み込み済みの気配値（写真モードで持ち越し）':priceSource==='quote-board'?'同一フレームの気配値Bid/Ask':'価格未確定';
+  const sourceText=priceSource==='trade-screen-inferred'?'取引画面の現在価格（Bid/Askの片側を推定）':priceSource==='previous-quote-carried'?'前回読み込み済みの気配値（写真モードで持ち越し）':priceSource==='quote-board'?'同一フレームの気配値Bid/Ask':'価格未確定';
   $('rateStatus').innerHTML=Number.isFinite(goldBid)&&Number.isFinite(goldAsk)
     ? `<span class="${marketAskInferred?'warn':'ok'}">${marketAskInferred?'⚠':'✓'} ${currentSymbol} ${sourceText}</span><span class="small"><br>根拠：${evidenceText}${mediaQuality.expected?` ／ 有効 ${mediaQuality.usable}/${mediaQuality.expected}フレーム`:''}</span>`
     : `<span class="warn">${currentSymbol}の価格情報を読み込んでください</span>`;
@@ -2547,6 +2606,12 @@ function extractAccountHeaderIntegers(head){
     // this pre-trade account header, where it is later accepted solely by checksum.
     const decimal=row.match(/(?:^|[^\d.])(\d{1,3}(?:[ ,]\d{3})+\.\d+|\d{3,8}\.\d+)(?![\d.])/);
     if(decimal){push(Number(decimal[1].replace(/[ ,]/g,'')));continue;}
+    // ENG OCR can destroy the Japanese Credit label while keeping its colon,
+    // e.g. `ILYYk: 155`. Inside the already-bounded MT5 account header this is
+    // a real account row, and the full Balance/Equity/Margin/Free checksum below
+    // still has to validate before the short value can ever be accepted.
+    const shortLabeled=row.match(/[:：]\s*(\d{1,3})\s*$/);
+    if(shortLabeled){push(Number(shortLabeled[1]));continue;}
     // Labels may survive on the same row. Extract exactly one grouped/integer amount
     // from that row, but never consume across whitespace into a second amount.
     const labeled=row.match(/(?:^|[^\d.])(-?\d{1,3}(?:[ ,]\d{3})+|-?\d{4,12})(?![\d.])/);
@@ -4224,15 +4289,21 @@ $('addTradeScreenshotFile')?.addEventListener('change',async e=>{
       pos=sanitizeRecognizedPositions(parsed.positions);
       ord=normalizePendingSnapshot(parsed.pending);
     }
-    const applied=applyAdditiveTradeEvidence(pos,ord);
+    const accountSnapshot=aggregateAccountSnapshotFromResults(results);
+    const tradePriceEvidence=accountSnapshot.tradePriceEvidence||extractTradeScreenPriceEvidence(accountSnapshot.sourceText||parsed.rawText||'',currentSymbol);
+    if(Number.isFinite(parsed.brokerPnl))$('brokerPnl').value=Math.round(parsed.brokerPnl);
+    const applied=applyAdditiveTradeEvidence(pos,ord,{accountSnapshot,tradePriceEvidence,priorBid:goldBid,priorAsk:goldAsk});
     if(!applied.ok)throw new Error(applied.reason||'ADDITIVE_APPLY_FAILED');
     if(st){
       st.dataset.keep='1';
-      if(applied.changed){
+      if(applied.changed||applied.refresh?.updated){
         const parts=[];
         if(applied.positionsAdded.length)parts.push(`保有 +${applied.positionsAdded.length}件`);
         if(applied.ordersAdded.length)parts.push(`未約定 +${applied.ordersAdded.length}件`);
-        st.textContent=`✓ ${parts.join(' / ')} を追加`;
+        if(applied.refresh?.anchorUpdated)parts.push('最新口座・価格へ更新');
+        else if(applied.refresh?.marketUpdated)parts.push('最新価格へ更新');
+        else if(applied.refresh?.accountUpdated)parts.push('最新口座へ更新');
+        st.textContent=`✓ ${parts.join(' / ')}`;
       }else{
         st.textContent='✓ 新しい保有・未約定はありません';
       }
@@ -6490,7 +6561,7 @@ function runReleaseVersionConsistencySelfTest(){
   const title=document.title||'';
   const h1=document.querySelector('h1')?.innerText||'';
   const stale=/\bv(?:35[0-8])\b/i.test(title+' '+h1);
-  const current=/\bv375\b/i.test(title+' '+h1);
+  const current=/\bv376\b/i.test(title+' '+h1);
   return {pass:current&&!stale,current,stale,title,h1};
 }
 
@@ -6503,6 +6574,59 @@ function runV375AccessGateArchitectureSelfTest(){
   const delayedOcr=html.includes("addEventListener('delapoji:access-granted',schedule,{once:true})");
   const indexingBlocked=/<meta\s+name=["']robots["'][^>]*noindex/i.test(html);
   return gate&&crypto&&noPlaintext&&legal&&delayedOcr&&indexingBlocked;
+}
+
+function runV376AdditiveSnapshotRefreshSelfTest(){
+  const existing=[
+    {symbol:'GOLD#',side:'Sell',lot:.01,price:4317.43},
+    {symbol:'GOLD#',side:'Sell',lot:.01,price:4352.64},
+    {symbol:'GOLD#',side:'Sell',lot:.01,price:4377.04},
+    {symbol:'GOLD#',side:'Sell',lot:.01,price:4395.60}
+  ];
+  const added={symbol:'GOLD#',side:'Sell',lot:.01,price:4331.91};
+  const merged=additiveMergeMultiset(existing,[added],false);
+  // ENG OCR output from the supplied IMG_1424.png. Japanese labels are lost,
+  // so the account checksum fallback and fuzzy `se!!` recovery are exercised.
+  const raw=`20:19 5G+
+46 183 JPY
+en: 50 000
+A wEE: 96 338
+ILYYk: 155
+al PLS: 3 353
+BJ BERE: 92 985
+aL HLS 3 (%): 2 873.19
+GOLD se!! 0.01
+4317.43 — 4295.28 3 423
+GOLD se!! 0.01
+4352.64 — 4295.28 8 864
+GOLD se!! 0.01
+4377.04 — 4295.28 12 634
+GOLD se!! 0.01
+4395.60 — 4295.28 15 502
+GOLD se!! 0.01
+4331.91 — 4295.28 3 660
+GOLD sel! limit
+0.01 / 0 at 4337.76 placed
+GOLD sel! limit
+0.01 / 0 at 4303.50 placed`;
+  const account=parseAccountSnapshotFromText(raw),evidence=extractTradeScreenPriceEvidence(raw,'GOLD#');
+  const parsedActual=parseOCR(raw),parsedActualPositions=sanitizeRecognizedPositions(parsedActual.positions),parsedActualOrders=normalizePendingSnapshot(parsedActual.pending);
+  const refresh=deriveAdditiveSnapshotRefresh(account,evidence,merged.merged,4345.42,4345.99);
+  const rate=46083/298.22;
+  const state={market:{bid:refresh.market?.bid,ask:refresh.market?.ask},contract:{quoteRate:rate,size:100,leverage:1000,stopout:20},positions:merged.merged,pendingOrders:[{side:'Sell Limit',lot:.01,price:4303.50},{side:'Sell Limit',lot:.01,price:4337.76}]};
+  const sim=refresh.account&&refresh.market?calculateAnchoredStopOutPath(state,{...refresh.account,anchorBid:refresh.market.bid}):null;
+  const checks={
+    rowsPreserved:merged.merged.length===5&&merged.additions.length===1,
+    actualOcrPositions:parsedActualPositions.length===5,
+    actualOcrOrders:parsedActualOrders.length===2&&parsedActualOrders.some(o=>Math.abs(o.price-4303.50)<1e-9)&&parsedActualOrders.some(o=>Math.abs(o.price-4337.76)<1e-9),
+    accountSafe:refresh.accountSafe,priceSafe:refresh.priceSafe,
+    askExact:Math.abs(Number(refresh.market?.ask)-4295.28)<1e-9,
+    bidExact:Math.abs(Number(refresh.market?.bid)-4294.71)<1e-9,
+    upward:sim?.direction==='up',ordersReached:sim?.added?.length===2,positionsAtStop:sim?.filled?.length===7,
+    deadline:Math.abs(Number(sim?.lc)-4390.13)<0.15
+  };
+  window.__V376_ADDITIVE_TEST__={checks,account,evidence,refresh,sim};
+  return Object.values(checks).every(Boolean);
 }
 
 function runBrowserCompatibilityGuardSelfTest(){
@@ -7594,7 +7718,7 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const analysisPlusMinusUi=runAnalysisPlusMinusUiSelfTest();
     const sourceBasketCompleteness=runSourceBasketCompletenessSelfTest();
     const emDashFourPositionBasket=runEmDashFourPositionBasketSelfTest();
-    const named={v375AccessGate:runV375AccessGateArchitectureSelfTest(),v374StateCoherence:runV374StateCoherenceSelfTest(),v374ImportSafety:runV374ImportSafetySelfTest(),v373TemporalAccountAnchor:runV373TemporalAccountAnchorSelfTest(),v370AnchoredEngine:runV370AnchoredEngineSelfTest(),v370CoherentOrderBasket:runV370CoherentOrderBasketSelfTest(),duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoZeroOrderFullSync:runVideoZeroOrderFullSyncSelfTest(),tradeVisualDedupe:runTradeVisualDedupeSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    const named={v376AdditiveSnapshotRefresh:runV376AdditiveSnapshotRefreshSelfTest(),v375AccessGate:runV375AccessGateArchitectureSelfTest(),v374StateCoherence:runV374StateCoherenceSelfTest(),v374ImportSafety:runV374ImportSafetySelfTest(),v373TemporalAccountAnchor:runV373TemporalAccountAnchorSelfTest(),v370AnchoredEngine:runV370AnchoredEngineSelfTest(),v370CoherentOrderBasket:runV370CoherentOrderBasketSelfTest(),duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoZeroOrderFullSync:runVideoZeroOrderFullSyncSelfTest(),tradeVisualDedupe:runTradeVisualDedupeSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     // A production safety gate must be based on observable behavior, not on
     // source-code strings, DOM labels or a version badge. A stale audit assertion
     // previously made every new build fail its own regression test and stopped
@@ -8346,7 +8470,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v375-20260914';
+window.__APP_BUILD__='v376-20260914';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -8389,9 +8513,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v375-20260914'
+  build:'v376-20260914'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v375-20260914'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v376-20260914'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

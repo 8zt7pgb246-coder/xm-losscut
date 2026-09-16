@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v376-20260914">
+<meta name="build-id" content="v377-20260917">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v376</title>
+<title>Stop Out positioning｜デラポジ Pro v377</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -815,7 +815,7 @@ h1 { margin-bottom: 2px !important; line-height: 1.02 !important; }
 .posOrderTools{display:flex;gap:6px;flex-wrap:wrap}
 @media(max-width:420px){.posOrderTools button{font-size:10px;padding:5px 7px}}
 
-/* v376: private-beta gate and unobtrusive legal drawer. */
+/* v377: private-beta gate and unobtrusive legal drawer. */
 [hidden]{display:none!important}
 body.accessLocked{overflow:hidden}
 body.accessLocked .app{visibility:hidden;pointer-events:none}
@@ -851,7 +851,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v376</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v377</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1107,9 +1107,11 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 </div>
 
 <script>
-// v376 access gate: a client-side deterrent for private beta URLs. It is not server-side authentication.
+// v377 access gate: a client-side deterrent for private beta URLs. It is not server-side authentication.
 (function setupAccessGate(){
   'use strict';
+  // Keep the established credential derivation and storage keys so an app
+  // update neither changes the user's code nor unexpectedly signs them out.
   const CFG=Object.freeze({salt:'delapoji-v376-access-20260914',iterations:120000,hash:'c6de93906de155875e84197529139ed92cc303831f167a2d9b2225361d3dfbcb',rememberMs:30*24*60*60*1000,maxAttempts:5,cooldownMs:30000});
   const LOCAL_KEY='delapoji_access_v376_until',SESSION_KEY='delapoji_access_v376_session';
   const gate=document.getElementById('accessGate'),form=document.getElementById('accessForm'),input=document.getElementById('accessCode'),button=document.getElementById('accessUnlock'),remember=document.getElementById('accessRemember'),status=document.getElementById('accessStatus');
@@ -1200,7 +1202,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v376-20260914';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v377-20260917';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1314,8 +1316,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v376-20260914',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v376-20260914';
+window.__DEPLOYMENT_STATE__={build:'v377-20260917',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v377-20260917';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1336,7 +1338,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v376-20260914', SHORT='v376';
+  const BUILD='v377-20260917', SHORT='v377';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1612,7 +1614,7 @@ function additiveMergeMultiset(existing,incoming,isPending=false){
   return {merged:[...base,...additions],additions};
 }
 
-// v376: an additive Trade screenshot is partial for rows, but its account header
+// v377: an additive Trade screenshot is partial for rows, but its account header
 // and entry→current column are current at the same instant. Preserve off-screen
 // rows while refreshing only a mathematically coherent same-frame account anchor.
 function deriveAdditiveSnapshotRefresh(accountSnapshot,tradePriceEvidence,finalPositions,priorBid=goldBid,priorAsk=goldAsk){
@@ -3162,6 +3164,66 @@ function recoverAuthoritativeVideoPositions(results){
   return best;
 }
 
+// v377: MT5's iPhone Trade pane is a viewport, not a complete-position list.
+// When a basket is taller than the screen, the account header and the Orders
+// boundary cannot coexist in one frame. Reconstruct the basket only from an
+// ordered chain of overlapping viewport windows inside the SAME video import.
+// The chain must start at an account-summary frame and end at the Orders pane;
+// this prevents a plain union from retaining positions that were actually
+// closed or replaced while a video was being recorded.
+function positionViewportKey(o){
+  const side=/^buy$/i.test(String(o?.side))?'buy':/^sell$/i.test(String(o?.side))?'sell':'';
+  const lot=Number(o?.lot),price=Number(o?.price);
+  return side&&Number.isFinite(lot)&&lot>0&&Number.isFinite(price)&&price>0
+    ?`${side}|${lot.toFixed(4)}|${price.toFixed(5)}`:'';
+}
+function orderedViewportOverlap(existingRows,nextRows){
+  const a=(existingRows||[]).map(positionViewportKey).filter(Boolean);
+  const b=(nextRows||[]).map(positionViewportKey).filter(Boolean);
+  const max=Math.min(a.length,b.length);
+  for(let n=max;n>=2;n--){
+    let ok=true;
+    for(let i=0;i<n;i++)if(a[a.length-n+i]!==b[i]){ok=false;break}
+    if(ok)return n;
+  }
+  return 0;
+}
+function stitchScrolledPositionViewports(candidates){
+  const ordered=(Array.isArray(candidates)?candidates:[])
+    .filter(c=>Array.isArray(c?.rows)&&c.rows.length>0&&Number.isFinite(c?.time))
+    .sort((a,b)=>a.time-b.time||Number(a.frameIndex??0)-Number(b.frameIndex??0));
+  let best=null;
+  for(let start=0;start<ordered.length;start++){
+    const first=ordered[start];
+    if(!first.hasAccountBoundary)continue;
+    let rows=first.rows.map(o=>({...o})),lastTime=first.time,links=0,endBoundary=!!first.hasOrderBoundary;
+    const sourceFrames=new Set([first.frameIndex??`t:${first.time}`]);
+    for(let i=start+1;i<ordered.length;i++){
+      const c=ordered[i];
+      // OCR samples from a single normal phone recording should be close in time.
+      // A long gap is treated as a possible account mutation, not scrolling.
+      if(c.time-lastTime>12)break;
+      const currentKeys=new Set(rows.map(positionViewportKey));
+      const nextKeys=c.rows.map(positionViewportKey);
+      const allAlreadyKnown=nextKeys.length>0&&nextKeys.every(k=>currentKeys.has(k));
+      if(allAlreadyKnown){
+        lastTime=c.time;endBoundary=endBoundary||!!c.hasOrderBoundary;sourceFrames.add(c.frameIndex??`t:${c.time}`);continue;
+      }
+      const overlap=orderedViewportOverlap(rows,c.rows);
+      const minimum=Math.max(2,Math.ceil(Math.min(rows.length,c.rows.length)*0.40));
+      if(overlap<minimum)continue;
+      rows.push(...c.rows.slice(overlap).map(o=>({...o})));
+      lastTime=c.time;links++;endBoundary=endBoundary||!!c.hasOrderBoundary;sourceFrames.add(c.frameIndex??`t:${c.time}`);
+    }
+    if(!endBoundary||links<1||rows.length<=first.rows.length)continue;
+    const stitched=sanitizeRecognizedPositions(rows);
+    if(stitched.length!==rows.length)continue;
+    const candidate={rows:stitched,authoritative:true,source:'scroll-overlap-position-chain',frameIndex:first.frameIndex,support:sourceFrames.size,stitched:true,links};
+    if(!best||candidate.rows.length>best.rows.length||candidate.rows.length===best.rows.length&&candidate.support>best.support)best=candidate;
+  }
+  return best;
+}
+
 // v252: one coherent MT5 Trade frame is authoritative for the CURRENT open-position basket.
 // The previous pipeline could count two raw position evidences, then discard both during a
 // later confidence gate. Keep evidence and accepted positions tied to the same strong rows.
@@ -3176,7 +3238,8 @@ function recoverTrustedVideoPositionBasket(results,mergedText=''){
     // arrows (—/–), while the strong parser is stricter about explicit trade rows.
     // Taking their de-duplicated union prevents a valid 4-position frame from being
     // reduced to 1 row merely because one parser misses the em-dash glyph.
-    const parsedRows=parseOCR(text).positions||[];
+    const parsedFrame=parseOCR(text);
+    const parsedRows=parsedFrame.positions||[];
     const strongRows=recoverStrongOpenPositionsFromTradeText(text);
     const union=[];
     for(const o of [...parsedRows,...strongRows]){
@@ -3189,9 +3252,14 @@ function recoverTrustedVideoPositionBasket(results,mergedText=''){
     if(!hasTradeContext)continue;
 
     // Prefer completeness first, then newest time only as a tie-breaker.
-    candidates.push({rows,time:Number(r?.time||0),frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null});
+    const account=parseAccountSnapshotFromText(text);
+    const hasAccountBoundary=Number.isFinite(account?.balance)&&account.balance>0&&Number.isFinite(account?.equity)&&account.equity>0;
+    const hasOrderBoundary=(parsedFrame.pending||[]).length>0||/(?:オーダー|orders?|\bplaced\b)/i.test(text);
+    candidates.push({rows,time:Number(r?.time||0),frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null,hasAccountBoundary,hasOrderBoundary});
   }
   if(candidates.length){
+    const stitched=stitchScrolledPositionViewports(candidates);
+    if(stitched)return stitched;
     const fp=rows=>canonicalPositionFingerprint(rows);
     const groups=new Map();
     for(const c of candidates){
@@ -6561,7 +6629,7 @@ function runReleaseVersionConsistencySelfTest(){
   const title=document.title||'';
   const h1=document.querySelector('h1')?.innerText||'';
   const stale=/\bv(?:35[0-8])\b/i.test(title+' '+h1);
-  const current=/\bv376\b/i.test(title+' '+h1);
+  const current=/\bv377\b/i.test(title+' '+h1);
   return {pass:current&&!stale,current,stale,title,h1};
 }
 
@@ -6576,7 +6644,7 @@ function runV375AccessGateArchitectureSelfTest(){
   return gate&&crypto&&noPlaintext&&legal&&delayedOcr&&indexingBlocked;
 }
 
-function runV376AdditiveSnapshotRefreshSelfTest(){
+function runV377AdditiveSnapshotRefreshSelfTest(){
   const existing=[
     {symbol:'GOLD#',side:'Sell',lot:.01,price:4317.43},
     {symbol:'GOLD#',side:'Sell',lot:.01,price:4352.64},
@@ -6625,7 +6693,46 @@ GOLD sel! limit
     upward:sim?.direction==='up',ordersReached:sim?.added?.length===2,positionsAtStop:sim?.filled?.length===7,
     deadline:Math.abs(Number(sim?.lc)-4390.13)<0.15
   };
-  window.__V376_ADDITIVE_TEST__={checks,account,evidence,refresh,sim};
+  window.__V377_ADDITIVE_TEST__={checks,account,evidence,refresh,sim};
+  return Object.values(checks).every(Boolean);
+}
+
+function runV377ScrolledPositionStitchSelfTest(){
+  const all=[4317.43,4352.64,4377.04,4395.60,4331.91,4293.36,4303.68,4314.56,4271.96,4271.38]
+    .map(price=>({symbol:'GOLD#',side:'Sell',lot:.01,price}));
+  const top={rows:all.slice(0,8),time:2,frameIndex:2,hasAccountBoundary:true,hasOrderBoundary:false};
+  const bottom={rows:all.slice(2),time:6,frameIndex:6,hasAccountBoundary:false,hasOrderBoundary:true};
+  const stitched=stitchScrolledPositionViewports([top,bottom]);
+  // A similar overlap without a proven Orders boundary can be a live position
+  // mutation. It must stay unstitched instead of reviving a closed row.
+  const unsafe=stitchScrolledPositionViewports([
+    top,
+    {...bottom,hasOrderBoundary:false,rows:[...all.slice(1,8),{symbol:'GOLD#',side:'Sell',lot:.01,price:4260.00}]}
+  ]);
+  const thirty=Array.from({length:30},(_,i)=>({symbol:'GOLD#',side:'Sell',lot:.01,price:+(4200+i*1.11).toFixed(2)}));
+  const longWindows=[];
+  for(let from=0,frame=0;from<thirty.length;from+=4,frame++){
+    const rows=thirty.slice(from,Math.min(thirty.length,from+8));
+    if(rows.length<2)break;
+    longWindows.push({rows,time:frame*1.5,frameIndex:20+frame,hasAccountBoundary:frame===0,hasOrderBoundary:from+8>=thirty.length});
+  }
+  const longStitched=stitchScrolledPositionViewports(longWindows);
+  const state={
+    market:{bid:4271.46,ask:4272.00},
+    contract:{quoteRate:156.168,size:100,leverage:1000,stopout:20},
+    positions:stitched?.rows||[],
+    pendingOrders:[4276.42,4287.16].map(price=>({side:'Sell Limit',lot:.01,price}))
+  };
+  const sim=calculateAnchoredStopOutPath(state,{equity:130907,margin:6687,anchorBid:4271.46});
+  const checks={
+    authoritative:stitched?.authoritative===true&&stitched?.source==='scroll-overlap-position-chain',
+    allTen:stitched?.rows?.length===10&&canonicalPositionFingerprint(stitched.rows)===canonicalPositionFingerprint(all),
+    unboundedScroll:longStitched?.rows?.length===30&&canonicalPositionFingerprint(longStitched.rows)===canonicalPositionFingerprint(thirty),
+    noUnsafeUnion:unsafe===null,
+    pendingBoth:sim?.direction==='up'&&sim?.added?.length===2&&sim?.filled?.length===12,
+    deadline:Number.isFinite(sim?.lc)&&Math.abs(sim.lc-4342.08)<0.20
+  };
+  window.__V377_SCROLL_STITCH_TEST__={checks,stitched,longStitched,unsafe,sim};
   return Object.values(checks).every(Boolean);
 }
 
@@ -7718,7 +7825,7 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const analysisPlusMinusUi=runAnalysisPlusMinusUiSelfTest();
     const sourceBasketCompleteness=runSourceBasketCompletenessSelfTest();
     const emDashFourPositionBasket=runEmDashFourPositionBasketSelfTest();
-    const named={v376AdditiveSnapshotRefresh:runV376AdditiveSnapshotRefreshSelfTest(),v375AccessGate:runV375AccessGateArchitectureSelfTest(),v374StateCoherence:runV374StateCoherenceSelfTest(),v374ImportSafety:runV374ImportSafetySelfTest(),v373TemporalAccountAnchor:runV373TemporalAccountAnchorSelfTest(),v370AnchoredEngine:runV370AnchoredEngineSelfTest(),v370CoherentOrderBasket:runV370CoherentOrderBasketSelfTest(),duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoZeroOrderFullSync:runVideoZeroOrderFullSyncSelfTest(),tradeVisualDedupe:runTradeVisualDedupeSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    const named={v377ScrolledPositionStitch:runV377ScrolledPositionStitchSelfTest(),v377AdditiveSnapshotRefresh:runV377AdditiveSnapshotRefreshSelfTest(),v375AccessGate:runV375AccessGateArchitectureSelfTest(),v374StateCoherence:runV374StateCoherenceSelfTest(),v374ImportSafety:runV374ImportSafetySelfTest(),v373TemporalAccountAnchor:runV373TemporalAccountAnchorSelfTest(),v370AnchoredEngine:runV370AnchoredEngineSelfTest(),v370CoherentOrderBasket:runV370CoherentOrderBasketSelfTest(),duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoZeroOrderFullSync:runVideoZeroOrderFullSyncSelfTest(),tradeVisualDedupe:runTradeVisualDedupeSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     // A production safety gate must be based on observable behavior, not on
     // source-code strings, DOM labels or a version badge. A stale audit assertion
     // previously made every new build fail its own regression test and stopped
@@ -8470,7 +8577,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v376-20260914';
+window.__APP_BUILD__='v377-20260917';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -8513,9 +8620,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v376-20260914'
+  build:'v377-20260917'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v376-20260914'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v377-20260917'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

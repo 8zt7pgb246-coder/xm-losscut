@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v379-20260925">
+<meta name="build-id" content="v380-20260925">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v379</title>
+<title>Stop Out positioning｜デラポジ Pro v380</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -851,7 +851,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v379</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v380</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1202,7 +1202,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v379-20260925';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v380-20260925';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1316,8 +1316,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v379-20260925',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v379-20260925';
+window.__DEPLOYMENT_STATE__={build:'v380-20260925',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v380-20260925';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1338,7 +1338,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v379-20260925', SHORT='v379';
+  const BUILD='v380-20260925', SHORT='v380';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -3560,8 +3560,46 @@ function parseTradeRowsByLinePair(text){
   return {positions,pending};
 }
 
+// v380: an iPhone edge overlay can cover only the leading `0.` of the final
+// MT5 order lot. Tesseract then returns `01/0 at 4289.61` although the visible
+// basket is `0.01 / 0 at ...`. Repair only that exact fixed-decimal loss when:
+//   1) at least two complete rows establish one dominant lot,
+//   2) the damaged row is directly attached to a Limit/Stop heading, and
+//   3) inserting the missing decimal reproduces that dominant lot.
+// A real `1.00 / 0 at ...` remains untouched, as does any ambiguous basket.
+function normalizeOccludedMt5OrderLotText(text){
+  const original=String(text||'');
+  const lines=original.replace(/\r/g,'').split('\n');
+  const counts=new Map();let explicitTotal=0;
+  for(const line of lines){
+    const m=String(line).match(/^\s*(\d+\.\d+)\s*\/\s*0\s+at\s+\d/i);
+    const lot=m?Number(m[1]):NaN;
+    if(!(lot>0&&lot<=1000))continue;
+    const key=lot.toFixed(4);counts.set(key,(counts.get(key)||0)+1);explicitTotal++;
+  }
+  const ranked=[...counts.entries()].sort((a,b)=>b[1]-a[1]);
+  if(!ranked.length||ranked[0][1]<2||ranked[0][1]/Math.max(1,explicitTotal)<0.75)return original;
+  const dominant=Number(ranked[0][0]);
+  if(!(dominant>0))return original;
+  let repaired=0;
+  const out=lines.map((line,i)=>{
+    const m=String(line).match(/^(\s*)(\d{2,3})(\s*\/\s*0\s+at\s+\d[\d,.]*\.\d+)/i);
+    if(!m)return line;
+    // Sparse-text OCR may insert blank lines and the blue `placed` label
+    // between the order heading and its numeric row.
+    const heading=lines.slice(Math.max(0,i-6),i).join(' ');
+    if(!/\b(?:buy|sell|sel[!|1lI]?|buv)\s*(?:limit|stop)\b/i.test(heading))return line;
+    const candidate=Number(m[2])/100;
+    if(!Number.isFinite(candidate)||Math.abs(candidate-dominant)>1e-8)return line;
+    repaired++;
+    return `${m[1]}${dominant.toFixed(2)}${m[3]}${String(line).slice(m[0].length)}`;
+  });
+  if(repaired)window.__LAST_OCCLUDED_LOT_RECOVERY__={count:repaired,lot:dominant};
+  return out.join('\n');
+}
+
 function parseOCR(text){
-  const raw=String(text||'');
+  const raw=normalizeOccludedMt5OrderLotText(text);
   const lines=raw.split(/\r?\n/).map(normalizeOcrLine).filter(Boolean);
   const positions=[], pending=[];
   let brokerPnl=null;
@@ -3764,7 +3802,11 @@ function mergeParsedResults(results){
   const out={positions:[],pending:[],brokerPnl:null,rawText:''};
   for(const r of filterUsableOCRResults(results)){
     const text=r?.data?.text||r?.text||'';
-    out.rawText += (out.rawText?'\n':'') + text;
+    // Keep every downstream recovery pass on the same normalized evidence.
+    // Otherwise parseOCR repairs `01/0`, but the later pending-row recovery sees
+    // the original token again and reintroduces the false 1.00 lot.
+    const normalizedText=normalizeOccludedMt5OrderLotText(text);
+    out.rawText += (out.rawText?'\n':'') + normalizedText;
     const p=parseOCR(text);
     const frameIndex=Number.isFinite(r?.frameIndex)?r.frameIndex:null;
     out.positions.push(...p.positions.map(o=>({...o,frameIndex})));
@@ -6873,12 +6915,46 @@ function runV379ProfessionalEngineSelfTest(){
   return Object.values(checks).every(Boolean);
 }
 
+function runV380OccludedLotRecoverySelfTest(){
+  const damaged=`GOLD sell limit
+0.01 / 0 at 4283.97
+GOLD sell limit
+0.01 /0 at 4298.30
+GOLD sell limit
+0.01 /0 at 4310.06
+GOLD sell limit
+0.01 /0 at 4275.73
+GOLD sell limit
+01/0 at 4289.61`;
+  const repaired=normalizeOccludedMt5OrderLotText(damaged);
+  const parsed=parseOCR(repaired);
+  const last=parsed.pending.find(o=>Math.abs(Number(o.price)-4289.61)<1e-6);
+  const trueLarge=`GOLD sell limit
+0.01 / 0 at 4283.97
+GOLD sell limit
+0.01 / 0 at 4298.30
+GOLD sell limit
+1.00 / 0 at 4310.06`;
+  const ambiguous=`GOLD sell limit
+0.01 / 0 at 4283.97
+GOLD sell limit
+01/0 at 4289.61`;
+  const checks={
+    damagedTokenRepaired:/\n0\.01\/0 at 4289\.61/.test(repaired),
+    recoveredRowParsed:parsed.pending.length===5&&Math.abs(Number(last?.lot)-.01)<1e-8,
+    realOneLotPreserved:/\n1\.00 \/ 0 at 4310\.06/.test(normalizeOccludedMt5OrderLotText(trueLarge)),
+    ambiguousBasketUntouched:/\n01\/0 at 4289\.61/.test(normalizeOccludedMt5OrderLotText(ambiguous))
+  };
+  window.__V380_OCCLUDED_LOT_TEST__={checks,repaired,parsed};
+  return Object.values(checks).every(Boolean);
+}
+
 function runReleaseVersionConsistencySelfTest(){
   const html=document.documentElement.innerHTML;
   const title=document.title||'';
   const h1=document.querySelector('h1')?.innerText||'';
   const stale=/\bv(?:35[0-8])\b/i.test(title+' '+h1);
-  const current=/\bv379\b/i.test(title+' '+h1);
+  const current=/\bv380\b/i.test(title+' '+h1);
   return {pass:current&&!stale,current,stale,title,h1};
 }
 
@@ -8083,6 +8159,7 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const sourceBasketCompleteness=runSourceBasketCompletenessSelfTest();
     const emDashFourPositionBasket=runEmDashFourPositionBasketSelfTest();
     const named={v379ProfessionalEngine:runV379ProfessionalEngineSelfTest(),v378ScrolledPositionStitch:runV378ScrolledPositionStitchSelfTest(),v378AdditiveSnapshotRefresh:runV378AdditiveSnapshotRefreshSelfTest(),v375AccessGate:runV375AccessGateArchitectureSelfTest(),v374StateCoherence:runV374StateCoherenceSelfTest(),v374ImportSafety:runV374ImportSafetySelfTest(),v373TemporalAccountAnchor:runV373TemporalAccountAnchorSelfTest(),v370AnchoredEngine:runV370AnchoredEngineSelfTest(),v370CoherentOrderBasket:runV370CoherentOrderBasketSelfTest(),duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoZeroOrderFullSync:runVideoZeroOrderFullSyncSelfTest(),tradeVisualDedupe:runTradeVisualDedupeSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    named.v380OccludedLotRecovery=runV380OccludedLotRecoverySelfTest();
     // A production safety gate must be based on observable behavior, not on
     // source-code strings, DOM labels or a version badge. A stale audit assertion
     // previously made every new build fail its own regression test and stopped
@@ -8834,7 +8911,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v379-20260925';
+window.__APP_BUILD__='v380-20260925';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -8877,9 +8954,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v379-20260925'
+  build:'v380-20260925'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v379-20260925'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v380-20260925'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

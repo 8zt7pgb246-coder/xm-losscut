@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v381-20260928">
+<meta name="build-id" content="v382-20260930">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v381</title>
+<title>Stop Out positioning｜デラポジ Pro v382</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -851,7 +851,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v381</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v382</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1202,7 +1202,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v381-20260928';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v382-20260930';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1316,8 +1316,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v381-20260928',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v381-20260928';
+window.__DEPLOYMENT_STATE__={build:'v382-20260930',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v382-20260930';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1338,7 +1338,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v381-20260928', SHORT='v381';
+  const BUILD='v382-20260930', SHORT='v382';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1793,7 +1793,7 @@ function updatePriceUI(){
     : `<span class="warn">${currentSymbol}の価格情報を読み込んでください</span>`;
 }
 function formatPrice(v){if(!Number.isFinite(v))return '—';const d=Math.max(0,Math.min(5,decimalPlacesFor(v)));return v.toFixed(d)}
-// v381: every occurrence of the calculated Stop Out price must use the same
+// v382: every occurrence of the calculated Stop Out price must use the same
 // precision as the main headline. Never derive display precision from the raw
 // floating-point root itself (e.g. 4299.86172984871).
 function formatDeadlinePrice(v){
@@ -3542,7 +3542,12 @@ function parseTradeRowsByLinePair(text){
     if(!sideM&&!fuzzyPending&&!fuzzySide)continue;
     const sideRaw=sideM?sideM[1].replace(/\s+/g,' '):(fuzzyPending||fuzzySide);
     const isPending=/\b(?:limit|stop)$/i.test(sideRaw);
-    const chunk=lines.slice(i,i+4).join(' ');
+    const ownLines=[lines[i]];
+    for(let j=i+1;j<Math.min(lines.length,i+4);j++){
+      if(symRe.test(lines[j]))break;
+      ownLines.push(lines[j]);
+    }
+    const chunk=ownLines.join(' ');
     const lotM=lines[i].match(/\b(?:buy\s*limit|sell\s*limit|buy|sell)\s*(?:#?\s*)(0?\.\d+|\d+(?:\.\d+)?)/i);
     let lot=lotM?Number(lotM[1]):null;
     if(!Number.isFinite(lot)&&fuzzySide){
@@ -3639,7 +3644,10 @@ function parseOCR(text){
     const arrowRe=/(\d[\d,.]*\.\d+)\s*(?:->|→|>|-|to)\s*(\d[\d,.]*\.\d+)/i;
     let arrow=same.match(arrowRe);
     if(!arrow && !isPending) arrow=next.match(arrowRe);
-    if(!arrow && !isPending) arrow=prev.match(arrowRe);
+    // A preceding price pair belongs to its preceding symbol/lot heading.
+    // Do not borrow it for a clipped following row (mixed lots become phantom rows).
+    const prevOwned=i>=2 && !!symbolFromText((lines[i-2].match(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i)||[])[0]||'') && !!detectTradeSideFromLine(lines[i-2]);
+    if(!arrow && !isPending && !prevOwned) arrow=prev.match(arrowRe);
     const chunk=(isPending?lines.slice(i,i+3):lines.slice(Math.max(0,i-1),Math.min(lines.length,i+3))).join(' ');
 
     let lotMatch=line.match(/(?:buy\s*limit|sell\s*limit|buy|sell)\s*(?:#?\s*)?(\d+(?:\.\d+)?)/i);
@@ -6901,6 +6909,10 @@ function runGoldenMt5FixturesSelfTest(){
 }
 
 function runV379ProfessionalEngineSelfTest(){
+  const clippedMixedLot='GOLD sell 0.01\n4267.06 > 4177.84\nGOLD sell 0.02\n4172 ent';
+  const crossedHeading='GOLD sell 0.01\nGOLD sell 0.02\n4170.11 > 4177.84';
+  const clippedRows=parseOCR(clippedMixedLot).positions;
+  const crossedRows=parseOCR(crossedHeading).positions;
   const positions=[{symbol:'GOLD#',side:'Sell',lot:.01,price:4269.42}];
   const pending=[4283.97,4298.30,4310.06,4275.73,4289.61].map(price=>({symbol:'GOLD#',side:'Sell Limit',lot:.01,price}));
   const state={
@@ -6918,6 +6930,8 @@ function runV379ProfessionalEngineSelfTest(){
   const badPositionState={...state,positions:[{...positions[0],lot:1}]};
   const pnlBad=currentPnlIdentityAudit(badPositionState,snapshot);
   const checks={
+    clippedMixedLotNotBorrowed:clippedRows.length===1&&clippedRows[0].lot===.01&&clippedRows[0].price===4267.06,
+    followingHeadingNotBorrowed:!crossedRows.some(o=>o.lot===.01&&o.price===4170.11),
     correctDeadline:Number.isFinite(sim?.lc)&&Math.abs(sim.lc-4350.098584)<0.0005,
     allFiveReached:sim?.added?.length===5&&sim?.filled?.length===6&&sim?.skipped?.length===0,
     stopLevelVerified:verification?.ok===true&&Math.abs(Number(sim?.levelAtLc)-20)<0.001,
@@ -8928,7 +8942,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v381-20260928';
+window.__APP_BUILD__='v382-20260930';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -8971,9 +8985,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v381-20260928'
+  build:'v382-20260930'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v381-20260928'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v382-20260930'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

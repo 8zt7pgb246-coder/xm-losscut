@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v386-20261005">
+<meta name="build-id" content="v387-20261005">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v386</title>
+<title>Stop Out positioning｜デラポジ Pro v387</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -851,7 +851,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v386</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v387</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1200,9 +1200,16 @@ function setImportStage(n,msg){
   setAnalysisPanelState('working','解析中…',msg||'');
   console.info('[XM IMPORT]',n,msg);
 }
+function markMediaImportFailed(){
+  window.__MEDIA_STAGE='failed';window.__importStage='failed';window.__releaseReady=false;
+  window.__POST_IMPORT_AUDIT__={pass:false,issues:['MEDIA_IMPORT_FAILED']};
+  setAnalysisPanelState('error','⚠ 読み込み停止','詳細を確認');
+  const gate=$('finalReleaseGate');
+  if(gate){gate.style.display='block';gate.className='err';gate.textContent='⚠ 今回の読み込みは未完了です。前回の整合性チェック結果は無効です。';}
+}
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v386-20261005';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v387-20261005';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1316,8 +1323,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v386-20261005',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v386-20261005';
+window.__DEPLOYMENT_STATE__={build:'v387-20261005',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v387-20261005';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1338,7 +1345,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v386-20261005', SHORT='v386';
+  const BUILD='v387-20261005', SHORT='v387';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1810,6 +1817,15 @@ function conversionGraph(){const g={};const addOne=(a,b,r)=>{if(!a||!b||!Number.
 function getRateToJPY(currency){if(currency==='JPY')return 1;const g=conversionGraph();if(currency==='USD'&&+$('usdjpy').value>0)return +$('usdjpy').value;const q=[[currency,1]],seen=new Set();while(q.length){const [cur,r]=q.shift();if(cur==='JPY')return r;if(seen.has(cur))continue;seen.add(cur);for(const [n,m] of (g[cur]||[]))if(!seen.has(n))q.push([n,r*m])}return null}
 function baseRateFor(c){return getRateToJPY(c.base)}
 function quoteRateFor(c){if(window.__testRate&&c.quote==='USD')return window.__testRate;return getRateToJPY(c.quote)}
+let manualUsdJpyVerifiedAt=0;
+function usdJpyConversionUsable(now=Date.now()){
+  const value=Number($('usdjpy')?.value);
+  if(!(value>0))return false;
+  if(mediaUsdJpyFresh)return true;
+  if(manualUsdJpyVerifiedAt>0&&now-manualUsdJpyVerifiedAt<=5*60*1000)return true;
+  const q=quoteStore['USDJPY#']||priceStore['USDJPY#'];
+  return !!(q?.updatedAt&&now-Date.parse(q.updatedAt)>=0&&now-Date.parse(q.updatedAt)<=5*60*1000&&Math.abs(value-Number(q.bid))<=.002);
+}
 function currentPositionPnlJPY(o,c,bid=goldBid,ask=goldAsk){const px=Number(o?.price),lot=Number(o?.lot),qr=quoteRateFor(c);if(!Number.isFinite(px)||!Number.isFinite(lot)||lot<=0||!qr)return null;if(/^buy$/i.test(String(o?.side||''))&&Number.isFinite(bid))return (bid-px)*lot*c.contract*qr;if(/^sell$/i.test(String(o?.side||''))&&Number.isFinite(ask))return (px-ask)*lot*c.contract*qr;return null;}
 function renderPositions(lc=null,c=cfg()){const arr=getPositions();$('positionCount').textContent=`${arr.length}件`;if(!positionDataValid){$('positions').innerHTML='<div class="dataLock"><strong>⚠ 保存済みポジションは現在の計算には使用していません。</strong><br>今回の読み込みで現在ポジションを確定できるまでDEAD LINEを表示しません。</div>';return}if(!arr.length){$('positions').innerHTML='<div class="small">現在の約定済みポジションはまだありません。注文スクショから自動認識します。</div>';return}$('positions').innerHTML=arr.map((o,i)=>{const px=Number(o.price),lot=Number(o.lot),qr=quoteRateFor(c);let nowPnl=currentPositionPnlJPY(o,c,goldBid,goldAsk);const lcLoss=lc!==null?lossAtLCJPY(o,lc,c):null;return `<div class="grid" style="margin-top:8px"><div><label>方向</label><input value="${escapeHtml(o.side)}" onchange="editPosition(${i},'side',this.value)"></div><div><label>Lot</label><input type="number" step=".01" value="${o.lot}" onchange="editPosition(${i},'lot',parseFloat(this.value)||0)"></div><div class="wide"><label>約定価格</label><input type="number" step="any" value="${o.price}" onchange="editPosition(${i},'price',parseFloat(this.value)||0)"></div><div class="wide small positionPnlLine">現在評価損益（概算）：${nowPnl!==null?formatJPYLoss(nowPnl):'—'}　／　LC時想定含み損：<span class="positionLcLossAmount">${lcLoss!==null?formatJPYLoss(lcLoss):'—'}</span></div></div>`}).join('')}
 window.editPosition=function(i,k,v){const a=getPositions();a[i][k]=v;setPositions(a);renderPositions();calc()}
@@ -2288,6 +2304,7 @@ function buildCurrentTradeState(){
       usdJpy:Number($('usdjpy')?.value||0),
       priceFresh:!!mediaPriceFresh,
       usdJpyFresh:!!mediaUsdJpyFresh,
+      conversionUsable:c.quote!=='USD'||usdJpyConversionUsable(),
       temporalQuoteBeforeTrade:window.__currentTemporalQuoteBeforeTrade===true
     },
     positions:getPositions()
@@ -2316,6 +2333,7 @@ function validateCurrentTradeState(state){
   if(!state?.validity?.account)return {ok:false,code:'ACCOUNT_UNCONFIRMED'};
   if(!state.positions.length&&!state.pendingOrders.length)return {ok:false,code:'NO_EXPOSURE'};
   if(!(Number.isFinite(state.market.bid)&&Number.isFinite(state.market.ask)&&state.market.ask>=state.market.bid))return {ok:false,code:'PRICE_UNCONFIRMED'};
+  if(/^mt5-ocr/i.test(String(state.account.source||''))&&state.market.conversionUsable===false)return {ok:false,code:'CONVERSION_UNCONFIRMED'};
   if(!(Number(state.contract.quoteRate)>0&&Number(state.contract.leverage)>0&&Number(state.contract.size)>0&&Number(state.account.balance)>0&&Number(state.contract.stopout)>0))return {ok:false,code:'CONTRACT_UNCONFIRMED'};
   const ocrState=/^mt5-ocr/i.test(String(state.account.source||''))||/^ocr/i.test(String(positionDataSource||''));
   if(ocrState){
@@ -3420,6 +3438,9 @@ function stitchScrolledPositionViewports(candidates){
         rows.push(...additions.map(o=>({...o})));
       }
       lastTime=c.time;links++;endBoundary=endBoundary||!!c.hasOrderBoundary||!!c.hasTerminalBoundary;sourceFrames.add(c.frameIndex??`t:${c.time}`);
+      // The account-to-terminal chain is complete. Later OCR windows belong to
+      // another reading, and must not append spurious prices to this snapshot.
+      if(endBoundary)break;
     }
     if(!endBoundary||links<1||rows.length<=first.rows.length)continue;
     const stitched=sanitizeRecognizedPositions(rows);
@@ -3467,6 +3488,11 @@ function recoverTrustedVideoPositionBasket(results,mergedText=''){
   if(candidates.length){
     const stitched=stitchScrolledPositionViewports(candidates);
     if(stitched)return stitched;
+    // A complete header-to-end viewport owns its basket. Partial OCR windows
+    // and older complete baskets cannot overrule it by vote or contaminate it.
+    const complete=candidates.filter(c=>c.hasAccountBoundary&&(c.hasOrderBoundary||c.hasTerminalBoundary))
+      .sort((a,b)=>b.time-a.time||b.rows.length-a.rows.length)[0];
+    if(complete)return {rows:complete.rows,authoritative:true,source:'complete-trade-viewport',frameIndex:complete.frameIndex,support:1};
     // Repeated OCR proves a viewport, never the entire account basket. A long
     // viewport needs a header-to-end boundary; disagreeing windows must not fall
     // through to the consensus/newest/merged-union recovery paths below.
@@ -3514,6 +3540,7 @@ function inspectVideoPositionCoverage(candidates){
   const complete=frames.some(c=>c.hasAccountBoundary&&(c.hasOrderBoundary||c.hasTerminalBoundary));
   const keys=new Set(frames.flatMap(c=>(c.rows||[]).map(positionViewportKey)).filter(Boolean));
   const max=Math.max(0,...frames.map(c=>(c.rows||[]).length));
+  if(complete)return {ok:true};
   if(keys.size>max)return {ok:false,reason:'動画内のポジション画面が異なり、先頭から末尾までの接続を確定できませんでした。部分データでは計算しません。'};
   if((max>=8||frames.some(c=>c.hasScrollableViewport))&&!complete)return {ok:false,reason:'ポジション一覧の末尾を確認できませんでした。同じ画面の反復認識を全件確認として扱わず、計算を停止します。'};
   return {ok:true};
@@ -3527,11 +3554,32 @@ function runVideoCoverageFailureSelfTest(){
     alternatePassNotCompleteness:!inspectVideoPositionCoverage([top,{...top}]).ok,
     disconnectedWindowsBlocked:!inspectVideoPositionCoverage([top,bottom]).ok,
     fullSingleFrameAccepted:inspectVideoPositionCoverage([{...top,hasTerminalBoundary:true}]).ok,
+    completeNotOverruledByPartial:inspectVideoPositionCoverage([{...top,hasTerminalBoundary:true},bottom]).ok,
     smallUnchangedBasketAccepted:inspectVideoPositionCoverage([{rows:rows.slice(0,2),hasAccountBoundary:true}]).ok,
     differentSmallWindowsBlocked:!inspectVideoPositionCoverage([{rows:rows.slice(0,2)},{rows:rows.slice(1,3)}]).ok
     ,smallScrollableViewportBlocked:!inspectVideoPositionCoverage([{rows:rows.slice(0,2),hasScrollableViewport:true}]).ok
   };
   return Object.values(checks).every(Boolean);
+}
+function runV387AuditRegressionSelfTest(){
+  const rows=Array.from({length:14},(_,i)=>({side:'Sell',lot:.01,price:4100+i}));
+  const chain=stitchScrolledPositionViewports([
+    {rows:rows.slice(0,8),time:1,frameIndex:0,hasAccountBoundary:true},
+    {rows:rows.slice(3),time:2,frameIndex:1,hasTerminalBoundary:true},
+    {rows:[...rows.slice(3),{side:'Sell',lot:.01,price:9999}],time:3,frameIndex:2,hasTerminalBoundary:true}
+  ]);
+  const saved={value:$('usdjpy').value,fresh:mediaUsdJpyFresh,manual:manualUsdJpyVerifiedAt,quotes:quoteStore,prices:priceStore};
+  try{
+    $('usdjpy').value='159.427';mediaUsdJpyFresh=false;manualUsdJpyVerifiedAt=0;quoteStore={};priceStore={};
+    const defaultRejected=!usdJpyConversionUsable(1000000);
+    manualUsdJpyVerifiedAt=999999;
+    const manualAccepted=usdJpyConversionUsable(1000000),expiredRejected=!usdJpyConversionUsable(1400000);
+    manualUsdJpyVerifiedAt=0;
+    quoteStore={'USDJPY#':{bid:159.427,updatedAt:new Date(999999).toISOString()}};
+    const freshAccepted=usdJpyConversionUsable(1000000);
+    const missingRateBlocked=validateCurrentTradeState({validity:{positions:true,orders:true,account:true},positions:[rows[0]],pendingOrders:[],account:{source:'mt5-ocr'},market:{bid:4200,ask:4201,conversionUsable:false}}).code==='CONVERSION_UNCONFIRMED';
+    return chain?.rows.length===14&&!chain.rows.some(o=>o.price===9999)&&defaultRejected&&manualAccepted&&expiredRejected&&freshAccepted&&missingRateBlocked;
+  }finally{$('usdjpy').value=saved.value;mediaUsdJpyFresh=saved.fresh;manualUsdJpyVerifiedAt=saved.manual;quoteStore=saved.quotes;priceStore=saved.prices;}
 }
 
 // v370: Pending orders must come from one coherent Trade snapshot, not from a
@@ -4595,7 +4643,7 @@ function detectQuoteBeforeTradeTemporalEvidence(results,quoteMeta,symbol=current
   return false;
 }
 
-$('symbol').addEventListener('change',switchSymbol);$('symbolLeverage').addEventListener('input',()=>{const c=cfg();c.leverage=+$('symbolLeverage').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});$('contractSize').addEventListener('input',()=>{const c=cfg();c.contract=+$('contractSize').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});$('balance').addEventListener('input',()=>{const v=Number($('balance').value||0);if(v>0)setAccountBalance(v,'manual',0);else invalidateAccountData('手動残高が未入力です。');calc()});['stopout','usdjpy','brokerPnl'].forEach(id=>$(id).addEventListener('input',()=>calc()));
+$('symbol').addEventListener('change',switchSymbol);$('symbolLeverage').addEventListener('input',()=>{const c=cfg();c.leverage=+$('symbolLeverage').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});$('contractSize').addEventListener('input',()=>{const c=cfg();c.contract=+$('contractSize').value||1;specStore[currentSymbol]=c;saveAll();updateSpecUI();calc()});$('balance').addEventListener('input',()=>{const v=Number($('balance').value||0);if(v>0)setAccountBalance(v,'manual',0);else invalidateAccountData('手動残高が未入力です。');calc()});['stopout','usdjpy','brokerPnl'].forEach(id=>$(id).addEventListener('input',()=>{if(id==='usdjpy')manualUsdJpyVerifiedAt=Date.now();calc()}));
 function resetMediaPicker(){
   const input=$('mediaFile');
   if(input) input.value='';
@@ -5011,9 +5059,10 @@ $('mediaFile').addEventListener('change',async e=>{
       // therefore omits the Orders heading entirely.
       const terminalSrc=srcList.filter(src=>src?.scrollBoundary==='bottom').sort((a,b)=>Number(b.time)-Number(a.time))[0]||null;
       const initialHasOrderBoundary=/(?:オーダー|orders?|\bplaced\b|(?:buy|sell|sel[!|1lI])\s*(?:limit|stop)\b)/i.test(parsed.rawText||'');
-      const needsTerminalVerification=!!terminalSrc&&initialStrongRows.length>=8&&!initialHasOrderBoundary;
+      const coverageNeedsVerification=recoverTrustedVideoPositionBasket(results,parsed.rawText||'').incomplete===true;
+      const needsTerminalVerification=!!terminalSrc&&(coverageNeedsVerification||initialStrongRows.length>=8&&!initialHasOrderBoundary);
       const boundedVerifySrc=needsTerminalVerification?terminalSrc:verifySrc;
-      if(boundedVerifySrc && (!initialTradeAlreadyStrong||needsTerminalVerification)){
+      if(boundedVerifySrc && (!initialTradeAlreadyStrong||needsTerminalVerification||coverageNeedsVerification)){
         let verify=await recognizeFileFrames(T,f,'trade-verify',m=>{
           if(m.status==='recognizing text')$('ocrStatus').textContent=`Trade画面再確認中… ${Math.round((m.progress||0)*100)}%`;
         },[boundedVerifySrc],sharedVideoWorker);
@@ -5660,7 +5709,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const excludedText=isVideo?` / 無効フレーム除外 ${mediaQuality.excluded}件${mediaQuality.controlExcluded?`（コントロールセンター${mediaQuality.controlExcluded}件）`:''}`:'';
     const qualityText=isVideo?`有効 ${mediaQuality.usable}/${mediaQuality.expected}フレーム${excludedText}`:'スクショ1フレーム';
     const selectedPriceOk=Number.isFinite(goldBid)&&Number.isFinite(goldAsk);
-    const usdJpyOk=Number($('usdjpy')?.value||0)>0;
+    const usdJpyOk=usdJpyConversionUsable();
     const selectedLabel=currentSymbol.replace(/#$/,'');
     const acctClass=xmAccountType==='unknown'?'warn':'ok';
     const quoteNames=Object.keys(quotes).filter(k=>quotes[k]?.bid>0&&quotes[k]?.ask>0).map(k=>k.replace(/#$/,'')).join(' / ');
@@ -5700,6 +5749,7 @@ $('mediaFile').addEventListener('change',async e=>{
     // silently restoring the previous movie as current trading truth. Keep stored
     // values only as history, but fail closed until this new import succeeds.
     restoreImportSnapshot(importSnapshot);
+    markMediaImportFailed();
     if(isVideo)fullVideoBaselineReady=false;
     mediaPriceFresh=false; mediaUsdJpyFresh=false; mediaPriceEvidence=null;window.__currentTemporalQuoteBeforeTrade=false;
     invalidatePositionData(`新しい${isVideo?'動画':'スクショ'}の解析に失敗しました。前回ポジションは現在値として使用していません。`);
@@ -5729,6 +5779,7 @@ $('mediaFile').addEventListener('change',async e=>{
     if(stillCurrent()){
       if(sharedVideoWorker){await discardReusableOcrWorker(sharedVideoWorker);sharedVideoWorker=null;}
       if(importSnapshot)restoreImportSnapshot(importSnapshot);
+      markMediaImportFailed();
       if(selectedIsVideo)fullVideoBaselineReady=false;
       // A failed new selection must never silently leave the previous media looking current.
       mediaPriceFresh=false; mediaUsdJpyFresh=false; mediaPriceEvidence=null;window.__currentTemporalQuoteBeforeTrade=false;
@@ -6899,7 +6950,7 @@ function runDeadlineDecimalConsistencySelfTest(){
     src.includes('fmtScenarioPrice=v=>formatDeadlinePrice(v)') &&
     src.includes('推定Stop Out ${fmtScenarioPrice(lc)}') &&
     src.includes('現在保有のみ ${fmtScenarioPrice(sim.currentLc)}') &&
-    src.includes('Bid ${fmtScenarioPrice(goldBid)}') &&
+    src.includes('fmtScenarioPrice(basisBid)') &&
     warningSrc.includes('deadText=formatDeadlinePrice(lc)') &&
     scenarioSrc.includes('formatDeadlinePrice(lc)') &&
     scenarioSrc.includes('formatDeadlinePrice(simMeta.allFilledLc)') &&
@@ -7076,8 +7127,11 @@ function runReleaseVersionConsistencySelfTest(){
   const html=document.documentElement.innerHTML;
   const title=document.title||'';
   const h1=document.querySelector('h1')?.innerText||'';
-  const stale=/\bv(?:35[0-8])\b/i.test(title+' '+h1);
-  const current=/\bv381\b/i.test(title+' '+h1);
+  const short=String(window.__APP_BUILD__||'').split('-')[0];
+  const versions=(title+' '+h1).match(/\bv\d+\b/g)||[];
+  const stale=versions.some(v=>v!==short);
+  const current=/^v\d+$/.test(short)&&versions.length===2&&versions.every(v=>v===short)&&
+    html.includes(`SHORT='${short}'`)&&window.__NETWORK_BUILD__===window.__APP_BUILD__;
   return {pass:current&&!stale,current,stale,title,h1};
 }
 
@@ -8304,6 +8358,9 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const named={v379ProfessionalEngine:runV379ProfessionalEngineSelfTest(),v378ScrolledPositionStitch:runV378ScrolledPositionStitchSelfTest(),v378AdditiveSnapshotRefresh:runV378AdditiveSnapshotRefreshSelfTest(),v375AccessGate:runV375AccessGateArchitectureSelfTest(),v374StateCoherence:runV374StateCoherenceSelfTest(),v374ImportSafety:runV374ImportSafetySelfTest(),v373TemporalAccountAnchor:runV373TemporalAccountAnchorSelfTest(),v370AnchoredEngine:runV370AnchoredEngineSelfTest(),v370CoherentOrderBasket:runV370CoherentOrderBasketSelfTest(),duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoZeroOrderFullSync:runVideoZeroOrderFullSyncSelfTest(),tradeVisualDedupe:runTradeVisualDedupeSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,accountBridgeSamplingPolicy,zeroOrderTerminalArchitecture,mt5ScrollBoundary,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     named.v380OccludedLotRecovery=runV380OccludedLotRecoverySelfTest();
     named.videoCoverageFailures=runVideoCoverageFailureSelfTest();
+    named.v387Audit=runV387AuditRegressionSelfTest();
+    named.releaseVersionAlignment=runReleaseVersionConsistencySelfTest().pass;
+    named.deadlineDecimalAlignment=runDeadlineDecimalConsistencySelfTest();
     // A production safety gate must be based on observable behavior, not on
     // source-code strings, DOM labels or a version badge. A stale audit assertion
     // previously made every new build fail its own regression test and stopped
@@ -9055,7 +9112,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v386-20261005';
+window.__APP_BUILD__='v387-20261005';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -9098,9 +9155,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v386-20261005'
+  build:'v387-20261005'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v386-20261005'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v387-20261005'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

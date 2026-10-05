@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v391-20261005">
+<meta name="build-id" content="v392-20261005">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v391</title>
+<title>Stop Out positioning｜デラポジ Pro v392</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -839,7 +839,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v391</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v392</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -852,7 +852,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v391</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v392</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1313,7 +1313,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 // v378 access gate: a client-side deterrent for private beta URLs. It is not server-side authentication.
 (function setupAccessGate(){
   'use strict';
-  document.getElementById('accessBuildVersion').textContent=(document.querySelector('meta[name="build-id"]')?.content||'v391').split('-')[0];
+  document.getElementById('accessBuildVersion').textContent=(document.querySelector('meta[name="build-id"]')?.content||'v392').split('-')[0];
   // Keep the established credential derivation and storage keys so an app
   // update neither changes the user's code nor unexpectedly signs them out.
   const CFG=Object.freeze({salt:'delapoji-v376-access-20260914',iterations:120000,hash:'c6de93906de155875e84197529139ed92cc303831f167a2d9b2225361d3dfbcb',rememberMs:30*24*60*60*1000,maxAttempts:5,cooldownMs:30000});
@@ -1414,7 +1414,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v391-20261005';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v392-20261005';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1559,8 +1559,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v391-20261005',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v391-20261005';
+window.__DEPLOYMENT_STATE__={build:'v392-20261005',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v392-20261005';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1581,7 +1581,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v391-20261005', SHORT='v391';
+  const BUILD='v392-20261005', SHORT='v392';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -3671,7 +3671,11 @@ function stitchScrolledPositionViewports(candidates){
       // separately; never union such a frame into an older basket.
       if(c.hasAccountBoundary)continue;
       const overlap=orderedViewportOverlap(rows,c.rows);
-      const minimum=Math.max(2,Math.ceil(Math.min(rows.length,c.rows.length)*0.40));
+      // Two adjacent exact (side, lot, entry) rows in the same order prove
+      // continuity even after a larger scroll. Percentage thresholds rejected
+      // the real 9-row top -> 10-row middle viewport with two exact overlaps.
+      // Unordered recovery below retains its stronger majority requirement.
+      const minimum=2;
       if(overlap>=minimum){
         rows.push(...c.rows.slice(overlap).map(o=>({...o})));
       }else{
@@ -3811,6 +3815,18 @@ function runVideoCoverageFailureSelfTest(){
     ,smallScrollableViewportBlocked:!inspectVideoPositionCoverage([{rows:rows.slice(0,2),hasScrollableViewport:true}]).ok
   };
   return Object.values(checks).every(Boolean);
+}
+function runSparseOrderedScrollSelfTest(){
+  const rows=Array.from({length:17},(_,i)=>({side:'Sell',lot:i<8?.01:.02,price:4100+i}));
+  const top={rows:rows.slice(0,9),time:1,frameIndex:0,hasAccountBoundary:true};
+  const middle={rows:rows.slice(7),time:2,frameIndex:1};
+  const bottom={rows:rows.slice(8),time:3,frameIndex:2,hasTerminalBoundary:true};
+  const complete=stitchScrolledPositionViewports([top,middle,bottom]);
+  const single=stitchScrolledPositionViewports([top,{...middle,rows:rows.slice(8),hasTerminalBoundary:true}]);
+  const shuffled=stitchScrolledPositionViewports([top,{...middle,rows:[...middle.rows].reverse(),hasTerminalBoundary:true}]);
+  const mutation=stitchScrolledPositionViewports([top,{...middle,hasAccountBoundary:true,hasTerminalBoundary:true}]);
+  const noTerminal=stitchScrolledPositionViewports([top,middle]);
+  return complete?.rows.length===17&&!single&&!shuffled&&!mutation&&!noTerminal;
 }
 function runV387AuditRegressionSelfTest(){
   const rows=Array.from({length:14},(_,i)=>({side:'Sell',lot:.01,price:4100+i}));
@@ -8739,9 +8755,10 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const named={v379ProfessionalEngine:runV379ProfessionalEngineSelfTest(),v378ScrolledPositionStitch:runV378ScrolledPositionStitchSelfTest(),v378AdditiveSnapshotRefresh:runV378AdditiveSnapshotRefreshSelfTest(),v375AccessGate:runV375AccessGateArchitectureSelfTest(),v374StateCoherence:runV374StateCoherenceSelfTest(),v374ImportSafety:runV374ImportSafetySelfTest(),v373TemporalAccountAnchor:runV373TemporalAccountAnchorSelfTest(),v370AnchoredEngine:runV370AnchoredEngineSelfTest(),v370CoherentOrderBasket:runV370CoherentOrderBasketSelfTest(),duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoZeroOrderFullSync:runVideoZeroOrderFullSyncSelfTest(),tradeVisualDedupe:runTradeVisualDedupeSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,accountBridgeSamplingPolicy,zeroOrderTerminalArchitecture,mt5ScrollBoundary,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     named.v380OccludedLotRecovery=runV380OccludedLotRecoverySelfTest();
     named.videoCoverageFailures=runVideoCoverageFailureSelfTest();
+    named.sparseOrderedScroll=runSparseOrderedScrollSelfTest();
     named.protectedBoundarySelection=runProtectedBoundarySelectionSelfTest();
     named.coverageRecoverySelection=runCoverageRecoverySelectionSelfTest();
-    named.v391Audit=runV387AuditRegressionSelfTest();
+    named.v392Audit=runV387AuditRegressionSelfTest();
     named.releaseVersionAlignment=runReleaseVersionConsistencySelfTest().pass;
     named.deadlineDecimalAlignment=runDeadlineDecimalConsistencySelfTest();
     // A production safety gate must be based on observable behavior, not on
@@ -9495,7 +9512,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v391-20261005';
+window.__APP_BUILD__='v392-20261005';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -9538,9 +9555,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v391-20261005'
+  build:'v392-20261005'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v391-20261005'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v392-20261005'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

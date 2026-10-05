@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v390-20261005">
+<meta name="build-id" content="v391-20261005">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v390</title>
+<title>Stop Out positioning｜デラポジ Pro v391</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -839,7 +839,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v390</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v391</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -852,7 +852,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v390</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v391</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1313,7 +1313,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 // v378 access gate: a client-side deterrent for private beta URLs. It is not server-side authentication.
 (function setupAccessGate(){
   'use strict';
-  document.getElementById('accessBuildVersion').textContent=(document.querySelector('meta[name="build-id"]')?.content||'v390').split('-')[0];
+  document.getElementById('accessBuildVersion').textContent=(document.querySelector('meta[name="build-id"]')?.content||'v391').split('-')[0];
   // Keep the established credential derivation and storage keys so an app
   // update neither changes the user's code nor unexpectedly signs them out.
   const CFG=Object.freeze({salt:'delapoji-v376-access-20260914',iterations:120000,hash:'c6de93906de155875e84197529139ed92cc303831f167a2d9b2225361d3dfbcb',rememberMs:30*24*60*60*1000,maxAttempts:5,cooldownMs:30000});
@@ -1414,7 +1414,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v390-20261005';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v391-20261005';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1559,8 +1559,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v390-20261005',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v390-20261005';
+window.__DEPLOYMENT_STATE__={build:'v391-20261005',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v391-20261005';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1581,7 +1581,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v390-20261005', SHORT='v390';
+  const BUILD='v391-20261005', SHORT='v391';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -4593,6 +4593,7 @@ function prepareVideoFramePresentation(video,target,timeoutMs=300){
 }
 async function videoFrameSources(file,maxFrames=60,onProgress=null){
   window.__VIDEO_CAPTURE_AUDIT=null;
+  window.__COVERAGE_RECOVERY_AUDIT=null;
   if(!(file instanceof Blob) || !file.size) throw new Error('VIDEO_FILE_INVALID');
   const v=document.createElement('video');
   v.preload='auto'; v.muted=true; v.defaultMuted=true; v.playsInline=true;
@@ -4749,11 +4750,12 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
     if(onProgress)onProgress({...m,frame:currentFrame,total:sources.length});
   });
   try{
-    const psm=(mode==='order'||mode==='trade-fast')?6:mode==='trade-verify'?3:11;
+    const psm=(mode==='order'||mode==='trade-fast'||mode==='trade-column-recover')?6:mode==='trade-verify'?3:11;
     await worker.setParameters({tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'});
     for(let i=0;i<sources.length;i++){
       currentFrame=i+1;
       let source=sources[i].canvas;
+      if(mode==='trade-column-recover')source=makePositionColumnRecoveryCanvas(source);
       const isControlCenter=!!sources[i].isControlCenter;
       const sourceFrameIndex=Number.isFinite(sources[i].frameIndex)?sources[i].frameIndex:i;
       if(isControlCenter){results.push({data:{text:'',words:[]},time:sources[i].time,frameIndex:sourceFrameIndex,isControlCenter:true});continue}
@@ -4767,6 +4769,32 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
   results.videoDuration=sources.videoDuration||0;
   if(isVideo)Object.defineProperty(results,'__sources',{value:sources,enumerable:false});
   return results;
+}
+function makePositionColumnRecoveryCanvas(source){
+  const crop=document.createElement('canvas');
+  const width=Math.round(source.width*.68),scale=Math.min(2.2,1100/width);
+  crop.width=Math.round(width*scale);crop.height=Math.round(source.height*scale);
+  const ctx=crop.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(source,0,0,width,source.height,0,0,crop.width,crop.height);
+  // Remove the right-hand profit column, which made dense multi-column MT5
+  // rows merge in PSM6. Preserve explicit symbol, side, lot and both prices.
+  const pixels=ctx.getImageData(0,0,crop.width,crop.height);
+  for(let i=0;i<pixels.data.length;i+=4){
+    const gray=Math.round(.299*pixels.data[i]+.587*pixels.data[i+1]+.114*pixels.data[i+2]);
+    pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=gray;
+  }
+  ctx.putImageData(pixels,0,0);
+  return crop;
+}
+function selectCoverageRecoverySources(sources){
+  const valid=(sources||[]).filter(x=>x&&!x.isControlCenter&&x.fraction>=.50);
+  const terminal=valid.filter(x=>x.scrollBoundary==='bottom').sort((a,b)=>b.time-a.time);
+  // Re-read actual boundary images. A quote-board scrollbar or a repeated
+  // top viewport cannot itself establish a complete position basket.
+  const selected=terminal.slice(0,2);
+  const top=valid.filter(x=>x.scrollBoundary==='top').sort((a,b)=>a.time-b.time)[0];
+  if(top&&!selected.includes(top))selected.push(top);
+  return selected.slice(0,3).sort((a,b)=>a.time-b.time);
 }
 function makeAccountHeaderFocusCanvas(source){
   if(!source?.width||!source?.height)return source;
@@ -5522,6 +5550,17 @@ $('mediaFile').addEventListener('change',async e=>{
       if(results.length && !mt5Now)throw new Error('VIDEO_NO_VALID_MT5_FRAME');
     }
 
+    if(isVideo&&recoverTrustedVideoPositionBasket(results,parsed.rawText||'').incomplete){
+      const rescueSources=selectCoverageRecoverySources(videoSourcesForReuse);
+      if(rescueSources.length){
+        $('ocrStatus').textContent='ポジション一覧を再確認中…';
+        const recovered=await recognizeFileFrames(T,f,'trade-column-recover',null,rescueSources,sharedVideoWorker);
+        results=[...results,...filterUsableOCRResults(recovered)];
+        parsed=mergeParsedResults(results);
+        const recoveryBasket=recoverTrustedVideoPositionBasket(results,parsed.rawText||'');
+        window.__COVERAGE_RECOVERY_AUDIT={attempted:rescueSources.length,complete:!!recoveryBasket.authoritative&&!recoveryBasket.incomplete,rows:recoveryBasket.rows.length};
+      }
+    }
     // Account type is determined only from actual quote-board rows. Order/position-only
     // media never flips the account type, preventing an OCR-dropped '#' from changing profiles.
     const accountTypeDetection=detectXMAccountTypeFromText(parsed.rawText||'');
@@ -6086,7 +6125,8 @@ $('mediaFile').addEventListener('change',async e=>{
     if(isVideo&&window.__VIDEO_CAPTURE_AUDIT){
       const capture=window.__VIDEO_CAPTURE_AUDIT,frames=capture.candidates||[];
       const diagnostic=document.createElement('div');diagnostic.className='small';
-      diagnostic.textContent=`診断 ${String(capture.build||'').split('-')[0]}：抽出${frames.length}枚 / 描画確認${frames.filter(x=>x.presented).length}枚 / 末尾${(capture.selected||[]).filter(x=>x.boundary==='bottom').length}枚`;
+      const terminalRows=Math.max(0,...(window.__activeMediaResultsForAudit||[]).filter(r=>r.scrollBoundary==='bottom').map(r=>recoverStrongOpenPositionsFromTradeText(r.data?.text||'').length));
+      diagnostic.textContent=`診断 ${String(capture.build||'').split('-')[0]}：抽出${frames.length}枚 / 描画確認${frames.filter(x=>x.presented).length}枚 / 末尾${(capture.selected||[]).filter(x=>x.boundary==='bottom').length}枚 / 末尾OCR${terminalRows}件`;
       $('ocrStatus').appendChild(diagnostic);
     }
     const failedPreview=$('preview'); if(failedPreview){failedPreview.removeAttribute('src');failedPreview.style.display='none';}
@@ -6293,6 +6333,12 @@ function runProtectedBoundarySelectionSelfTest(){
   const withControl=selectProtectedVideoSources([...sources,control],sources.slice(0,8),[],8);
   return chosen.length===8&&chosen.includes(sources[8])&&chosen.includes(sources[9])&&
     !withControl.includes(control)&&withControl.includes(sources[9])&&chosen.every((x,i)=>!i||x.time>=chosen[i-1].time);
+}
+function runCoverageRecoverySelectionSelfTest(){
+  const top={time:8,fraction:.58,scrollBoundary:'top'},a={time:10,fraction:.73,scrollBoundary:'bottom'},b={time:13,fraction:.90,scrollBoundary:'bottom'};
+  const quote={time:4,fraction:.35,scrollBoundary:'bottom'},control={time:14,fraction:.95,scrollBoundary:'bottom',isControlCenter:true};
+  const selected=selectCoverageRecoverySources([quote,top,a,b,control]);
+  return selected.length===3&&selected[0]===top&&selected[1]===a&&selected[2]===b&&selectCoverageRecoverySources([quote,control]).length===0;
 }
 function runVideoAtomicStateSelfTest(){
   const h=document.documentElement.innerHTML;
@@ -8694,7 +8740,8 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     named.v380OccludedLotRecovery=runV380OccludedLotRecoverySelfTest();
     named.videoCoverageFailures=runVideoCoverageFailureSelfTest();
     named.protectedBoundarySelection=runProtectedBoundarySelectionSelfTest();
-    named.v390Audit=runV387AuditRegressionSelfTest();
+    named.coverageRecoverySelection=runCoverageRecoverySelectionSelfTest();
+    named.v391Audit=runV387AuditRegressionSelfTest();
     named.releaseVersionAlignment=runReleaseVersionConsistencySelfTest().pass;
     named.deadlineDecimalAlignment=runDeadlineDecimalConsistencySelfTest();
     // A production safety gate must be based on observable behavior, not on
@@ -9448,7 +9495,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v390-20261005';
+window.__APP_BUILD__='v391-20261005';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -9491,9 +9538,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v390-20261005'
+  build:'v391-20261005'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v390-20261005'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v391-20261005'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

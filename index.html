@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v384-20261003">
+<meta name="build-id" content="v385-20261005">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v384</title>
+<title>Stop Out positioning｜デラポジ Pro v385</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -851,7 +851,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v384</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v385</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1202,7 +1202,7 @@ function setImportStage(n,msg){
 }
 window.__ocrReady = false;
 window.__ocrPromise = null;
-window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v384-20261003';
+window.__ocrLoadStrategy = 'CDN worker + BlobURL'; window.__NETWORK_BUILD__='v385-20261005';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1316,8 +1316,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v384-20261003',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v384-20261003';
+window.__DEPLOYMENT_STATE__={build:'v385-20261005',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v385-20261005';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1338,7 +1338,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v384-20261003', SHORT='v384';
+  const BUILD='v385-20261005', SHORT='v385';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -3384,7 +3384,7 @@ function stitchScrolledPositionViewports(candidates){
   for(let start=0;start<ordered.length;start++){
     const first=ordered[start];
     if(!first.hasAccountBoundary)continue;
-    let rows=first.rows.map(o=>({...o})),lastTime=first.time,links=0,endBoundary=!!first.hasOrderBoundary;
+    let rows=first.rows.map(o=>({...o})),lastTime=first.time,links=0,endBoundary=!!first.hasOrderBoundary||!!first.hasTerminalBoundary;
     const sourceFrames=new Set([first.frameIndex??`t:${first.time}`]);
     for(let i=start+1;i<ordered.length;i++){
       const c=ordered[i];
@@ -3395,7 +3395,7 @@ function stitchScrolledPositionViewports(candidates){
       const nextKeys=c.rows.map(positionViewportKey);
       const allAlreadyKnown=nextKeys.length>0&&nextKeys.every(k=>currentKeys.has(k));
       if(allAlreadyKnown){
-        lastTime=c.time;endBoundary=endBoundary||!!c.hasOrderBoundary;sourceFrames.add(c.frameIndex??`t:${c.time}`);continue;
+        lastTime=c.time;endBoundary=endBoundary||!!c.hasOrderBoundary||!!c.hasTerminalBoundary;sourceFrames.add(c.frameIndex??`t:${c.time}`);continue;
       }
       // A changed basket while the account header is still visible is a live
       // state update, not proof of scrolling. Start candidates are evaluated
@@ -3419,12 +3419,12 @@ function stitchScrolledPositionViewports(candidates){
         if(shared<setMinimum||!additions.length)continue;
         rows.push(...additions.map(o=>({...o})));
       }
-      lastTime=c.time;links++;endBoundary=endBoundary||!!c.hasOrderBoundary;sourceFrames.add(c.frameIndex??`t:${c.time}`);
+      lastTime=c.time;links++;endBoundary=endBoundary||!!c.hasOrderBoundary||!!c.hasTerminalBoundary;sourceFrames.add(c.frameIndex??`t:${c.time}`);
     }
     if(!endBoundary||links<1||rows.length<=first.rows.length)continue;
     const stitched=sanitizeRecognizedPositions(rows);
     if(stitched.length!==rows.length)continue;
-    const candidate={rows:stitched,authoritative:true,source:'scroll-overlap-position-chain',frameIndex:first.frameIndex,support:sourceFrames.size,stitched:true,links};
+    const candidate={rows:stitched,authoritative:true,source:'scroll-overlap-position-chain',frameIndex:first.frameIndex,support:sourceFrames.size,stitched:true,links,terminalBoundary:endBoundary};
     if(!best||candidate.rows.length>best.rows.length||candidate.rows.length===best.rows.length&&candidate.support>best.support)best=candidate;
   }
   return best;
@@ -3461,7 +3461,8 @@ function recoverTrustedVideoPositionBasket(results,mergedText=''){
     const account=parseAccountSnapshotFromText(text);
     const hasAccountBoundary=Number.isFinite(account?.balance)&&account.balance>0&&Number.isFinite(account?.equity)&&account.equity>0;
     const hasOrderBoundary=(parsedFrame.pending||[]).length>0||/(?:オーダー|orders?|\bplaced\b)/i.test(text);
-    candidates.push({rows,time:Number(r?.time||0),frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null,hasAccountBoundary,hasOrderBoundary});
+    const hasTerminalBoundary=r?.scrollBoundary==='bottom';
+    candidates.push({rows,time:Number(r?.time||0),frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null,hasAccountBoundary,hasOrderBoundary,hasTerminalBoundary});
   }
   if(candidates.length){
     const stitched=stitchScrolledPositionViewports(candidates);
@@ -4093,6 +4094,45 @@ function fingerprintDistance(a,b){
   if(!a?.length||a.length!==b?.length)return 999;
   let s=0;for(let i=0;i<a.length;i++)s+=Math.abs(a[i]-b[i]);return s/a.length;
 }
+// MT5 iPhone draws a thin scrollbar at the far-right edge of the Trade pane.
+// Its thumb touching the bottom of the track is the only reliable zero-order
+// end boundary: when no pending orders exist MT5 renders no Orders heading.
+// Detect it from the already-decoded preview, so this adds no OCR or seek cost.
+function detectMt5TradeScrollBoundary(canvas){
+  try{
+    const w=Number(canvas?.width),h=Number(canvas?.height);
+    if(!(w>100&&h>200))return 'none';
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const data=ctx.getImageData(0,0,w,h).data;
+    const y0=Math.floor(h*.07),y1=Math.floor(h*.93);
+    let best=null;
+    for(let x=Math.max(0,w-12);x<=w-3;x++){
+      let start=-1,last=-9;
+      const finish=()=>{
+        if(start<0)return;
+        const len=last-start+1;
+        if(!best||len>best.len)best={start,end:last,len,x};
+        start=-1;last=-9;
+      };
+      for(let y=y0;y<=y1;y++){
+        const i=(y*w+x)*4,r=data[i],g=data[i+1],b=data[i+2];
+        const lum=(r+g+b)/3,chroma=Math.max(r,g,b)-Math.min(r,g,b);
+        const bi=(y*w+Math.max(0,x-8))*4;
+        const bg=(data[bi]+data[bi+1]+data[bi+2])/3;
+        const thumb=chroma<=20&&lum>=45&&lum<=235&&Math.abs(lum-bg)>=12;
+        if(thumb){
+          if(start<0)start=y;
+          last=y;
+        }else if(start>=0&&y-last>2)finish();
+      }
+      finish();
+    }
+    if(!best||best.len<h*.12)return 'none';
+    if(best.end>=h*.885)return 'bottom';
+    if(best.start<=h*.16)return 'top';
+    return 'middle';
+  }catch(_){return 'none'}
+}
 function needsLateTradeRescue(candidates){
   const all=(Array.isArray(candidates)?candidates:[]).filter(Boolean);
   const late=all.filter(x=>x.fraction>=0.70);
@@ -4240,8 +4280,9 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
       const sharpness=frameSharpnessScore(canvas);
       const isControlCenter=looksLikeIOSControlCenterCanvas(canvas,sharpness);
       const fingerprint=frameFingerprint(canvas);
+      const scrollBoundary=detectMt5TradeScrollBoundary(canvas);
       const copy=document.createElement('canvas');copy.width=canvas.width;copy.height=canvas.height;copy.getContext('2d').drawImage(canvas,0,0);
-      candidates.push({canvas:copy,time:t,fraction:f,frameIndex:candidates.length,isControlCenter,sharpness,fingerprint});
+      candidates.push({canvas:copy,time:t,fraction:f,frameIndex:candidates.length,isControlCenter,sharpness,fingerprint,scrollBoundary});
       onProgress?.(candidates.length,Math.max(baseFractions.length+2,(typeof allFractions!=='undefined'?allFractions.length:baseFractions.length)+2));
     };
     // First pass is visual only: no OCR cost. This lets the app discover where screens change.
@@ -4262,7 +4303,7 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     // visual-change extras second.  Sorting before truncation could discard the
     // latest protected Trade anchor whenever four quote-scroll changes were found.
     // Bound the work first, then restore chronological OCR order.
-    const frames=merged.slice(0,8).sort((a,b)=>a.time-b.time).map((x,i)=>({canvas:x.canvas,time:x.time,frameIndex:i,isControlCenter:false,fraction:x.fraction,sharpness:x.sharpness,fingerprint:x.fingerprint}));
+    const frames=merged.slice(0,8).sort((a,b)=>a.time-b.time).map((x,i)=>({canvas:x.canvas,time:x.time,frameIndex:i,isControlCenter:false,fraction:x.fraction,sharpness:x.sharpness,fingerprint:x.fingerprint,scrollBoundary:x.scrollBoundary||'none'}));
     Object.defineProperties(frames,{expectedFrameCount:{value:frames.length,enumerable:false},candidateFrameCount:{value:candidates.length,enumerable:false},videoDuration:{value:duration,enumerable:false}});
     return frames;
   }catch(e){console.error('[XM] VIDEO_PIPELINE_FAILED',e);throw e}
@@ -4330,7 +4371,7 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
       // v125: Trade/position OCR intentionally uses the full frame. The focused grayscale crop
       // drops MT5's small price digits on iPhone recordings, while full-frame PSM 6 preserves them.
       const r=await worker.recognize(source);
-      results.push({data:r.data,time:sources[i].time,frameIndex:sourceFrameIndex,isControlCenter:false});
+      results.push({data:r.data,time:sources[i].time,frameIndex:sourceFrameIndex,isControlCenter:false,scrollBoundary:sources[i].scrollBoundary||'none'});
     }
   }finally{if(ownWorker){try{await worker.terminate()}catch(e){console.warn('[XM] OCR worker terminate skipped',e)}}}
   results.expectedFrameCount=sources.expectedFrameCount||sources.length;
@@ -4933,10 +4974,19 @@ $('mediaFile').addEventListener('change',async e=>{
       const initialStrongRows=recoverStrongOpenPositionsFromTradeText(parsed.rawText||'');
       const initialExplicitPositions=Array.isArray(parsed.positions)?parsed.positions.length:0;
       const initialTradeAlreadyStrong=initialExplicitPositions>0 && initialStrongRows.length>=initialExplicitPositions && Number.isFinite(initialAccountSnapshot.balance) && initialAccountSnapshot.balance>0;
-      if(verifySrc && !initialTradeAlreadyStrong){
+      // A saturated top viewport is not a complete basket. If the visual pre-scan
+      // found the scrollbar at the bottom, verify that terminal viewport with PSM3
+      // even when the top/account frame was already perfectly readable. This is
+      // required to reconstruct long baskets when MT5 has zero pending orders and
+      // therefore omits the Orders heading entirely.
+      const terminalSrc=srcList.filter(src=>src?.scrollBoundary==='bottom').sort((a,b)=>Number(b.time)-Number(a.time))[0]||null;
+      const initialHasOrderBoundary=/(?:オーダー|orders?|\bplaced\b|(?:buy|sell|sel[!|1lI])\s*(?:limit|stop)\b)/i.test(parsed.rawText||'');
+      const needsTerminalVerification=!!terminalSrc&&initialStrongRows.length>=8&&!initialHasOrderBoundary;
+      const boundedVerifySrc=needsTerminalVerification?terminalSrc:verifySrc;
+      if(boundedVerifySrc && (!initialTradeAlreadyStrong||needsTerminalVerification)){
         let verify=await recognizeFileFrames(T,f,'trade-verify',m=>{
           if(m.status==='recognizing text')$('ocrStatus').textContent=`Trade画面再確認中… ${Math.round((m.progress||0)*100)}%`;
-        },[verifySrc],sharedVideoWorker);
+        },[boundedVerifySrc],sharedVideoWorker);
         verify=filterUsableOCRResults(verify);
         results=[...results,...verify];
         parsed=mergeParsedResults(results);
@@ -7070,6 +7120,10 @@ function runV378ScrolledPositionStitchSelfTest(){
   const top={rows:all.slice(0,8),time:2,frameIndex:2,hasAccountBoundary:true,hasOrderBoundary:false};
   const bottom={rows:all.slice(2),time:6,frameIndex:6,hasAccountBoundary:false,hasOrderBoundary:true};
   const stitched=stitchScrolledPositionViewports([top,bottom]);
+  const zeroOrderTerminal=stitchScrolledPositionViewports([
+    top,
+    {...bottom,hasOrderBoundary:false,hasTerminalBoundary:true}
+  ]);
   const reorderedTop={...top,rows:[...all.slice(0,4),...all.slice(6,8),...all.slice(4,6)]};
   const reorderedBottom={...bottom,rows:[...all.slice(2,6),...all.slice(8,10),...all.slice(6,8)]};
   const reorderedStitched=stitchScrolledPositionViewports([reorderedTop,reorderedBottom]);
@@ -7101,13 +7155,14 @@ function runV378ScrolledPositionStitchSelfTest(){
   const checks={
     authoritative:stitched?.authoritative===true&&stitched?.source==='scroll-overlap-position-chain',
     allTen:stitched?.rows?.length===10&&canonicalPositionFingerprint(stitched.rows)===canonicalPositionFingerprint(all),
+    zeroOrderTerminalAllTen:zeroOrderTerminal?.rows?.length===10&&canonicalPositionFingerprint(zeroOrderTerminal.rows)===canonicalPositionFingerprint(all),
     reorderedOcrAllTen:reorderedStitched?.rows?.length===10&&canonicalPositionFingerprint(reorderedStitched.rows)===canonicalPositionFingerprint(all),
     unboundedScroll:longStitched?.rows?.length===30&&canonicalPositionFingerprint(longStitched.rows)===canonicalPositionFingerprint(thirty),
     noUnsafeUnion:unsafe===null&&mutationWithHeader===null,
     pendingBoth:sim?.direction==='up'&&sim?.added?.length===2&&sim?.filled?.length===12,
     deadline:Number.isFinite(sim?.lc)&&Math.abs(sim.lc-4342.08)<0.20
   };
-  window.__V378_SCROLL_STITCH_TEST__={checks,stitched,reorderedStitched,longStitched,unsafe,mutationWithHeader,sim};
+  window.__V378_SCROLL_STITCH_TEST__={checks,stitched,zeroOrderTerminal,reorderedStitched,longStitched,unsafe,mutationWithHeader,sim};
   return Object.values(checks).every(Boolean);
 }
 
@@ -7120,6 +7175,18 @@ function runBrowserCompatibilityGuardSelfTest(){
   const pickerReset=picker.includes('resetMediaPicker();')&&picker.includes("input.value='';");
   return {pass:safeObjectUrl&&noPlayRequirement&&seeksAfterMetadata&&pickerReset,
     safeObjectUrl,noPlayRequirement,seeksAfterMetadata,pickerReset};
+}
+function runMt5ScrollBoundarySelfTest(){
+  const probe=document.createElement('canvas');
+  if(typeof probe?.getContext!=='function')return detectMt5TradeScrollBoundary.toString().includes("return 'bottom'")&&detectMt5TradeScrollBoundary.toString().includes("return 'top'");
+  const make=(start,end)=>{
+    const c=document.createElement('canvas');c.width=200;c.height=400;
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+    if(Number.isFinite(start)&&Number.isFinite(end)){x.fillStyle='#999';x.fillRect(196,start,3,end-start+1)}
+    return detectMt5TradeScrollBoundary(c);
+  };
+  const top=make(35,235),middle=make(110,310),bottom=make(150,360),none=make(NaN,NaN);
+  return top==='top'&&middle==='middle'&&bottom==='bottom'&&none==='none';
 }
 
 function runCommercialReleaseGateV364(){
@@ -8172,6 +8239,8 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const importRollbackScopeSafe=(()=>{const src=document.documentElement.innerHTML;return src.includes('let importSnapshot=null,sharedVideoWorker=null')&&src.includes('if(importSnapshot)restoreImportSnapshot(importSnapshot)')&&captureImportSnapshot.toString().includes('xmAccountType')&&restoreImportSnapshot.toString().includes('setXMAccountType')})();
     const quoteScrollSamplingPolicy=videoFrameSources.toString().includes('const baseFractions=[0.10,0.35,0.42,0.58,0.73,0.90]')&&selectAdaptiveVideoFrames.toString().includes("for(const f of [0.10,0.35,0.42,0.58,0.73,0.90])")&&document.documentElement.innerHTML.includes('videoFrameSources(f,4');
     const accountBridgeSamplingPolicy=document.documentElement.innerHTML.includes('const accountBridgeSource=initialVideoSources.reduce')&&document.documentElement.innerHTML.includes('src===accountBridgeSource')&&document.documentElement.innerHTML.includes('src!==accountBridgeSource');
+    const zeroOrderTerminalArchitecture=stitchScrolledPositionViewports.toString().includes('hasTerminalBoundary')&&document.documentElement.innerHTML.includes('needsTerminalVerification')&&document.documentElement.innerHTML.includes("scrollBoundary==='bottom'");
+    const mt5ScrollBoundary=runMt5ScrollBoundarySelfTest();
     const lateTradeAnchorRetention=videoFrameSources.toString().includes('merged.slice(0,8).sort((a,b)=>a.time-b.time)')&&!videoFrameSources.toString().includes('merged.sort((a,b)=>a.time-b.time).slice(0,8)');
     const orderMutationUpdatePath=window.editOrder.toString().includes('calc()')&&window.addOrder.toString().includes('renderOrders()')&&window.addOrder.toString().includes('calc()')&&window.resetOrders.toString().includes('renderOrders()')&&window.resetOrders.toString().includes('calc()')&&!renderOrders.toString().includes('calc()');
     const secondMediaSupersedesFirst=document.documentElement.innerHTML.includes('window.__mediaImportToken')&&document.documentElement.innerHTML.includes('const stillCurrent=()=>window.__mediaImportToken===importToken')&&document.documentElement.innerHTML.includes('if(!stillCurrent())return');
@@ -8201,7 +8270,7 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     const analysisPlusMinusUi=runAnalysisPlusMinusUiSelfTest();
     const sourceBasketCompleteness=runSourceBasketCompletenessSelfTest();
     const emDashFourPositionBasket=runEmDashFourPositionBasketSelfTest();
-    const named={v379ProfessionalEngine:runV379ProfessionalEngineSelfTest(),v378ScrolledPositionStitch:runV378ScrolledPositionStitchSelfTest(),v378AdditiveSnapshotRefresh:runV378AdditiveSnapshotRefreshSelfTest(),v375AccessGate:runV375AccessGateArchitectureSelfTest(),v374StateCoherence:runV374StateCoherenceSelfTest(),v374ImportSafety:runV374ImportSafetySelfTest(),v373TemporalAccountAnchor:runV373TemporalAccountAnchorSelfTest(),v370AnchoredEngine:runV370AnchoredEngineSelfTest(),v370CoherentOrderBasket:runV370CoherentOrderBasketSelfTest(),duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoZeroOrderFullSync:runVideoZeroOrderFullSyncSelfTest(),tradeVisualDedupe:runTradeVisualDedupeSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,accountBridgeSamplingPolicy,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
+    const named={v379ProfessionalEngine:runV379ProfessionalEngineSelfTest(),v378ScrolledPositionStitch:runV378ScrolledPositionStitchSelfTest(),v378AdditiveSnapshotRefresh:runV378AdditiveSnapshotRefreshSelfTest(),v375AccessGate:runV375AccessGateArchitectureSelfTest(),v374StateCoherence:runV374StateCoherenceSelfTest(),v374ImportSafety:runV374ImportSafetySelfTest(),v373TemporalAccountAnchor:runV373TemporalAccountAnchorSelfTest(),v370AnchoredEngine:runV370AnchoredEngineSelfTest(),v370CoherentOrderBasket:runV370CoherentOrderBasketSelfTest(),duplicateMediaEventGuard:runDuplicateMediaEventGuardSelfTest(),videoZeroOrderFullSync:runVideoZeroOrderFullSyncSelfTest(),tradeVisualDedupe:runTradeVisualDedupeSelfTest(),videoAtomicState:runVideoAtomicStateSelfTest(),productionPerformance:runProductionPerformanceSelfTest(),storageIsolation:runStorageIsolationSelfTest(),ocrScriptDedupe:runOcrScriptDedupeSelfTest(),failedImportFailClosed:runFailedImportFailClosedSelfTest(),deploymentScopeSafe:runDeploymentScopeSelfTest(),selfTestRegistration:runSelfTestRegistrationSelfTest(),deadlineWarningConsistency:runDeadlineWarningConsistencySelfTest(),temporalReconcileSafety:runTemporalReconcileSafetySelfTest(),quoteRescueOrder,compareAggregate,staleQuotePending,importCompletionStage,priceGateOrder,diagnosticIsolation,calcFixture,historicalScenario,creditFlatAccountParse,stopOutPriority,pendingDirection,reachablePath,tradeParse,orderParse,exactVideoOrders,latestStillImageOrders,videoSamplingPolicy,controlCenterMetricPolicy,exactReportedScenario,correctedSevenOrderScenario,balanceSensitivity,flatAccountParse,fuzzyFlatPendingEvidence,fuzzyFlatFullRecovery,historicalBalanceParse,professionalBalancePolicy,positionFreshnessPolicy,sameImportBalancePolicy,crossFrameBalanceRetention,accountLayoutFallback,noJpyFlatFallback,perFrameAccountConsensus,real1115RepeatedFlatAccepted,real1115QuoteAccepted,controlCenterOrderVideoRecovery,controlCenterFlatAccepted,oneFrameQuoteTextAccepted,highNeverBecomesAsk,reportedScreenshotStateTransition,real1156AccountRecovered,realIphoneAccountRecovered,realIphoneTradeAuthoritative,realIphoneStateAccepted,filledPendingTransitionAccepted,transitionFill,transitionCancel,transitionAddOrder,transitionAddPosition,transitionReducePosition,countChangesNeverRejectAuthoritative,explicitPositionBeatsFlat,genuineOrderOnlyRetention,verifiedFlatRetentionPolicy,freshTradePriceWins,authoritativeStillOrder,stillOrderCountChangeAccepted,headerlessStillAuthoritative,headerlessStillCountChangeAccepted,noQuoteScreenBalance,noUnlabeledSingleBalance,staleBalanceBlocked,freshBalanceAccepted,sellPnlUsesAsk,sellLcLossUsesAsk,mixedExposureReachability,spreadAwareTrigger,pendingAboveDeadlineWarning,standardSellDeadline,bidirectionalScenarioSelection,conversionSpreadDirection,accountTypeAmbiguityFailsClosed,realKiwamiQuoteDetected,psmDroppedHashStillKiwami,tradeHashKiwami,importRollbackScopeSafe,quoteScrollSamplingPolicy,accountBridgeSamplingPolicy,zeroOrderTerminalArchitecture,mt5ScrollBoundary,lateTradeAnchorRetention,orderMutationUpdatePath,secondMediaSupersedesFirst,videoNoFullRedecodeFallback,noFalsePosition,noUnsafeSideInference,staleQuoteDoesNotBlockNew,freshQuoteStillGuardsJump,controlCenter,singlePositionVideoAccepted,splitArrowPositionRecovery,authoritativeFrameRecovery,realVideoEngOcrRecovery,realTwoSellCurrentState,realTwoSellDeadline,realPsm3E2E:realPsm3Ok,buildOk,apiOk,domOk};
     named.v380OccludedLotRecovery=runV380OccludedLotRecoverySelfTest();
     // A production safety gate must be based on observable behavior, not on
     // source-code strings, DOM labels or a version badge. A stale audit assertion
@@ -8954,7 +9023,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v384-20261003';
+window.__APP_BUILD__='v385-20261005';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -8997,9 +9066,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v384-20261003'
+  build:'v385-20261005'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v384-20261003'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v385-20261005'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

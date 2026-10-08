@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v393-20261005">
+<meta name="build-id" content="v395-20261008">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v393</title>
+<title>Stop Out positioning｜デラポジ Pro v395</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -835,11 +835,13 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 .legalSheetHead{position:sticky;top:-18px;z-index:1;display:flex;align-items:center;justify-content:space-between;margin:-18px -18px 12px;padding:15px 18px 10px;background:rgba(12,17,22,.97);border-bottom:1px solid #222c35}.legalSheetHead b{font-size:17px}.legalClose{width:36px;height:36px;padding:0;border-radius:50%;font-size:20px!important}
 .legalPanel{max-width:680px;margin:auto;color:#aeb8c5;font-size:12px;line-height:1.7}.legalPanel h3{margin:18px 0 5px;color:#eef2f6;font-size:13px}.legalPanel p,.legalPanel ul{margin:5px 0}.legalPanel ul{padding-left:20px}.legalPanel a{color:#74b8ff}.legalDate{color:#788492;font-size:10px}
 @media(min-width:720px){.legalModal{align-items:center;padding:24px}.legalSheet{width:min(720px,100%);margin:auto;border-bottom:1px solid #303a44;border-radius:24px}}
+#cmpRebateDialog::backdrop{background:rgba(0,0,0,.72)}
+#cmpRebateDialog [hidden]{display:none!important}
 </style></head>
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v393</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v395</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -852,7 +854,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v393</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v395</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1022,6 +1024,21 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
       <div><label>比較Lot</label><input id="cmpLots" type="number" min="0.01" step="0.01" value="0.01"></div>
       <div><label>XMPランク</label><select id="cmpTier"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Elite</option></select></div>
     </div>
+    <button id="cmpRebateOpen" type="button" class="secondary" style="margin-top:8px;width:100%;padding:8px 10px;text-align:left;font-size:12px">TariTali：KIWAMI／通常 ⚙</button>
+    <dialog id="cmpRebateDialog" aria-labelledby="cmpRebateTitle" style="box-sizing:border-box;width:calc(100% - 24px);max-width:440px;max-height:85dvh;overflow:auto;border:1px solid #34434d;border-radius:16px;background:#10171d;color:#eef3f8;padding:16px">
+      <div class="row"><b id="cmpRebateTitle">TariTali設定</b><button id="cmpRebateClose" type="button" class="secondary" style="width:auto;padding:6px 12px">閉じる</button></div>
+      <div class="grid" style="margin-top:8px">
+        <div><label>対象口座</label><select id="cmpRebateMode"><option value="off">なし</option><option value="kiwami" selected>KIWAMIだけ</option><option value="standard">Standardだけ</option><option value="both">両方</option></select></div>
+        <div><label>受取方式</label><select id="cmpRebateKind"><option value="normal">通常</option><option value="auto">オートリベート</option></select></div>
+        <div><label>最低保有時間（分）</label><input id="cmpRebateMinutes" type="number" min="0" step="any" placeholder="適用条件を入力"></div>
+        <div><label>Standard USD / 往復1 lot</label><input id="cmpRebateStandard" type="number" min="0" step="any" placeholder="対象外は0"></div>
+        <div><label>KIWAMI USD / 往復1 lot</label><input id="cmpRebateKiwami" type="number" min="0" step="any" placeholder="対象外は0"></div>
+      </div>
+      <label style="margin-top:8px"><input id="cmpRebateConfirmed" type="checkbox" style="width:auto;display:inline"> 口座・銘柄の還元額、保有時間、資金条件を確認済み</label>
+      <div id="cmpRebateStatus" class="small" style="margin-top:8px"></div>
+      <div class="small">通常はTariTali側で受取。オートリベートはXM側で受取。適用額は銘柄・方式ごとに保存します。未受領額はLC資金に加算しません。</div>
+      <div class="small"><a href="https://taritali.com/xm/" target="_blank" rel="noopener noreferrer">TariTaliの適用条件を確認</a></div>
+    </dialog>
     <select id="cmpSide" aria-hidden="true" tabindex="-1" style="display:none"><option value="buy">ロング</option><option value="sell">ショート</option></select>
   </div>
 
@@ -1313,7 +1330,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 // v378 access gate: a client-side deterrent for private beta URLs. It is not server-side authentication.
 (function setupAccessGate(){
   'use strict';
-  document.getElementById('accessBuildVersion').textContent=(document.querySelector('meta[name="build-id"]')?.content||'v393').split('-')[0];
+  document.getElementById('accessBuildVersion').textContent=(document.querySelector('meta[name="build-id"]')?.content||'v395').split('-')[0];
   // Keep the established credential derivation and storage keys so an app
   // update neither changes the user's code nor unexpectedly signs them out.
   const CFG=Object.freeze({salt:'delapoji-v376-access-20260914',iterations:120000,hash:'c6de93906de155875e84197529139ed92cc303831f167a2d9b2225361d3dfbcb',rememberMs:30*24*60*60*1000,maxAttempts:5,cooldownMs:30000});
@@ -1414,7 +1431,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v393-20261005';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v395-20261008';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1559,8 +1576,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v393-20261005',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v393-20261005';
+window.__DEPLOYMENT_STATE__={build:'v395-20261008',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v395-20261008';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1581,7 +1598,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v393-20261005', SHORT='v393';
+  const BUILD='v395-20261008', SHORT='v395';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -8819,7 +8836,8 @@ GOLD# buy limit 0.02 / 0 at 4383.19`;
     named.protectedBoundarySelection=runProtectedBoundarySelectionSelfTest();
     named.coverageRecoverySelection=runCoverageRecoverySelectionSelfTest();
     named.partialAccountBoundary=runPartialAccountBoundarySelfTest();
-    named.v393Audit=runV387AuditRegressionSelfTest();
+    named.taritaliComparison=runRebateComparisonSelfTest();
+    named.v395Audit=runV387AuditRegressionSelfTest();
     named.releaseVersionAlignment=runReleaseVersionConsistencySelfTest().pass;
     named.deadlineDecimalAlignment=runDeadlineDecimalConsistencySelfTest();
     // A production safety gate must be based on observable behavior, not on
@@ -9305,13 +9323,62 @@ function cmpClassifyStrategy(upfrontGap,dailyGap){
   return {short,long,cross};
 }
 function cmpWinnerName(diff){return Math.abs(diff)<.5?'ほぼ同等':diff>0?'Standard':'KIWAMI'}
+const CMP_REBATE_KEY='xm_compare_taritali_v2';
+let cmpRebateSymbol=null;
+let cmpRebateInitialized=false;
+function cmpRebateLoad(sym){
+  let store={};try{store=JSON.parse(localStorage.getItem(CMP_REBATE_KEY)||'{}')||{}}catch(e){}
+  if(!cmpRebateInitialized){
+    $('cmpRebateMode').value=['off','kiwami','standard','both'].includes(store.mode)?store.mode:'kiwami';
+    $('cmpRebateKind').value=store.kind==='auto'?'auto':'normal';cmpRebateInitialized=true;
+  }
+  const profile=sym+'|'+$('cmpRebateKind').value;
+  if(cmpRebateSymbol===profile)return;
+  cmpRebateSymbol=profile;
+  const saved=store.profiles?.[profile]||{};
+  const defaults=sym==='GOLD#'&&$('cmpRebateKind').value==='normal'?{kiwami:'5.1',minutes:'5'}:{};
+  for(const [key,id] of Object.entries({minutes:'cmpRebateMinutes',standard:'cmpRebateStandard',kiwami:'cmpRebateKiwami'}))if($(id))$(id).value=String(saved[key]??defaults[key]??'');
+  if($('cmpRebateConfirmed'))$('cmpRebateConfirmed').checked=saved.confirmed===true;
+}
+function cmpRebateSave(){
+  if(!cmpRebateSymbol)return;
+  let saved={};try{saved=JSON.parse(localStorage.getItem(CMP_REBATE_KEY)||'{}');if(!saved||typeof saved!=='object'||Array.isArray(saved))saved={}}catch(e){}
+  saved.mode=$('cmpRebateMode').value;saved.kind=$('cmpRebateKind').value;
+  if(!saved.profiles||typeof saved.profiles!=='object')saved.profiles={};
+  saved.profiles[cmpRebateSymbol]={minutes:$('cmpRebateMinutes').value,standard:$('cmpRebateStandard').value,kiwami:$('cmpRebateKiwami').value,confirmed:$('cmpRebateConfirmed').checked===true};
+  try{localStorage.setItem(CMP_REBATE_KEY,JSON.stringify(saved))}catch(e){}
+}
+function cmpRebateQuote(settings,lots,usdJpy){
+  if(!['kiwami','standard','both'].includes(settings.mode))return {enabled:false,ready:true,standard:0,kiwami:0,days:Infinity};
+  const std=['standard','both'].includes(settings.mode),kiw=['kiwami','both'].includes(settings.mode);
+  const values=[...(std?[settings.standard]:[]),...(kiw?[settings.kiwami]:[]),settings.minutes];
+  const valid=values.every(v=>String(v??'').trim()!==''&&Number.isFinite(Number(v))&&Number(v)>=0);
+  const ready=valid&&settings.confirmed===true&&Number.isFinite(lots)&&lots>0&&Number.isFinite(usdJpy)&&usdJpy>0;
+  return {enabled:true,ready,standard:ready&&std?Number(settings.standard)*lots*usdJpy:0,kiwami:ready&&kiw?Number(settings.kiwami)*lots*usdJpy:0,days:ready?Number(settings.minutes)/1440:Infinity};
+}
+function cmpRebateAt(rebate,days){return rebate.enabled&&rebate.ready&&Number.isFinite(days)&&days+1e-12>=rebate.days?{standard:rebate.standard,kiwami:rebate.kiwami}:{standard:0,kiwami:0}}
+function runRebateComparisonSelfTest(){
+  const cfg={mode:'both',standard:'13',kiwami:'5.1',minutes:'5',confirmed:true};
+  const r=cmpRebateQuote(cfg,.01,150),once=cmpRebateAt(r,5/1440);
+  return Math.abs(once.standard-19.5)<1e-9&&Math.abs(once.kiwami-7.65)<1e-9&&
+    cmpRebateAt(r,0).standard===0&&cmpRebateAt(r,30).standard===once.standard&&
+    !cmpRebateQuote({...cfg,standard:''},.01,150).ready&&!cmpRebateQuote({...cfg,standard:'-1'},.01,150).ready&&
+    !cmpRebateQuote({...cfg,confirmed:false},.01,150).ready&&!cmpRebateQuote(cfg,.01,0).ready&&
+    cmpRebateQuote({...cfg,mode:'off'},.01,150).ready&&cmpRebateQuote({...cfg,mode:'off'},.01,150).standard===0&&
+    cmpRebateQuote({...cfg,kiwami:'0'},.01,150).ready&&
+    cmpRebateQuote({...cfg,mode:'kiwami',standard:''},.01,150).standard===0&&
+    cmpRebateQuote({...cfg,mode:'kiwami',standard:''},.01,150).ready&&
+    cmpRebateQuote({...cfg,mode:'standard',kiwami:''},.01,150).kiwami===0;
+}
 function calcCompare(){
   if(!$('cmpSymbol'))return;cmpSyncDefaults();cmpApplyCurrentPosition();cmpMaybeAutoSpread();
   const sym=$('cmpSymbol').value,c=ensureSpec(sym),lots=Number($('cmpLots').value||0),trades=1,usdJpy=Number($('cmpUsdJpy').value||$('usdjpy')?.value||0);
+  cmpRebateLoad(sym);
+  const rebate=cmpRebateQuote({mode:$('cmpRebateMode')?.value,standard:$('cmpRebateStandard')?.value,kiwami:$('cmpRebateKiwami')?.value,minutes:$('cmpRebateMinutes')?.value,confirmed:$('cmpRebateConfirmed')?.checked===true},lots,usdJpy);
   const tier=$('cmpTier')?.value||'Bronze',group=cmpGroupForSymbol(sym);if($('cmpGroup'))$('cmpGroup').value=group;
   const price=Number($('cmpPrice')?.value||cmpGetPrice(sym)||0),ownRatioPct=Math.max(0,Math.min(100,Number($('cmpOwnRatio')?.value||100))),ownRatio=ownRatioPct/100;
   const stdUnits=Number($('cmpSpreadStandard')?.value),kiwUnits=Number($('cmpSpreadKiwami')?.value);
-  const stdReady=Number.isFinite(stdUnits)&&stdUnits>0,kiwReady=Number.isFinite(kiwUnits)&&kiwUnits>0,spreadReady=stdReady&&kiwReady;
+  const stdReady=Number.isFinite(stdUnits)&&stdUnits>0,kiwReady=Number.isFinite(kiwUnits)&&kiwUnits>0,spreadReady=stdReady&&kiwReady&&rebate.ready;
   const stdSpread=stdReady?cmpSpreadJPY(stdUnits,lots,trades,c,usdJpy):NaN,kiwSpread=kiwReady?cmpSpreadJPY(kiwUnits,lots,trades,c,usdJpy):NaN;
   const upfrontGap=spreadReady?kiwSpread-stdSpread:NaN; // Standard - KIWAMI net at entry (positive = Standard better)
 
@@ -9337,7 +9404,8 @@ function calcCompare(){
     const diffAt=(days,includeXmp=true)=>{
       if(!spreadReady)return NaN;
       const stdCarry=cmpSwapJPY(sp,lots,days,c,usdJpy),kiwCarry=cmpSwapJPY(kp,lots,days,c,usdJpy);
-      return upfrontGap+(includeXmp&&xmpReady?xmpNetGap:0)+(Number.isFinite(stdCarry)?stdCarry:0)-(Number.isFinite(kiwCarry)?kiwCarry:0);
+      const cb=cmpRebateAt(rebate,days);
+      return upfrontGap+(includeXmp&&xmpReady?xmpNetGap:0)+cb.standard-cb.kiwami+(Number.isFinite(stdCarry)?stdCarry:0)-(Number.isFinite(kiwCarry)?kiwCarry:0);
     };
     const immediate=diffAt(0,false),after5=diffAt(fiveMinDays,true);
     const events=[];
@@ -9454,9 +9522,10 @@ function calcCompare(){
   ];
   const mkRow=(x,p)=>{
     const stdCarry=cmpSwapJPY(x.sp,lots,p.days,c,usdJpy),kiwCarry=cmpSwapJPY(x.kp,lots,p.days,c,usdJpy);
-    const diff=spreadReady?(upfrontGap+(p.xmp&&xmpReady?xmpNetGap:0)+(Number.isFinite(stdCarry)?stdCarry:0)-(Number.isFinite(kiwCarry)?kiwCarry:0)):NaN;
-    const std=(Number.isFinite(stdSpread)?-stdSpread:0)+(p.xmp&&xmpReady?stdXmpJpy:0)+(Number.isFinite(stdCarry)?stdCarry:0);
-    const kiw=(Number.isFinite(kiwSpread)?-kiwSpread:0)+(Number.isFinite(kiwCarry)?kiwCarry:0);
+    const cb=cmpRebateAt(rebate,p.days);
+    const diff=x.diffAt(p.days,p.xmp);
+    const std=(Number.isFinite(stdSpread)?-stdSpread:0)+(p.xmp&&xmpReady?stdXmpJpy:0)+cb.standard+(Number.isFinite(stdCarry)?stdCarry:0);
+    const kiw=(Number.isFinite(kiwSpread)?-kiwSpread:0)+cb.kiwami+(Number.isFinite(kiwCarry)?kiwCarry:0);
     return {...p,diff,std,kiw,swapTag:cmpSwapCalendarTag(p.days)};
   };
   const buyRows=periods.map(p=>mkRow(buy,p)),sellRows=periods.map(p=>mkRow(sell,p));
@@ -9502,6 +9571,29 @@ function calcCompare(){
   }
   const specRec=cmpSpecStore?.[sym];$('cmpConfidence').innerHTML=`${stdReady?'✓ Standardスプレッドあり':'⚠ Standardスプレッド未取得'} ／ ${kiwReady?'✓ KIWAMIスプレッドあり':'⚠ KIWAMIスプレッド未取得'}<br>${specRec?'✓ MT5詳細スワップ取得済み':'スワップ：保存値/入力値を使用'}<br>${xmpReady?`✓ XMP ${tier} / 自己資金比率 ${ownRatioPct}%で計算`:'⚠ XMP計算データ不足'}<br><span class="small">XMPは対象取引の決済時に1回だけ反映。総合判定はStandardの1 XMP=$1ボーナス価値のみ反映。KIWAMIのXMPは参考表示で、勝敗には加算しません。</span>`;
   $('cmpBasis').innerHTML=`銘柄 ${sym} / 契約サイズ ${c.contract} / ${c.type==='fx'?'pip':'point'}幅 ${pointStepFor(sym,c)}<br>Standard ${stdReady?stdUnits:'—'} / KIWAMI ${kiwReady?kiwUnits:'—'} ${c.type==='fx'?'pips':'points'}<br>XMPランク ${tier} / Standard係数 ${stdX.coeff||0} / KIWAMI係数 ${kiwX.coeff||0}<br>※ XMPは対象取引1回につき1回だけ反映。総合判定はStandardのボーナス価値のみ使用。KIWAMI XMPは参考表示で勝敗には加算しません。<br>※ スワップは概算。平日は1日分、3倍曜日（現在：${cmpWeekdayName(cmpTripleDay())}）は3日分、土日は0日分として保有期間に反映します。MT5詳細で曜日を認識できた場合は自動上書きします。`;
+  // Cash rebates belong to the comparison only; they are not MT5 equity.
+  const enabled=$('cmpRebateMode')?.value!=='off';
+  const r=cmpRebateQuote({mode:$('cmpRebateMode')?.value,standard:$('cmpRebateStandard')?.value,kiwami:$('cmpRebateKiwami')?.value,minutes:$('cmpRebateMinutes')?.value,confirmed:$('cmpRebateConfirmed')?.checked===true},Number($('cmpLots')?.value),Number($('cmpUsdJpy')?.value||$('usdjpy')?.value));
+  const note=enabled?(r.ready?`TariTali：Standard 約${Math.round(r.standard).toLocaleString('ja-JP')}円 / KIWAMI 約${Math.round(r.kiwami).toLocaleString('ja-JP')}円。${$('cmpRebateMinutes').value}分以上の対象取引を決済した場合に1回だけ反映。未受領額はLC資金に加算しません。`:'TariTali：還元額・保有時間・対象条件の確認が必要です。比較判定は保留中。'):'TariTali：利用なし（従来の比較）';
+  if($('cmpRebateStatus'))$('cmpRebateStatus').textContent=enabled&&r.ready?`TariTali還元：Standard 約${Math.round(r.standard).toLocaleString('ja-JP')}円 / KIWAMI 約${Math.round(r.kiwami).toLocaleString('ja-JP')}円（対象取引1回）`:note;
+  if($('cmpWinnerLabel'))$('cmpWinnerLabel').textContent=enabled?'XMP＋TariTali込み口座比較':'XMP込み口座比較';
+  const target={off:'なし',kiwami:'KIWAMI',standard:'Standard',both:'両方'}[$('cmpRebateMode').value]||'なし';
+  const kind=$('cmpRebateKind').value==='auto'?'オートリベート':'通常';
+  $('cmpRebateOpen').textContent=`TariTali：${target}${enabled?'／'+kind:''}${enabled&&!r.ready?'・要確認':''} ⚙`;
+  $('cmpRebateStandard').disabled=!['standard','both'].includes($('cmpRebateMode').value);
+  $('cmpRebateKiwami').disabled=!['kiwami','both'].includes($('cmpRebateMode').value);
+  $('cmpRebateStandard').parentElement.hidden=$('cmpRebateStandard').disabled;
+  $('cmpRebateKiwami').parentElement.hidden=$('cmpRebateKiwami').disabled;
+  if(enabled){
+    for(const id of ['cmpConfidence','cmpBasis'])if($(id))$(id).insertAdjacentText('beforeend',' '+note);
+    if($('cmpWhy'))$('cmpWhy').insertAdjacentText('beforeend',' TariTaliの還元差も含めて判定します。');
+    const title=document.querySelector('#pageCompare .compareBreakEven .small');if(title)title.textContent='XMP＋TariTali込み・逆転ポイント';
+    if(!r.ready){
+      for(const id of ['cmpBuyAccount','cmpSellAccount','cmpBreakEvenHero'])if($(id))$(id).textContent='条件確認待ち';
+      for(const id of ['cmpBuyReason','cmpSellReason','cmpBreakEvenSub'])if($(id))$(id).textContent='TariTaliの設定を確認してください';
+    }
+  }
+  else{const title=document.querySelector('#pageCompare .compareBreakEven .small');if(title)title.textContent='XMP込み・逆転ポイント';}
 }
 // v364 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
 window.__CMP_V280_CONSISTENCY__=(()=>{
@@ -9548,6 +9640,15 @@ function switchPage(which){
 $('navLC').addEventListener('click',()=>switchPage('lc'));
 $('navPnl').addEventListener('click',()=>switchPage('pnl'));
 $('navCompare').addEventListener('click',()=>switchPage('compare'));
+$('cmpRebateOpen')?.addEventListener('click',()=>{$('cmpRebateDialog').showModal()});
+$('cmpRebateClose')?.addEventListener('click',()=>{$('cmpRebateDialog').close()});
+$('cmpRebateKind')?.addEventListener('input',()=>{
+  cmpRebateSymbol=null;cmpRebateLoad($('cmpSymbol').value);cmpRebateSave();calcCompare();
+});
+['cmpRebateMode','cmpRebateMinutes','cmpRebateStandard','cmpRebateKiwami','cmpRebateConfirmed'].forEach(id=>$(id)?.addEventListener('input',()=>{
+  if(['cmpRebateMinutes','cmpRebateStandard','cmpRebateKiwami'].includes(id))$('cmpRebateConfirmed').checked=false;
+  cmpRebateSave();calcCompare();
+}));
 ['cmpSymbol','cmpSide','cmpLots','cmpTrades','cmpPrice','cmpUsdJpy','cmpSpreadStandard','cmpSpreadKiwami','cmpTier','cmpXmpMode','cmpOwnRatio','cmpKiwamiUse','cmpGroup','cmpPointSize','cmpSwapCurrent','cmpSwapSell','cmpSwapKiwami','cmpSwapKiwamiSell','cmpSwapAvg','cmpSwapBest','cmpSwapWorst','cmpSwapChanges'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',calcCompare);el.addEventListener('change',()=>{if(id==='cmpSymbol'){const sym=el.value;if(sym==='GOLD#'){$('cmpGroup').value='metals';$('cmpSwapCurrent').value='-94.64';$('cmpSwapSell').value='12.17';$('cmpSwapKiwami').value='0';$('cmpSwapKiwamiSell').value='0';$('cmpSwapAvg').value='-98.8';$('cmpSwapBest').value='-47.9';$('cmpSwapWorst').value='-297.1';$('cmpSwapChanges').value='38';$('cmpPointSize').value='0.01'}else{$('cmpPrice').value='';$('cmpGroup').value=cmpGroupForSymbol(sym);$('cmpSwapCurrent').value='0';$('cmpSwapSell').value='0';$('cmpSwapKiwami').value='0';$('cmpSwapKiwamiSell').value='0';$('cmpSwapAvg').value='0';$('cmpSwapBest').value='0';$('cmpSwapWorst').value='0';$('cmpSwapChanges').value='0';$('cmpPointSize').value=/JPY#$/.test(sym)?'0.001':'0.00001'}if($('cmpSpreadStandard')){$('cmpSpreadStandard').value='';delete $('cmpSpreadStandard').dataset.auto}if($('cmpSpreadKiwami')){$('cmpSpreadKiwami').value='';delete $('cmpSpreadKiwami').dataset.auto}cmpSyncDefaults();cmpApplySavedSpec(sym);cmpApplyCurrentPosition();cmpMaybeAutoSpread()}calcCompare();})}});
 $('cmpSpreadStandard')?.addEventListener('input',()=>{delete $('cmpSpreadStandard').dataset.auto});$('cmpSpreadKiwami')?.addEventListener('input',()=>{delete $('cmpSpreadKiwami').dataset.auto});
 $('cmpSpecChoose')?.addEventListener('click',()=>$('cmpSpecFile')?.click());
@@ -9573,7 +9674,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v393-20261005';
+window.__APP_BUILD__='v395-20261008';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -9616,9 +9717,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v393-20261005'
+  build:'v395-20261008'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v393-20261005'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v395-20261008'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

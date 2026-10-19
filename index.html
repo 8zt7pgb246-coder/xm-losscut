@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v395-20261008">
+<meta name="build-id" content="v414-20261016">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v395</title>
+<title>Stop Out positioning｜デラポジ Pro v414</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -841,7 +841,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v395</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v414</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -854,7 +854,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v395</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v414</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1431,7 +1431,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v395-20261008';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v414-20261016';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1576,8 +1576,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v395-20261008',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v395-20261008';
+window.__DEPLOYMENT_STATE__={build:'v414-20261016',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v414-20261016';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1598,7 +1598,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v395-20261008', SHORT='v395';
+  const BUILD='v414-20261016', SHORT='v414';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -2040,6 +2040,19 @@ function invalidatePositionData(reason){
   positionDataValid=false;positionDataSource='ocr';positionImportError=reason||'現在ポジションを確認できませんでした。';
   renderDataLock();
 }
+// v414: a failed replacement import must not leave the previous calculation
+// visible in secondary panels, even when the main DEAD LINE is locked.
+function clearPreviousCalculationPresentation(){
+  const neutral=['scenarioSteps','calcBasis','pendingDeadlineWarning'];
+  for(const id of neutral){const el=$(id);if(el){el.innerHTML='';if(id==='pendingDeadlineWarning')el.style.display='none';}}
+  for(const id of ['scenarioStatus','basisStatus','positionCount','count']){
+    const el=$(id);if(el)el.textContent='— / 今回の読み込み未確定';
+  }
+  for(const id of ['result','avg','lots','lcAvg','lcLots','currentPnl','lcLoss','qty','lcTotalPositions']){
+    const el=$(id);if(el)el.textContent='—';
+  }
+}
+
 function validatePositionData(){return positionDataValid}
 function renderDataLock(){
   const el=$('dataLock');if(!el)return;
@@ -2526,7 +2539,7 @@ function breakEvenDirectionText(be,bid){
   if(!Number.isFinite(be)||!Number.isFinite(bid))return '';
   const d=be-bid;
   if(Math.abs(d)<1e-9)return '現在価格付近';
-  return `${d>0?'上昇':'下落'}してあと ${formatPrice(Math.abs(d))}`;
+  return `${d>0?'上昇':'下落'}してあと ${formatScenarioGoldPrice(Math.abs(d))}`;
 }
 
 function formatScenarioGoldPrice(n){
@@ -2579,7 +2592,7 @@ function buildCurrentTradeState(){
       .filter(o=>/^(buy|sell)$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0)
       .map(o=>({side:String(o.side),lot:Number(o.lot),price:Number(o.price),symbol:o.symbol||currentSymbol})),
     pendingOrders:getOrders()
-      .filter(o=>/^(?:buy|sell)\s*limit$/i.test(String(o.side||''))&&Number(o.lot)>0&&Number(o.price)>0)
+      .filter(o=>String(o.side||'').trim()&&Number(o.lot)>0&&Number(o.price)>0)
       .map(o=>({side:String(o.side),lot:Number(o.lot),price:Number(o.price),symbol:o.symbol||currentSymbol})),
     validity:{
       positions:!!positionDataValid,
@@ -2687,6 +2700,39 @@ function calc(){
   const state=buildCurrentTradeState(),validation=validateCurrentTradeState(state),c=cfg();
   const bal=state.account.balance,stop=state.contract.stopout,lev=state.contract.leverage,contract=state.contract.size;
   const pending=state.pendingOrders,positions=state.positions,qr=state.contract.quoteRate;
+  // Defense in depth: manually edited or restored unsupported pending types
+  // must not disappear from the Limit-only LC simulator.
+  // Fail closed: never silently drop an order with missing OCR lot/price/type.
+  // The filtered state is suitable for arithmetic, not evidence of completeness.
+  // v414: position rows are evidence too. Never silently drop malformed exposure.
+  const rawPositions=getPositions();
+  const malformedPositions=rawPositions.filter(o=>!o||!/^(?:buy|sell)$/i.test(String(o.side||'').trim())||!(Number(o.lot)>0)||!(Number(o.price)>0)||!Number.isFinite(Number(o.lot))||!Number.isFinite(Number(o.price)));
+  if(malformedPositions.length){
+    ['result','avg','lots','lcAvg','lcLots','currentPnl','lcLoss','qty','lcTotalPositions'].forEach(id=>{if($(id))$(id).textContent='—'});
+    $('distance').textContent='⚠ 保有ポジションの方向・Lot・価格に欠落があるためDEAD LINE計算停止';
+    $('count').textContent=`${rawPositions.length}件 / 保有データ再確認必要`;
+    renderOrderStatus([],pending,null);
+    return;
+  }
+  const rawPending=getOrders();
+  const malformedPending=rawPending.filter(o=>!o||!String(o.side||'').trim()||!(Number(o.lot)>0)||!(Number(o.price)>0)||!Number.isFinite(Number(o.lot))||!Number.isFinite(Number(o.price)));
+  if(malformedPending.length){
+    ['result','avg','lots','lcAvg','lcLots','currentPnl','lcLoss','qty','lcTotalPositions'].forEach(id=>{if($(id))$(id).textContent='—'});
+    $('distance').textContent='⚠ 注文の種類・Lot・価格に欠落があるためDEAD LINE計算停止';
+    $('count').textContent=`${rawPending.length}件 / 注文数値の再確認必要`;
+    renderOrderStatus([],pending,null);
+    return;
+  }
+  const unsupportedPending=pending.filter(o=>!/^(?:buy|sell)\s+limit$/i.test(String(o.side||'').trim()));
+  if(unsupportedPending.length){
+    const ids=['result','avg','lots','lcAvg','lcLots','currentPnl','lcLoss','qty','lcTotalPositions'];
+    ids.forEach(id=>{if($(id))$(id).textContent='—'});
+    $('distance').textContent='⚠ 未対応の注文種別を検出したためDEAD LINE計算停止（Stop注文等）';
+    $('count').textContent=`${pending.length}件 / 注文種別確認必要`;
+    renderOrderStatus([],pending,null);
+    return;
+  }
+
   renderDataLock();
   const blank=(msg,count)=>{const pw=$('pendingDeadlineWarning');if(pw){pw.style.display='none';pw.innerHTML=''};['result','avg','lots','lcAvg','lcLots','currentPnl','lcLoss','qty','lcTotalPositions'].forEach(id=>{if($(id))$(id).textContent='—'});$('distance').textContent=msg;if(count)$('count').textContent=count};
   if(validation.code==='POSITION_UNCONFIRMED'){blank('ポジション認識未確定のため計算停止',`${pending.length}件 / 現在ポジション未確認`);renderOrderStatus([],pending,null);return}
@@ -3886,33 +3932,130 @@ function runV387AuditRegressionSelfTest(){
 
 // v370: Pending orders must come from one coherent Trade snapshot, not from a
 // union of slightly different OCR readings of the same rows across frames.
+// v414: Count visible pending-order labels for the SELECTED instrument,
+// not just GOLD. A labelled but unparsed order must never disappear silently.
+// v414: accept OCR-separated symbol suffix and em dash/minus separators.
+function countVisibleSelectedPendingLabels(text){
+  const matches=String(text||'').matchAll(/\b([A-Z][A-Z0-9]{2,})\s*#?\s+(?:buy|sell)[\s\-‐‑–—−]+(?:limit|stop)\b/ig);
+  let count=0;
+  for(const m of matches){
+    if(normalizeSymbol(m[1])===normalizeSymbol(currentSymbol))count++;
+  }
+  return count;
+}
 function recoverTrustedVideoOrderBasket(results){
   const candidates=[];
+  const unreadableTerminal=[];
   for(const r of (results||[])){
     if(r?.isControlCenter)continue;
     const text=String(r?.data?.text||r?.text||'');
     if(!text||isControlCenterFrameText(text))continue;
     const rows=normalizePendingSnapshot((parseOCR(text).pending||[]).filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol));
+    // Even if no order could be parsed, a visible labelled order at the verified
+    // terminal means the snapshot cannot be certified as complete.
+    // This check must occur BEFORE skipping frames with zero parsed rows.
+    const visibleLabels=countVisibleSelectedPendingLabels(text);
+    if(r?.scrollBoundary==='bottom' && visibleLabels>rows.length){
+      // A damaged OCR pass must not veto two matching full parses of the
+      // SAME terminal frame; but any observed excess labels still blocks it.
+      unreadableTerminal.push({time:Number(r?.time||0),visibleLabels,parsedRows:rows.length});
+      continue;
+    }
     if(!rows.length)continue;
-    const normalized=rows.map(o=>({...o,side:/^buy/i.test(o.side)?'Buy Limit':'Sell Limit'}));
+    const normalized=rows.map(o=>({...o,side:String(o.side||'').replace(/\s+/g,' ').trim()}));
+    // An explicit order label with an unreadable lot/price is not proof that
+    // the order is absent. Fail closed rather than calculate with fewer rows.
+    // Count only symbol-qualified labels; headings and generic prose are excluded.
     const key=normalized.map(o=>`${o.side.toLowerCase()}|${o.lot.toFixed(4)}|${o.price.toFixed(5)}`).sort().join(';');
-    candidates.push({rows:normalized,key,time:Number(r?.time||0)});
+    candidates.push({rows:normalized,key,time:Number(r?.time||0),terminal:r?.scrollBoundary==='bottom'});
   }
   if(!candidates.length)return {rows:[],authoritative:false,support:0};
+  const terminalCandidates=candidates.filter(c=>c.terminal);
   const groups=new Map();
   for(const c of candidates){const g=groups.get(c.key)||{rows:c.rows,key:c.key,support:0,latest:-Infinity};g.support++;if(c.time>=g.latest){g.latest=c.time;g.rows=c.rows}groups.set(c.key,g)}
-  const best=[...groups.values()].sort((a,b)=>b.support-a.support||b.rows.length-a.rows.length||b.latest-a.latest)[0];
-  // Even when OCR differs slightly between sampled frames, use one complete
-  // per-frame snapshot. Falling back to the merged text is precisely what can
-  // turn the same four visible orders into seven synthetic orders.
-  return {rows:best.rows,authoritative:true,support:best.support,source:best.support>=2?'multi-frame-order-consensus':'best-coherent-trade-frame'};
+  const baskets=[...groups.values()];
+  // Never prefer a repeated but truncated basket over a larger coherent frame.
+  // A subset is evidence of a partially visible list, not a complete order state.
+  const largest=baskets.slice().sort((a,b)=>b.rows.length-a.rows.length||b.support-a.support||b.latest-a.latest)[0];
+  const signature=o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`;
+  // v414: A non-terminal viewport can expose an additional labelled order
+  // that OCR failed to turn into a row. A smaller terminal basket must not
+  // silently overrule that evidence and produce an optimistic DEAD LINE.
+  const maxVisibleLabels=Math.max(0,...(results||[]).filter(r=>!r?.isControlCenter).map(r=>{
+    const t=String(r?.data?.text||r?.text||'');
+    return countVisibleSelectedPendingLabels(t);
+  }));
+  if(maxVisibleLabels>largest.rows.length){
+    return {rows:[],authoritative:false,incomplete:true,reason:'ORDER_LABEL_COUNT_EXCEEDS_BASKET',
+      visibleLabels:maxVisibleLabels,parsedRows:largest.rows.length};
+  }
+  const fullSet=new Set(largest.rows.map(signature));
+  // A terminal frame is valid only for the latest observed coherent order state.
+  // A later distinct basket may represent a real order mutation, not mere OCR noise.
+  const latestTime=Math.max(...candidates.map(c=>c.time));
+  // v404: A bright stripe at the bottom edge is NOT independent proof that
+  // the whole scrollable Trade viewport was observed. Require an ordered
+  // top -> middle -> bottom traversal before trusting a terminal order basket.
+  // This adds no OCR requests and is intentionally fail-closed for short clips.
+  const traversalVerified=terminalCandidates.some(c=>{
+    const starts=(results||[]).filter(r=>!r?.isControlCenter && r?.scrollBoundary==='top' && Number(r.time)<c.time-.001);
+    return starts.some(start=>(results||[]).some(mid=>
+      !mid?.isControlCenter && mid?.scrollBoundary==='middle' &&
+      Number(mid.time)>Number(start.time)+.001 && Number(mid.time)<c.time-.001));
+  });
+  const terminalConfirmed=traversalVerified && terminalCandidates.some(c=>
+    c.rows.length===largest.rows.length && c.rows.every(o=>fullSet.has(signature(o))) &&
+    !candidates.some(later=>later.time>c.time+0.001 && later.key!==c.key));
+  // v403: For overlapping pending-order viewports, the relative order of
+  // the same two distinct rows must remain stable. A reversed pair means that
+  // OCR windows cannot be safely stitched into one coherent Trade snapshot.
+  // Single-row overlap is not enough evidence, so leave it undecided.
+  let orderSequenceConflict=false;
+  for(let a=0;a<candidates.length&&!orderSequenceConflict;a++){
+    const left=candidates[a].rows.map(signature);
+    for(let b=a+1;b<candidates.length&&!orderSequenceConflict;b++){
+      const right=candidates[b].rows.map(signature);
+      const positions=new Map(right.map((id,i)=>[id,i]));
+      const shared=left.filter(id=>positions.has(id));
+      for(let i=1;i<shared.length;i++){
+        if(positions.get(shared[i])<positions.get(shared[i-1])){
+          orderSequenceConflict=true;break;
+        }
+      }
+    }
+  }
+  if(orderSequenceConflict){
+    return {rows:[],authoritative:false,conflict:true,reason:'ORDER_SEQUENCE_CONFLICT',
+      observedCounts:baskets.map(g=>g.rows.length)};
+  }
+  // An unreadable order on the last frame is only recoverable when two
+  // separately parsed terminal results agree *at the same video time* and
+  // neither result saw more labels than the adopted complete basket.
+  if(unreadableTerminal.length){
+    const recovered=unreadableTerminal.every(bad=>{
+      if(bad.visibleLabels>largest.rows.length)return false;
+      const peers=terminalCandidates.filter(g=>Math.abs(g.time-bad.time)<.12 && g.key===largest.key);
+      return peers.length>=2;
+    });
+    if(!recovered)return {rows:[],authoritative:false,incomplete:true,
+      reason:'ORDER_ROW_UNPARSED',observedCounts:baskets.map(g=>g.rows.length)};
+  }
+  const incompatible=baskets.filter(g=>g.rows.some(o=>!fullSet.has(signature(o))));
+  if(incompatible.length){
+    return {rows:[],authoritative:false,conflict:true,support:largest.support,
+      observedCounts:baskets.map(g=>g.rows.length),reason:'conflicting_video_order_baskets'};
+  }
+  return {rows:largest.rows,authoritative:terminalConfirmed,terminalConfirmed,
+    incomplete:!terminalConfirmed,reason:!terminalConfirmed?'ORDER_TERMINAL_UNCONFIRMED':null,support:largest.support,
+    observedCounts:baskets.map(g=>g.rows.length),partialFrames:baskets.some(g=>g.rows.length<largest.rows.length),
+    source:largest.support>=2?'multi-frame-largest-coherent-order-basket':'largest-coherent-trade-frame'};
 }
 
 function parseTradeRowsByLinePair(text){
   const lines=String(text||'').replace(/\r/g,'').split('\n').map(normalizeOcrLine).filter(Boolean);
   const positions=[], pending=[];
   const symRe=/(GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)/i;
-  const sideRe=/\b(buy\s*limit|sell\s*limit|buy|sell)\b/i;
+  const sideRe=/\b(buy\s*(?:limit|stop)|sell\s*(?:limit|stop)|buy|sell)\b/i;
   const numRe=/\d[\d,.]*\.\d+/g;
   for(let i=0;i<lines.length;i++){
     const sm=lines[i].match(symRe); const sideM=lines[i].match(sideRe);
@@ -3929,7 +4072,7 @@ function parseTradeRowsByLinePair(text){
       ownLines.push(lines[j]);
     }
     const chunk=ownLines.join(' ');
-    const lotM=lines[i].match(/\b(?:buy\s*limit|sell\s*limit|buy|sell)\s*(?:#?\s*)(0?\.\d+|\d+(?:\.\d+)?)/i);
+    const lotM=lines[i].match(/\b(?:buy\s*(?:limit|stop)|sell\s*(?:limit|stop)|buy|sell)\s*(?:#?\s*)(0?\.\d+|\d+(?:\.\d+)?)/i);
     let lot=lotM?Number(lotM[1]):null;
     if(!Number.isFinite(lot)&&fuzzySide){
       const lm=lines[i].match(/\b(0?\.\d+)\b/); lot=lm?Number(lm[1]):null;
@@ -3948,7 +4091,7 @@ function parseTradeRowsByLinePair(text){
       const at=chunk.match(/\bat\s*(\d[\d,.]*\.\d+)/i);
       if(at){
         const price=normalizeOcrNumber(at[1]);
-        if(Number.isFinite(price)&&price>0)pending.push({symbol:sym,side:/^buy/i.test(sideRaw)?'Buy Limit':'Sell Limit',lot:+lot.toFixed(4),price,linePairPattern:true});
+        if(Number.isFinite(price)&&price>0)pending.push({symbol:sym,side:sideRaw.replace(/\s+/g,' ').replace(/^buy/i,'Buy').replace(/^sell/i,'Sell'),lot:+lot.toFixed(4),price,linePairPattern:true});
       }
     }
   }
@@ -4050,7 +4193,7 @@ function parseOCR(text){
     else if(nums.length){
       const at=chunk.match(/\bat\s+(\d[\d,.]*\.\d+)/i);
       if(at) price=normalizeOcrNumber(at[1]);
-      else { const filtered=nums.filter(n=>n!==lot); price=filtered.length?filtered[0]:null; }
+      else if(!isPending) { const filtered=nums.filter(n=>n!==lot); price=filtered.length?filtered[0]:null; }
     }
     if(!Number.isFinite(price)||price<=0) continue;
     const obj={symbol:sym,side:sideRaw.replace(/\s+/g,' '),lot:+lot.toFixed(4),price};
@@ -4070,6 +4213,11 @@ function parseOCR(text){
     const sideRaw=sideM[1].replace(/\s+/g,' ');
     // 約定済みポジションのフォールバックでも、entry → current の矢印を必須にする。
     if(!/limit$/i.test(sideRaw) && !/(?:->|→|to)/i.test(chunk)) continue;
+    // Never infer a pending order from a neighboring position's entry price.
+    // The original fallback would read e.g. "4149.31" and "1" adjacent to
+    // "GOLD sell limit" as a fictitious 1-lot order at 4149.31.
+    // Pending fallback requires a literal MT5 "at PRICE" marker.
+    if(/limit$/i.test(sideRaw) && !/\bat\s*\d[\d,.]*\.\d+/i.test(chunk)) continue;
     let lm=chunk.match(/(?:buy\s*limit|sell\s*limit|buy|sell)\s+(\d+(?:\.\d+)?)/i);
     if(!lm) lm=chunk.match(/\b(\d+(?:\.\d+)?)\s*\/\s*0\b/i);
     const lot=lm?Number(lm[1]):null;
@@ -4515,6 +4663,25 @@ function detectMt5TradeScrollBoundary(canvas){
       finish();
     }
     if(!best||best.len<h*.12)return 'none';
+    // A single bright vertical line (chart grid, phone overlay, or text edge)
+    // must not masquerade as the MT5 scroll thumb. Require a neighbouring
+    // scrollbar-coloured pixel track for most of the candidate's length.
+    let coherentColumns=0;
+    for(const dx of [-2,-1,1,2]){
+      const nx=best.x+dx;
+      if(nx<0||nx>=w)continue;
+      let matched=0, samples=0;
+      for(let y=best.start;y<=best.end;y+=3){
+        const i=(y*w+nx)*4,bi=(y*w+Math.max(0,nx-8))*4;
+        const r=data[i],g=data[i+1],b=data[i+2];
+        const lum=(r+g+b)/3,chroma=Math.max(r,g,b)-Math.min(r,g,b);
+        const bg=(data[bi]+data[bi+1]+data[bi+2])/3;
+        if(chroma<=20&&lum>=45&&lum<=235&&Math.abs(lum-bg)>=12)matched++;
+        samples++;
+      }
+      if(samples&&matched/samples>=.70)coherentColumns++;
+    }
+    if(coherentColumns<1)return 'none';
     if(best.end>=h*.885)return 'bottom';
     if(best.start<=h*.16)return 'top';
     return 'middle';
@@ -5392,6 +5559,18 @@ $('mediaFile').addEventListener('change',async e=>{
       /XM画面のスクショ\/動画/i
     ];
     const rawAllText=String(results.map(r=>r?.data?.text||r?.text||'').join('\\n')||'');
+    // SAFETY v406: Stop pending orders are not supported by the directional
+    // Limit-only stop-out simulator. Preserve their type; never silently
+    // convert them to Limits or ignore them when computing DEAD LINE.
+    // Scan each current-media frame (not cached state) before any new Trade
+    // snapshot can be committed. This is a fail-closed compatibility guard.
+    const stopOrderRowRe=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell)\s+stop\b/i;
+    const detectedStopOrders=results.some(r=>!r?.isControlCenter && stopOrderRowRe.test(String(r?.data?.text||r?.text||''))) ||
+      (parsed.pending||[]).some(o=>/^\s*(?:buy|sell)\s+stop\s*$/i.test(String(o.side||'')));
+    if(detectedStopOrders){
+      invalidateOrderData('Stop注文（Buy Stop / Sell Stop）を検出。現在のLC計算はStop約定を正しくシミュレーションできないため、安全停止しました。');
+      throw new Error('UNSUPPORTED_STOP_ORDER: Stop注文をLimit注文として計算しないため停止しました。');
+    }
     const appMarkerHits=appUiMarkers.reduce((n,re)=>n+(re.test(rawAllText)?1:0),0);
     const mt5Anchors=/(?:GOLD#?|XAUUSD|USDJPY|証拠金率|有効額|残高|ポジション|オーダー|buy\\s+(?:limit|stop)?\\s*0?\\.\\d+|\\b(?:bid|ask)\\b)/i.test(rawAllText);
     // If multiple calculator-specific labels are visible, this is overwhelmingly
@@ -5840,10 +6019,43 @@ $('mediaFile').addEventListener('change',async e=>{
     }
 
     const trustedVideoOrders=isVideo?recoverTrustedVideoOrderBasket(results):{rows:[],authoritative:false,support:0};
+    // Conflicting per-frame baskets cannot be resolved safely by picking the most
+    // frequently repeated list. A wrong winner would move DEAD LINE dramatically.
+    if(isVideo&&trustedVideoOrders.incomplete){
+      throw new Error('ORDER_TERMINAL_UNCONFIRMED: 注文一覧の末尾を確認できません。部分注文でDEAD LINEを表示しないため停止しました。');
+    }
+    if(isVideo&&trustedVideoOrders.conflict){
+      throw new Error('ORDER_BASKET_CONFLICT: MT5動画の注文一覧がフレーム間で一致しません。部分注文で計算しないため停止します。');
+    }
+    // v408: OCR rescue can append frames after the early Stop guard.
+    // Scan ALL current-media OCR results at the final order-commit boundary;
+    // do not accept a partially parsed Stop as an absent order.
+    const stopOrderTextEvidence=results.some(r=>{
+      if(r?.isControlCenter)return false;
+      const t=String(r?.data?.text||r?.text||'');
+      return /\b(?:buy|sell)\s+stop\b/i.test(t) &&
+        (/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?)/i.test(t) ||
+         /\b(?:0?\.\d{1,4}|\d+\.\d+)\b/.test(t));
+    });
+    const stopOrderStructured=[...(parsed.pending||[]),...(trustedVideoOrders.rows||[]),...(repeatedFlatVideo.orders||[])]
+      .some(o=>/^(?:buy|sell)\s+stop$/i.test(String(o.side||'').trim()));
+    if(stopOrderTextEvidence||stopOrderStructured){
+      invalidateOrderData('Stop注文を検出。約定をシミュレーションできないためDEAD LINEを停止しました。');
+      throw new Error('UNSUPPORTED_STOP_ORDER_FINAL: 追加OCRでStop注文を検出したため計算停止');
+    }
     let rawFound=(isVideo&&trustedVideoOrders.authoritative)
       ? trustedVideoOrders.rows.slice()
       : parsed.pending.filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
-    if(repeatedFlatVideo.authoritative){
+    // Never merge a separate OCR reconstruction into an authoritative terminal
+    // order snapshot: it may belong to a different moment in the recording.
+    if(repeatedFlatVideo.authoritative && trustedVideoOrders.authoritative &&
+       repeatedFlatVideo.orders.some(o=>!rawFound.some(x=>
+         String(x.side).toLowerCase()===String(o.side).toLowerCase() &&
+         Math.abs(Number(x.lot)-Number(o.lot))<1e-6 &&
+         Math.abs(Number(x.price)-Number(o.price))<1e-5))){
+      throw new Error('ORDER_SOURCE_CONFLICT: 注文の復元結果が末尾確認済みの一覧と矛盾しています。混合計算を防ぐため停止しました。');
+    }
+    if(repeatedFlatVideo.authoritative && !trustedVideoOrders.authoritative){
       for(const o of repeatedFlatVideo.orders){
         if(!rawFound.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-o.lot)<1e-6&&Math.abs(Number(x.price)-o.price)<1e-5))rawFound.push(o);
       }
@@ -6209,6 +6421,7 @@ $('mediaFile').addEventListener('change',async e=>{
     const failedPreview=$('preview'); if(failedPreview){failedPreview.removeAttribute('src');failedPreview.style.display='none';}
     resetMediaPicker();
     calc();
+    clearPreviousCalculationPresentation();
   }
   }catch(topErr){
     if(stillCurrent()){
@@ -6223,6 +6436,7 @@ $('mediaFile').addEventListener('change',async e=>{
       invalidateAccountData('新しい媒体の読み込みに失敗したため、前回残高では計算しません。');
       goldBid=null; goldAsk=null; priceSource='none'; marketAskInferred=false;
       renderDataLock(); renderOrderDataLock(); updatePriceUI(); renderPositions(); renderOrders(); calc();
+      clearPreviousCalculationPresentation();
       console.error('[XM] MEDIA_IMPORT_TOP_LEVEL_FAILED',topErr);
       const msg=topErr?.message||'メディア読み込みに失敗しました。';
       if($('ocrStatus'))$('ocrStatus').textContent=`読み込み停止：${msg}`;
@@ -9378,9 +9592,11 @@ function calcCompare(){
   const tier=$('cmpTier')?.value||'Bronze',group=cmpGroupForSymbol(sym);if($('cmpGroup'))$('cmpGroup').value=group;
   const price=Number($('cmpPrice')?.value||cmpGetPrice(sym)||0),ownRatioPct=Math.max(0,Math.min(100,Number($('cmpOwnRatio')?.value||100))),ownRatio=ownRatioPct/100;
   const stdUnits=Number($('cmpSpreadStandard')?.value),kiwUnits=Number($('cmpSpreadKiwami')?.value);
-  const stdReady=Number.isFinite(stdUnits)&&stdUnits>0,kiwReady=Number.isFinite(kiwUnits)&&kiwUnits>0,spreadReady=stdReady&&kiwReady&&rebate.ready;
+  const stdReady=Number.isFinite(stdUnits)&&stdUnits>0,kiwReady=Number.isFinite(kiwUnits)&&kiwUnits>0;
+  const spreadReady=stdReady&&kiwReady; // Spread availability is independent of TariTali confirmation.
+  const compareReady=spreadReady&&rebate.ready;
   const stdSpread=stdReady?cmpSpreadJPY(stdUnits,lots,trades,c,usdJpy):NaN,kiwSpread=kiwReady?cmpSpreadJPY(kiwUnits,lots,trades,c,usdJpy):NaN;
-  const upfrontGap=spreadReady?kiwSpread-stdSpread:NaN; // Standard - KIWAMI net at entry (positive = Standard better)
+  const upfrontGap=compareReady?kiwSpread-stdSpread:NaN; // Standard - KIWAMI net at entry (positive = Standard better)
 
   // XMP is awarded only after a qualifying 5+ minute closed trade. Main comparison values Standard XMP as
   // 1 XMP = USD 1 trading-bonus value. KIWAMI XMP is displayed as reference only, per the user's confirmed usage.
@@ -9402,7 +9618,7 @@ function calcCompare(){
     const ss=cmpSwapJPY(sp,lots,1,c,usdJpy),ks=cmpSwapJPY(kp,lots,1,c,usdJpy);
     const dailyGap=(Number.isFinite(ss)?ss:0)-(Number.isFinite(ks)?ks:0);
     const diffAt=(days,includeXmp=true)=>{
-      if(!spreadReady)return NaN;
+      if(!compareReady)return NaN;
       const stdCarry=cmpSwapJPY(sp,lots,days,c,usdJpy),kiwCarry=cmpSwapJPY(kp,lots,days,c,usdJpy);
       const cb=cmpRebateAt(rebate,days);
       return upfrontGap+(includeXmp&&xmpReady?xmpNetGap:0)+cb.standard-cb.kiwami+(Number.isFinite(stdCarry)?stdCarry:0)-(Number.isFinite(kiwCarry)?kiwCarry:0);
@@ -9410,7 +9626,7 @@ function calcCompare(){
     const immediate=diffAt(0,false),after5=diffAt(fiveMinDays,true);
     const events=[];
     if(Number.isFinite(immediate)&&Number.isFinite(after5)&&cmpWinnerName(immediate)!==cmpWinnerName(after5)&&Math.abs(immediate)>=.5&&Math.abs(after5)>=.5){events.push({days:fiveMinDays,label:'5分後 XMP反映',to:cmpWinnerName(after5),kind:'xmp'});}
-    if(spreadReady&&xmpReady&&Math.abs(dailyGap)>1e-9){
+    if(compareReady&&xmpReady&&Math.abs(dailyGap)>1e-9){
       let prev=after5,prevWinner=cmpWinnerName(prev);
       for(let day=1;day<=365;day++){
         const cur=diffAt(day,true),curWinner=cmpWinnerName(cur);
@@ -9504,7 +9720,7 @@ function calcCompare(){
       const winner=stdSpread<kiwSpread?'Standard':kiwSpread<stdSpread?'KIWAMI':'同等';
       const winnerClass=winner==='Standard'?'cmpAccountStandard':winner==='KIWAMI'?'cmpAccountKiwami':'';
       spreadHero.innerHTML=`<div class="cmpSpreadGapTitle"><span>↔ スプレッド差</span><b class="${winnerClass}">${winner==='同等'?'ほぼ同等':winner+'が狭い'}</b></div><div class="cmpSpreadGapValues"><span><i class="cmpAccountStandard">Standard</i> ${stdUnits} ${unitLabel}</span><span class="cmpSpreadGapArrow">→ 差 ${gapUnits.toFixed(gapUnits<1?1:0)} ${unitLabel} ≒ ${Math.round(gapJpy).toLocaleString('ja-JP')}円</span><span><i class="cmpAccountKiwami">KIWAMI</i> ${kiwUnits} ${unitLabel}</span></div>`;
-    }else spreadHero.innerHTML='<div class="cmpSpreadGapTitle"><span>↔ スプレッド差</span><b>取得待ち</b></div>';
+    }else spreadHero.innerHTML=`<div class="cmpSpreadGapTitle"><span>↔ スプレッド差</span><b>${!stdReady&&!kiwReady?'両口座未取得':!stdReady?'Standard未取得':'KIWAMI未取得'}</b></div>`;
   }
   const xmpAward=$('cmpXmpAward');if(xmpAward){
     const kiwValueText=`参考：${kiwX.xmp.toFixed(kiwX.xmp<1?3:2)} XMP <span class="small">（総合判定には加算しない）</span>`;
@@ -9524,8 +9740,8 @@ function calcCompare(){
     const stdCarry=cmpSwapJPY(x.sp,lots,p.days,c,usdJpy),kiwCarry=cmpSwapJPY(x.kp,lots,p.days,c,usdJpy);
     const cb=cmpRebateAt(rebate,p.days);
     const diff=x.diffAt(p.days,p.xmp);
-    const std=(Number.isFinite(stdSpread)?-stdSpread:0)+(p.xmp&&xmpReady?stdXmpJpy:0)+cb.standard+(Number.isFinite(stdCarry)?stdCarry:0);
-    const kiw=(Number.isFinite(kiwSpread)?-kiwSpread:0)+cb.kiwami+(Number.isFinite(kiwCarry)?kiwCarry:0);
+    const std=compareReady?(Number.isFinite(stdSpread)?-stdSpread:0)+(p.xmp&&xmpReady?stdXmpJpy:0)+cb.standard+(Number.isFinite(stdCarry)?stdCarry:0):NaN;
+    const kiw=compareReady?(Number.isFinite(kiwSpread)?-kiwSpread:0)+cb.kiwami+(Number.isFinite(kiwCarry)?kiwCarry:0):NaN;
     return {...p,diff,std,kiw,swapTag:cmpSwapCalendarTag(p.days)};
   };
   const buyRows=periods.map(p=>mkRow(buy,p)),sellRows=periods.map(p=>mkRow(sell,p));
@@ -9537,7 +9753,7 @@ function calcCompare(){
     let html='';
     for(let i=0;i<periods.length;i++){
       const p=periods[i];html+=periodRowHtml(p.label,buyRows[i],sellRows[i]);
-      if(i<periods.length-1&&spreadReady){
+      if(i<periods.length-1&&compareReady){
         const lo=p.days,hi=periods[i+1].days,crosses=[];
         // Completed UX: sub-day flips are already represented by the 5-minute and 1-day rows.
         // Only insert a dedicated reversal row for meaningful 1+ day carry reversals.
@@ -9586,14 +9802,21 @@ function calcCompare(){
   $('cmpRebateKiwami').parentElement.hidden=$('cmpRebateKiwami').disabled;
   if(enabled){
     for(const id of ['cmpConfidence','cmpBasis'])if($(id))$(id).insertAdjacentText('beforeend',' '+note);
-    if($('cmpWhy'))$('cmpWhy').insertAdjacentText('beforeend',' TariTaliの還元差も含めて判定します。');
+    if($('cmpWhy'))$('cmpWhy').insertAdjacentText('beforeend',r.ready?' TariTaliの還元差も含めて判定します。':' TariTali未確認のため総合判定は保留します。');
     const title=document.querySelector('#pageCompare .compareBreakEven .small');if(title)title.textContent='XMP＋TariTali込み・逆転ポイント';
-    if(!r.ready){
-      for(const id of ['cmpBuyAccount','cmpSellAccount','cmpBreakEvenHero'])if($(id))$(id).textContent='条件確認待ち';
-      for(const id of ['cmpBuyReason','cmpSellReason','cmpBreakEvenSub'])if($(id))$(id).textContent='TariTaliの設定を確認してください';
+    if(!compareReady){
+      const missing=[!stdReady?'Standardスプレッド':null,!kiwReady?'KIWAMIスプレッド':null,!r.ready?'TariTali条件':null].filter(Boolean);
+      const reason=missing.join('・')+'を確認してください';
+      for(const id of ['cmpBuyAccount','cmpSellAccount','cmpBreakEvenHero'])if($(id))$(id).textContent='判定保留';
+      for(const id of ['cmpBuyReason','cmpSellReason','cmpBreakEvenSub'])if($(id))$(id).textContent=reason;
     }
   }
   else{const title=document.querySelector('#pageCompare .compareBreakEven .small');if(title)title.textContent='XMP込み・逆転ポイント';}
+  if(!spreadReady){
+    const missing=[!stdReady?'Standard':null,!kiwReady?'KIWAMI':null].filter(Boolean).join('・');
+    for(const id of ['cmpBuyAccount','cmpSellAccount','cmpBreakEvenHero'])if($(id))$(id).textContent='判定保留';
+    for(const id of ['cmpBuyReason','cmpSellReason','cmpBreakEvenSub'])if($(id))$(id).textContent=missing+'のスプレッド未取得'+(enabled&&!r.ready?' ／ TariTali条件未確認':'');
+  }
 }
 // v364 account-comparison consistency guard: one rule must drive headline, timeline and explanations.
 window.__CMP_V280_CONSISTENCY__=(()=>{
@@ -9674,7 +9897,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v395-20261008';
+window.__APP_BUILD__='v414-20261016';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -9717,9 +9940,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v395-20261008'
+  build:'v414-20261016'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v395-20261008'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v414-20261016'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

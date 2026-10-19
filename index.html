@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v420-20261019">
+<meta name="build-id" content="v422-20261019">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v420</title>
+<title>Stop Out positioning｜デラポジ Pro v422</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -841,7 +841,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v420</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v422</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -854,7 +854,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v420</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v422</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1437,7 +1437,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v420-20261019';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v422-20261019';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1582,8 +1582,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v420-20261019',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v420-20261019';
+window.__DEPLOYMENT_STATE__={build:'v422-20261019',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v422-20261019';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1604,7 +1604,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v420-20261019', SHORT='v420';
+  const BUILD='v422-20261019', SHORT='v422';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -4009,9 +4009,25 @@ function recoverTrustedVideoOrderBasket(results){
       !mid?.isControlCenter && mid?.scrollBoundary==='middle' &&
       Number(mid.time)>Number(start.time)+.001 && Number(mid.time)<c.time-.001));
   });
-  const terminalConfirmed=traversalVerified && terminalCandidates.some(c=>
+  // v422: MT5 Trade pane with a short, fully visible static order list.
+  // Require >=4 independent OCR samples of an identical >=2-order basket,
+  // a stable account header, no scroll evidence, and no extra order labels.
+  // This path is intentionally disallowed when any scroll boundary is seen.
+  const staticOrderFrames=(results||[]).filter(r=>{
+    const t=String(r?.data?.text||r?.text||'');
+    return !r?.isControlCenter && r?.scrollBoundary==='none' &&
+      /(?:残高|有効証拠金|クレジット|オーダー|placed)/i.test(t) &&
+      countVisibleSelectedPendingLabels(t)===largest.rows.length;
+  });
+  const stableStaticBasket=largest.rows.length>=2 && largest.rows.length<=5 &&
+    candidates.length>=4 && staticOrderFrames.length>=4 &&
+    !(results||[]).some(r=>['top','middle','bottom'].includes(r?.scrollBoundary)) &&
+    baskets.length===1 && maxVisibleLabels===largest.rows.length &&
+    candidates.every(c=>c.rows.length===largest.rows.length && c.key===largest.key) &&
+    Math.max(...candidates.map(c=>c.time))-Math.min(...candidates.map(c=>c.time))>=0.4;
+  const terminalConfirmed=stableStaticBasket || (traversalVerified && terminalCandidates.some(c=>
     c.rows.length===largest.rows.length && c.rows.every(o=>fullSet.has(signature(o))) &&
-    !candidates.some(later=>later.time>c.time+0.001 && later.key!==c.key));
+    !candidates.some(later=>later.time>c.time+0.001 && later.key!==c.key)));
   // v403: For overlapping pending-order viewports, the relative order of
   // the same two distinct rows must remain stable. A reversed pair means that
   // OCR windows cannot be safely stitched into one coherent Trade snapshot.
@@ -5565,6 +5581,29 @@ $('mediaFile').addEventListener('change',async e=>{
       /XM画面のスクショ\/動画/i
     ];
     const rawAllText=String(results.map(r=>r?.data?.text||r?.text||'').join('\\n')||'');
+    // v422: Match the symbol explicitly shown in the MT5 Trade/Order pane.
+    // A previous GOLD selection must not silently filter three EURGBP orders.
+    // Require >=2 complete, same-symbol order rows in at least two independent
+    // OCR frames, and reject mixed-symbol baskets. Quote-board symbols do not
+    // participate in this decision.
+    if(isVideo){
+      const perFrame=results.map(r=>{
+        const t=String(r?.data?.text||r?.text||'');
+        const hits=[...t.matchAll(/\b([A-Z][A-Z0-9]{2,})\s*#?\s+(?:buy|sell)\s+(?:limit|stop)\b/ig)]
+          .map(m=>normalizeSymbol(m[1]));
+        return hits.length>=2 && new Set(hits).size===1 ? hits[0] : null;
+      }).filter(Boolean);
+      const distinct=[...new Set(perFrame)];
+      if(distinct.length===1 && perFrame.length>=2 && distinct[0]!==currentSymbol){
+        const next=distinct[0];
+        ensureSymbolOption(next);
+        $('symbol').value=next;
+        switchSymbol();
+        console.info('[XM] TRADE_SYMBOL_MATCHED',next,'frames',perFrame.length);
+        parsed=mergeParsedResults(results);
+      }
+    }
+
     // SAFETY v406: Stop pending orders are not supported by the directional
     // Limit-only stop-out simulator. Preserve their type; never silently
     // convert them to Limits or ignore them when computing DEAD LINE.
@@ -9937,7 +9976,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v420-20261019';
+window.__APP_BUILD__='v422-20261019';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -9980,9 +10019,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v420-20261019'
+  build:'v422-20261019'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v420-20261019'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v422-20261019'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

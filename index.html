@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v414-20261016">
+<meta name="build-id" content="v416-20261019">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v414</title>
+<title>Stop Out positioning｜デラポジ Pro v416</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -841,7 +841,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v414</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v416</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -854,7 +854,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v414</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v416</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1431,7 +1431,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v414-20261016';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v416-20261019';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1576,8 +1576,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v414-20261016',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v414-20261016';
+window.__DEPLOYMENT_STATE__={build:'v416-20261019',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v416-20261019';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1598,7 +1598,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v414-20261016', SHORT='v414';
+  const BUILD='v416-20261019', SHORT='v416';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -9434,6 +9434,8 @@ const CMP_REFERENCE_SPREADS={
   'EURUSD#':{standard:1.6,kiwami:0.8,label:'XM平均参考'},
   'GBPUSD#':{standard:1.8,kiwami:0.8,label:'XM平均参考'},
   'EURJPY#':{standard:2.1,kiwami:1.4,label:'XM平均参考'},
+  // Published comparison reference (sys-tre.com, Oct 2026), NOT an MT5 live quote.
+  'EURGBP#':{standard:2.0,kiwami:1.0,label:'外部公開参考（実測ではない）'},
   // GOLD minimum reference spreads, expressed in app display units (points).
   // GOLD pointStep is 0.01, so 2.7 pips = 27 points and 1.6 pips = 16 points here.
   'GOLD#':{standard:27,kiwami:16,label:'XM最低参考'}
@@ -9458,9 +9460,9 @@ function cmpMaybeAutoSpread(){
   }
   const std=$('cmpSpreadStandard')?.value,kiw=$('cmpSpreadKiwami')?.value;
   const pieces=[];if(liveLabel)pieces.push('✓ '+liveLabel);
-  if(std)pieces.push(`Standard ${std} ${c.type==='fx'?'pips':'points'}${$('cmpSpreadStandard')?.dataset.ref==='1'?'（XM参考）':''}`);
-  if(kiw)pieces.push(`KIWAMI ${kiw} ${c.type==='fx'?'pips':'points'}${$('cmpSpreadKiwami')?.dataset.ref==='1'?'（XM参考）':''}`);
-  if(hint)hint.innerHTML=pieces.length?pieces.join(' ／ '):'この銘柄は自動スプレッド参考値がありません。詳細から確認できます。';
+  if(std)pieces.push(`Standard ${std} ${c.type==='fx'?'pips':'points'}${$('cmpSpreadStandard')?.dataset.ref==='1'?'（参考）':''}`);
+  if(kiw)pieces.push(`KIWAMI ${kiw} ${c.type==='fx'?'pips':'points'}${$('cmpSpreadKiwami')?.dataset.ref==='1'?'（参考）':''}`);
+  if(hint)hint.innerHTML=pieces.length?pieces.join(' ／ ')+(ref.std||ref.kiw?' ／ 参考値は実測ではなく変動します':''):'この銘柄は自動スプレッド参考値がありません。詳細から確認できます。';
 }
 function cmpSyncDefaults(){
   const sym=$('cmpSymbol')?.value||'GOLD#',c=ensureSpec(sym);
@@ -9618,7 +9620,7 @@ function calcCompare(){
     const ss=cmpSwapJPY(sp,lots,1,c,usdJpy),ks=cmpSwapJPY(kp,lots,1,c,usdJpy);
     const dailyGap=(Number.isFinite(ss)?ss:0)-(Number.isFinite(ks)?ks:0);
     const diffAt=(days,includeXmp=true)=>{
-      if(!compareReady)return NaN;
+      if(!compareReady||(days>=1&&unknownSwap))return NaN;
       const stdCarry=cmpSwapJPY(sp,lots,days,c,usdJpy),kiwCarry=cmpSwapJPY(kp,lots,days,c,usdJpy);
       const cb=cmpRebateAt(rebate,days);
       return upfrontGap+(includeXmp&&xmpReady?xmpNetGap:0)+cb.standard-cb.kiwami+(Number.isFinite(stdCarry)?stdCarry:0)-(Number.isFinite(kiwCarry)?kiwCarry:0);
@@ -9642,6 +9644,8 @@ function calcCompare(){
     events.sort((a,b)=>a.days-b.days);
     return {sp,kp,ss,ks,dailyGap,diffAt,immediate,after5,events};
   };
+  // Zero swap placeholders are not evidence of a zero-swap broker quote.
+  const unknownSwap=sym!=='GOLD#'&&['cmpSwapCurrent','cmpSwapSell','cmpSwapKiwami','cmpSwapKiwamiSell'].every(id=>Number($(id)?.value||0)===0);
   const buy=sideData('buy'),sell=sideData('sell');
 
   const aggregatePeriods=[
@@ -9747,7 +9751,7 @@ function calcCompare(){
   const buyRows=periods.map(p=>mkRow(buy,p)),sellRows=periods.map(p=>mkRow(sell,p));
   const side=$('cmpSide')?.value||'buy',rows=side==='sell'?sellRows:buyRows;
   $('cmpTableBody').innerHTML=rows.map(r=>`<tr><td>${r.label.replace('🎁 ','')}</td><td>${cmpFmtJPY(r.std)}</td><td>${cmpFmtJPY(r.kiw)}</td><td>${Number.isFinite(r.diff)?cmpWinnerName(r.diff):'—'}</td></tr>`).join('');
-  const periodCell=(r)=>{if(!Number.isFinite(r.diff))return '<div class="w">不足</div>';if(Math.abs(r.diff)<.5)return '<div class="w">ほぼ同等</div>';const w=r.diff>0?'Standard':'KIWAMI',cls=w==='KIWAMI'?'good':'warn';return `<div class="w ${cls}">${w}<br>${Math.abs(Math.round(r.diff)).toLocaleString('ja-JP')}円有利</div>`};
+  const periodCell=(r)=>{if(!Number.isFinite(r.diff))return `<div class="w">${!rebate.ready?'TariTali要確認':!spreadReady?'スプレッド未取得':unknownSwap&&r.days>=1?'スワップ未確認':'計算条件未確認'}</div>`;if(Math.abs(r.diff)<.5)return '<div class="w">ほぼ同等</div>';const w=r.diff>0?'Standard':'KIWAMI',cls=w==='KIWAMI'?'good':'warn';return `<div class="w ${cls}">${w}<br>${Math.abs(Math.round(r.diff)).toLocaleString('ja-JP')}円有利</div>`};
   const periodRowHtml=(label,buyRow,sellRow,extra='')=>`<div class="cmpPeriodRow${extra?' cmpCrossRow':''}"><div class="d">${label}${buyRow?.swapTag?`<span class="cmpCrossTag">${buyRow.swapTag}</span>`:''}${extra?`<span class="cmpCrossTag">${extra}</span>`:''}</div>${periodCell(buyRow)}${periodCell(sellRow)}</div>`;
   const list=$('cmpPeriodList');if(list){
     let html='';
@@ -9897,7 +9901,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v414-20261016';
+window.__APP_BUILD__='v416-20261019';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -9940,9 +9944,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v414-20261016'
+  build:'v416-20261019'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v414-20261016'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v416-20261019'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

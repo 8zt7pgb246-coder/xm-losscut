@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v434-20261026">
+<meta name="build-id" content="v438-20261026">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v434</title>
+<title>Stop Out positioning｜デラポジ Pro v438</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -841,7 +841,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v434</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v438</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -854,7 +854,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v434</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v438</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1437,7 +1437,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v434-20261026';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v438-20261026';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1582,8 +1582,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v434-20261026',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v434-20261026';
+window.__DEPLOYMENT_STATE__={build:'v438-20261026',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v438-20261026';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1604,7 +1604,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v434-20261026', SHORT='v434';
+  const BUILD='v438-20261026', SHORT='v438';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -1732,6 +1732,16 @@ try{priceStore=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}')||{}}catch(e){}
 try{orderStore=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}')||{}}catch(e){}
 try{positionStore=JSON.parse(localStorage.getItem(POSITION_KEY)||'{}')||{}}catch(e){}
 try{specStore=JSON.parse(localStorage.getItem(SPEC_KEY)||'{}')||{}}catch(e){}
+// Recovery from the last fully committed trade snapshot. A torn legacy multi-key
+// write must not mix positions from one recording with orders from another.
+const TRADE_SNAPSHOT_KEY='xm_authoritative_trade_snapshot_v1';
+try{
+ const saved=JSON.parse(localStorage.getItem(TRADE_SNAPSHOT_KEY)||'null');
+ if(saved&&saved.version===1&&saved.positions&&saved.orders&&typeof saved.positions==='object'&&typeof saved.orders==='object'){
+  positionStore=saved.positions;orderStore=saved.orders;
+ }
+}catch(e){console.warn('[XM] TRADE_SNAPSHOT_RECOVERY_SKIPPED',e)}
+
 let currentSymbol=(()=>{try{return localStorage.getItem('xm_selected_symbol')||'GOLD#'}catch(e){return 'GOLD#'}})(), goldBid=null,goldAsk=null,priceUpdatedAt='',priceSource='none',marketAskInferred=false,mediaPriceFresh=false,mediaUsdJpyFresh=false,mediaPriceEvidence=null,mediaQuality={total:0,usable:0,excluded:0,expected:0};
 window.__currentTemporalQuoteBeforeTrade=false;
 try{
@@ -2001,28 +2011,33 @@ function applyAuthoritativeTradeSnapshot({positions=[],orders=[],source='ocr-tra
 
   // Atomic current-state commit: positions and pending orders come from the SAME
   // authoritative MT5 Trade snapshot and must never be saved independently.
-  positionStore[currentSymbol]=nextPositions;
-  orderStore[currentSymbol]=nextOrders;
+  // Commit both sides in ONE storage write before exposing either as current.
+  // Other non-trade settings are best-effort and must not reject a valid trade.
+  const candidatePositions={...positionStore,[currentSymbol]:nextPositions};
+  const candidateOrders={...orderStore,[currentSymbol]:nextOrders};
+  let persisted=false;
+  try{
+    localStorage.setItem(TRADE_SNAPSHOT_KEY,JSON.stringify({version:1,positions:candidatePositions,orders:candidateOrders,at:Date.now()}));
+    persisted=true;
+  }catch(e){console.warn('[XM] TRADE_SNAPSHOT_PERSIST_FAILED',e)}
+  if(!persisted){
+    positionDataValid=false;orderDataInvalid=true;
+    positionImportError='最新Trade状態を安全に保存できませんでした。';
+    orderImportError='保存に失敗したため、前回状態を最新として使用しません。';
+    renderDataLock();renderOrderDataLock();
+    return {ok:false,transition,reason:'TRADE_SNAPSHOT_PERSIST_FAILED'};
+  }
+  positionStore=candidatePositions;orderStore=candidateOrders;
   mediaSessionActive=true;
   positionDataValid=true;
   positionDataSource=flat?'ocr-flat':source;
-  positionImportError='';
-  orderDataInvalid=false;
-  orderImportError='';
+  positionImportError='';orderDataInvalid=false;orderImportError='';
   try{window.resetTargetPnlExclusions?.()}catch(e){}
-  const saved=saveAll();
+  // Legacy keys are compatibility copies only; canonical snapshot is authoritative.
+  saveAll();
   writeVerifiedPositionSession(flat?'ocr-flat':source);
   renderDataLock();renderOrderDataLock();
-
-  const expected=tradeStateFingerprint(nextPositions,nextOrders);
   const actual=tradeStateFingerprint(getPositions(),getOrders());
-  if(!saved||actual!==expected){
-    positionDataValid=false;orderDataInvalid=true;
-    positionImportError='最新Trade状態の保存整合性を確認できませんでした。';
-    orderImportError='ポジションと注文の同時更新に失敗しました。';
-    renderDataLock();renderOrderDataLock();
-    return {ok:false,transition,expected,actual};
-  }
   window.__lastTradeSnapshotAudit={
     symbol:currentSymbol,source,at:Date.now(),transition,
     fingerprint:actual,positions:nextPositions.length,orders:nextOrders.length
@@ -3941,10 +3956,10 @@ function runV387AuditRegressionSelfTest(){
 // v414: Count visible pending-order labels for the SELECTED instrument,
 // not just GOLD. A labelled but unparsed order must never disappear silently.
 // v414: accept OCR-separated symbol suffix and em dash/minus separators.
-// v434: Independent image evidence. Repeated OCR is not independent proof
+// v438: Independent image evidence. Repeated OCR is not independent proof
 // that every visible MT5 Trade row was parsed. Count colored trade labels
 // directly from the video pixels (not OCR text). Sample only Trade frames.
-// v434: pixel-only trade-row evidence. Detect RED side/order labels as vertical
+// v438: pixel-only trade-row evidence. Detect RED side/order labels as vertical
 // bands, independent of the OCR engine and of the blue profit figures.
 // A band represents one MT5 trade row, not one text glyph/line fragment.
 function detectVisualTradeRowBands(canvas){
@@ -4079,10 +4094,9 @@ function recoverTrustedVideoOrderBasket(results){
     if(visible>positionCount+pendingCount && pendingCount>0)
       visualShortfalls.push({time:Number(frame.time||0),visible,parsed:positionCount+pendingCount});
   }
-  if(visualShortfalls.length>=2){
-    return {rows:[],authoritative:false,incomplete:true,
-      reason:'ORDER_VISUAL_ROW_MISSING',visualShortfalls};
-  }
+  // A damaged minority of OCR frames is not proof the entire static video
+  // is incomplete when independently pixel-complete frames agree on a full basket.
+  // Defer the shortfall decision until the complete-frame consensus is checked.
   if(maxVisibleLabels>largest.rows.length){
     return {rows:[],authoritative:false,incomplete:true,reason:'ORDER_LABEL_COUNT_EXCEEDS_BASKET',
       visibleLabels:maxVisibleLabels,parsedRows:largest.rows.length};
@@ -4101,7 +4115,7 @@ function recoverTrustedVideoOrderBasket(results){
       !mid?.isControlCenter && mid?.scrollBoundary==='middle' &&
       Number(mid.time)>Number(start.time)+.001 && Number(mid.time)<c.time-.001));
   });
-  // v434: MT5 Trade pane with a short, fully visible static order list.
+  // v438: MT5 Trade pane with a short, fully visible static order list.
   // Require >=4 independent OCR samples of an identical >=2-order basket,
   // a stable account header, no scroll evidence, and no extra order labels.
   // This path is intentionally disallowed when any scroll boundary is seen.
@@ -4111,18 +4125,31 @@ function recoverTrustedVideoOrderBasket(results){
       /(?:残高|有効証拠金|クレジット|オーダー|placed)/i.test(t) &&
       countVisibleSelectedPendingLabels(t)===largest.rows.length;
   });
-  const stableStaticBasket=largest.rows.length>=2 && largest.rows.length<=5 &&
-    candidates.length>=4 && staticOrderFrames.length>=4 &&
-    staticOrderFrames.filter(r=>{
-      const parsed=parseOCR(String(r?.data?.text||''));
-      const count=(parsed.positions||[]).filter(o=>normalizeSymbol(o.symbol||currentSymbol)===currentSymbol).length+
-        (parsed.pending||[]).filter(o=>normalizeSymbol(o.symbol||currentSymbol)===currentSymbol).length;
-      return Number(r.visualTradeRows)>0 && Number(r.visualTradeRows)===count;
-    }).length>=4 &&
-    !(results||[]).some(r=>['top','middle','bottom'].includes(r?.scrollBoundary)) &&
-    baskets.length===1 && maxVisibleLabels===largest.rows.length &&
-    candidates.every(c=>c.rows.length===largest.rows.length && c.key===largest.key) &&
-    Math.max(...candidates.map(c=>c.time))-Math.min(...candidates.map(c=>c.time))>=0.4;
+  const noScrollEvidence=!(results||[]).some(r=>['top','middle','bottom'].includes(r?.scrollBoundary));
+  const completeStaticFrames=staticOrderFrames.filter(r=>{
+    const parsed=parseOCR(String(r?.data?.text||r?.text||''));
+    const count=(parsed.positions||[]).filter(o=>normalizeSymbol(o.symbol||currentSymbol)===currentSymbol).length+
+      (parsed.pending||[]).filter(o=>normalizeSymbol(o.symbol||currentSymbol)===currentSymbol).length;
+    return Number(r.visualTradeRows)>0 && Number(r.visualTradeRows)===count;
+  });
+  const matchingCompleteFrames=completeStaticFrames.filter(r=>{
+    const rows=normalizePendingSnapshot((parseOCR(String(r?.data?.text||r?.text||'')).pending||[])
+      .filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol));
+    return rows.length===largest.rows.length && rows.every(o=>fullSet.has(signature(o)));
+  });
+  // Quorum is based on complete pixel-checked frames, NOT unanimity among
+  // noisy OCR samples. Never certify a truncated basket from repeatability alone.
+  const stableStaticBasket=largest.rows.length>=2 && noScrollEvidence &&
+    matchingCompleteFrames.length>=3 &&
+    Math.max(...matchingCompleteFrames.map(r=>Number(r.time||0)))-
+      Math.min(...matchingCompleteFrames.map(r=>Number(r.time||0)))>=0.4 &&
+    maxVisibleLabels<=largest.rows.length &&
+    !candidates.some(c=>c.time>Math.max(...matchingCompleteFrames.map(r=>Number(r.time||0)))+0.15 &&
+      c.rows.some(o=>!fullSet.has(signature(o))));
+  if(visualShortfalls.length>=2 && !stableStaticBasket){
+    return {rows:[],authoritative:false,incomplete:true,
+      reason:'ORDER_VISUAL_ROW_MISSING',visualShortfalls};
+  }
   const terminalConfirmed=stableStaticBasket || (traversalVerified && terminalCandidates.some(c=>
     c.rows.length===largest.rows.length && c.rows.every(o=>fullSet.has(signature(o))) &&
     !candidates.some(later=>later.time>c.time+0.001 && later.key!==c.key)));
@@ -4160,24 +4187,41 @@ function recoverTrustedVideoOrderBasket(results){
     if(!recovered)return {rows:[],authoritative:false,incomplete:true,
       reason:'ORDER_ROW_UNPARSED',observedCounts:baskets.map(g=>g.rows.length)};
   }
-  // v434: One frame can OCR 0.01 as 9.01. Do not treat a single isolated
+  // v438: One frame can OCR 0.01 as 9.01. Do not treat a single isolated
   // outlier as a real order mutation when 3+ independent, pixel-complete,
   // non-scrolling frames agree on every side/price/lot.
+  // A frame is evidence for a basket only if its own parsed rows match it.
+  // Pixel row count alone is NOT evidence for whichever OCR basket won a vote.
   const pixelComplete=results.filter(r=>{
-    if(r?.isControlCenter||r?.scrollBoundary!=='none'||!(r.visualTradeRows>0))return false;
-    const parsed=parseOCR(String(r.data?.text||''));
-    return parsed.positions.length+parsed.pending.length===r.visualTradeRows;
+    if(r?.isControlCenter||r?.scrollBoundary!=='none'||!(Number(r.visualTradeRows)>0))return false;
+    const parsed=parseOCR(String(r.data?.text||r.text||''));
+    const count=(parsed.positions||[]).filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol).length+
+      (parsed.pending||[]).filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol).length;
+    return count===Number(r.visualTradeRows);
   });
   const best=baskets.slice().sort((a,b)=>b.support-a.support||b.rows.length-a.rows.length)[0];
-  if(best?.support>=3 && best.rows.length>=2 && pixelComplete.length>=3 &&
+  const bestSignatures=new Set((best?.rows||[]).map(signature));
+  const matchingPixelComplete=pixelComplete.filter(r=>{
+    const rows=normalizePendingSnapshot((parseOCR(String(r.data?.text||r.text||'')).pending||[])
+      .filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol));
+    return rows.length===best.rows.length && rows.every(o=>bestSignatures.has(signature(o)));
+  });
+  const latestCandidateTime=Math.max(...candidates.map(c=>c.time));
+  const latestCompleteTime=matchingPixelComplete.length
+    ?Math.max(...matchingPixelComplete.map(r=>Number(r.time||0))):-Infinity;
+  // Require multiple independently pixel-complete, *matching* frames.
+  // Do not discard a later differing basket as noise: it can be a real order edit.
+  if(best?.support>=3 && best.rows.length>=2 && matchingPixelComplete.length>=3 &&
+     latestCompleteTime>=latestCandidateTime-0.15 &&
      !(results||[]).some(r=>['top','middle','bottom'].includes(r?.scrollBoundary))){
-    const bestKeys=new Set(best.rows.map(signature));
     const others=baskets.filter(g=>g.key!==best.key);
     const isolated=others.every(g=>g.support===1 && g.rows.length===best.rows.length &&
-      g.rows.every(o=>best.rows.some(b=>String(o.side).toLowerCase()===String(b.side).toLowerCase() && Math.abs(Number(o.price)-Number(b.price))<1e-5)));
+      g.latest<=latestCompleteTime+0.15 &&
+      g.rows.every(o=>best.rows.some(b=>String(o.side).toLowerCase()===String(b.side).toLowerCase() &&
+        Math.abs(Number(o.price)-Number(b.price))<1e-5)));
     if(isolated && best.rows.length===Math.max(...baskets.map(g=>g.rows.length))){
       return {rows:best.rows,authoritative:true,terminalConfirmed:true,support:best.support,
-        observedCounts:baskets.map(g=>g.rows.length),source:'pixel-verified-static-majority'};
+        observedCounts:baskets.map(g=>g.rows.length),source:'matching-pixel-complete-static-majority'};
     }
   }
   const incompatible=baskets.filter(g=>g.rows.some(o=>!fullSet.has(signature(o))));
@@ -4245,7 +4289,7 @@ function parseTradeRowsByLinePair(text){
 //   2) the damaged row is directly attached to a Limit/Stop heading, and
 //   3) inserting the missing decimal reproduces that dominant lot.
 // A real `1.00 / 0 at ...` remains untouched, as does any ambiguous basket.
-// v434: iPhone's floating overlay hides the leading G in GOLD and the 0
+// v438: iPhone's floating overlay hides the leading G in GOLD and the 0
 // in 0.01 on the LAST row. Require independent pixel evidence of that row,
 // at least three intact GOLD Limit labels in the SAME frame, and explicit
 // remaining 'OLD sell limit' + '.01 / 0 at PRICE' text. No price is invented.
@@ -5079,7 +5123,7 @@ async function recognizeOne(TesseractNS,source,psm,logger){
     return r;
   }finally{try{await worker.terminate()}catch(e){console.warn('[XM] recognizeOne worker terminate skipped',e)}}
 }
-// v434: A timed-out recognition cannot safely share its worker with another frame.
+// v438: A timed-out recognition cannot safely share its worker with another frame.
 // Terminate the underlying worker, not only the Promise.race waiter.
 async function boundedOcrRecognition(worker,source){
   let timer,expired=false;
@@ -5555,7 +5599,7 @@ $('mediaFile').addEventListener('change',async e=>{
   const importToken=(window.__mediaImportToken||0)+1; window.__mediaImportToken=importToken; window.__mediaBusy=true; window.__activeMediaSelectionKey=selectionKey; if($('mediaChoose'))$('mediaChoose').disabled=true;updateAddTradeScreenshotUI();
   const stillCurrent=()=>window.__mediaImportToken===importToken;
   let importSnapshot=null,sharedVideoWorker=null,prewarmedVideoWorkerPromise=null;
-  // v434: An OCR/codec promise can hang without rejecting on iPhone Safari.
+  // v438: An OCR/codec promise can hang without rejecting on iPhone Safari.
   // Watch progress, fail closed, and release the UI even if the original promise never settles.
   const importStartedAt=Date.now();
   let lastActivityAt=Date.now(), lastStatus='';
@@ -5660,7 +5704,7 @@ $('mediaFile').addEventListener('change',async e=>{
   try{
     let videoSourcesForReuse=null;
     sharedVideoWorker=null;
-    // v434: Safari can stall when decoding bundled WASM while simultaneously
+    // v438: Safari can stall when decoding bundled WASM while simultaneously
     // seeking video frames. Finish video extraction before loading/starting OCR.
     let ocrEnginePromise=null;
     prewarmedVideoWorkerPromise=null;
@@ -5791,7 +5835,7 @@ $('mediaFile').addEventListener('change',async e=>{
       /XM画面のスクショ\/動画/i
     ];
     const rawAllText=String(results.map(r=>r?.data?.text||r?.text||'').join('\\n')||'');
-    // v434: Match the symbol explicitly shown in the MT5 Trade/Order pane.
+    // v438: Match the symbol explicitly shown in the MT5 Trade/Order pane.
     // A previous GOLD selection must not silently filter three EURGBP orders.
     // Require >=2 complete, same-symbol order rows in at least two independent
     // OCR frames, and reject mixed-symbol baskets. Quote-board symbols do not
@@ -10210,7 +10254,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v434-20261026';
+window.__APP_BUILD__='v438-20261026';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -10253,9 +10297,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v434-20261026'
+  build:'v438-20261026'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v434-20261026'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v438-20261026'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

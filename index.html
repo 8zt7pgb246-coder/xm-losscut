@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v433-20261026">
+<meta name="build-id" content="v434-20261026">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v433</title>
+<title>Stop Out positioning｜デラポジ Pro v434</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -841,7 +841,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v433</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v434</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -854,7 +854,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v433</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v434</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1437,7 +1437,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v433-20261026';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker'; window.__NETWORK_BUILD__='v434-20261026';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1582,8 +1582,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v433-20261026',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v433-20261026';
+window.__DEPLOYMENT_STATE__={build:'v434-20261026',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v434-20261026';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1604,7 +1604,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v433-20261026', SHORT='v433';
+  const BUILD='v434-20261026', SHORT='v434';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -3941,32 +3941,79 @@ function runV387AuditRegressionSelfTest(){
 // v414: Count visible pending-order labels for the SELECTED instrument,
 // not just GOLD. A labelled but unparsed order must never disappear silently.
 // v414: accept OCR-separated symbol suffix and em dash/minus separators.
-// v433: Independent image evidence. Repeated OCR is not independent proof
+// v434: Independent image evidence. Repeated OCR is not independent proof
 // that every visible MT5 Trade row was parsed. Count colored trade labels
 // directly from the video pixels (not OCR text). Sample only Trade frames.
-function countVisualTradeRows(canvas){
-  if(!canvas || !canvas.width || !canvas.height)return 0;
+// v434: pixel-only trade-row evidence. Detect RED side/order labels as vertical
+// bands, independent of the OCR engine and of the blue profit figures.
+// A band represents one MT5 trade row, not one text glyph/line fragment.
+function detectVisualTradeRowBands(canvas){
+  if(!canvas || !canvas.width || !canvas.height)return [];
   try{
     const w=canvas.width,h=canvas.height;
-    const x0=Math.floor(w*.09),x1=Math.floor(w*.46);
-    const y0=Math.floor(h*.30),y1=Math.floor(h*.90);
+    const x0=Math.floor(w*.035),x1=Math.floor(w*.40);
+    const y0=Math.floor(h*.30),y1=Math.floor(h*.89);
     const ctx=canvas.getContext('2d',{willReadFrequently:true});
-    const im=ctx.getImageData(x0,y0,x1-x0,y1-y0);
-    const data=im.data,sw=im.width,sh=im.height;
-    const active=[];
-    for(let y=0;y<sh;y+=2){
-      let colored=0;
-      for(let x=0;x<sw;x+=2){
-        const p=(y*sw+x)*4,r=data[p],g=data[p+1],b=data[p+2];
-        if((r>90 && r>g*1.40 && r>b*1.40) ||
-           (b>90 && b>r*1.40 && b>g*1.18))colored++;
+    const im=ctx.getImageData(x0,y0,x1-x0,y1-y0),d=im.data;
+    const hits=[];
+    for(let y=0;y<im.height;y+=2){
+      let red=0;
+      for(let x=0;x<im.width;x+=2){
+        const p=(y*im.width+x)*4,r=d[p],g=d[p+1],b=d[p+2];
+        if(r>105 && r>g*1.42 && r>b*1.42 && r-g>35)red++;
       }
-      if(colored>=3)active.push(y);
+      if(red>=3)hits.push(y0+y);
     }
-    let groups=0,last=-1000;
-    for(const y of active){if(y-last>6)groups++;last=y}
-    return groups;
-  }catch(e){return 0} // unavailable pixel data never becomes positive evidence
+    const bands=[];
+    for(const y of hits){
+      const last=bands[bands.length-1];
+      if(last && y-last.bottom<=Math.max(10,Math.round(h*.011)))last.bottom=y;
+      else bands.push({top:y,bottom:y});
+    }
+    return bands.filter(b=>b.bottom-b.top>=2).map(b=>({...b,center:Math.round((b.top+b.bottom)/2)}));
+  }catch(e){return []}
+}
+function countVisualTradeRows(canvas){return detectVisualTradeRowBands(canvas).length}
+function makeTradeRowRescueCanvas(source,band){
+  const w=source.width,h=source.height;
+  const x=0,y=Math.max(0,band.top-Math.round(h*.016));
+  const right=Math.round(w*.73),bottom=Math.min(h,band.bottom+Math.round(h*.055));
+  const scale=Math.min(2.3,1200/right);
+  const out=document.createElement('canvas');
+  out.width=Math.max(1,Math.round(right*scale));out.height=Math.max(1,Math.round((bottom-y)*scale));
+  const ctx=out.getContext('2d',{willReadFrequently:true});
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,out.width,out.height);
+  ctx.drawImage(source,x,y,right,bottom-y,0,0,out.width,out.height);
+  return out;
+}
+// Rescue ONLY rows missing from the full-frame OCR. Never guess lot or price.
+// A crop must independently parse a symbol + side + lot + entry/at-price.
+async function rescueMissingTradeRows(worker,source,rawText,visualBands){
+  const baseline=parseOCR(rawText);
+  const count=(baseline.positions||[]).length+(baseline.pending||[]).length;
+  if(!visualBands.length || count>=visualBands.length)return {text:rawText,recovered:0};
+  const key=o=>`${normalizeSymbol(o.symbol||currentSymbol)}|${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(5)}`;
+  const known=new Set([...(baseline.positions||[]),...(baseline.pending||[])].map(key));
+  const added=[];
+  window.__ROW_RESCUE_DEBUG=[];
+  // At most 7 short row crops, only on frames where independent pixels
+  // demonstrate missing OCR. This avoids a heavy second full-video pass.
+  for(const band of visualBands.slice(0,10)){
+    if(known.size>=visualBands.length)break;
+    const crop=makeTradeRowRescueCanvas(source,band);
+    let t='';
+    try{t=String((await boundedOcrRecognition(worker,crop))?.data?.text||'')}catch(e){break}
+    const parsed=parseOCR(t);
+    window.__ROW_RESCUE_DEBUG.push({y:band.center,text:t.slice(0,250),positions:parsed.positions.length,pending:parsed.pending.length});
+    const rows=[...(parsed.positions||[]),...(parsed.pending||[])];
+    if(rows.length!==1)continue;
+    const o=rows[0],k=key(o);
+    if(normalizeSymbol(o.symbol||'')!==normalizeSymbol(currentSymbol)||known.has(k))continue;
+    // Exact row crop evidence, never infer a decimal from a nearby row.
+    if(!Number.isFinite(o.lot)||o.lot<=0||o.lot>1000||!Number.isFinite(o.price)||o.price<=0)continue;
+    known.add(k);added.push(t.trim());
+  }
+  return {text:added.length?rawText+'\n'+added.join('\n'):rawText,recovered:added.length};
 }
 function countVisibleSelectedPendingLabels(text){
   const matches=String(text||'').matchAll(/\b([A-Z][A-Z0-9]{2,})\s*#?\s+(?:buy|sell)[\s\-‐‑–—−]+(?:limit|stop)\b/ig);
@@ -4054,7 +4101,7 @@ function recoverTrustedVideoOrderBasket(results){
       !mid?.isControlCenter && mid?.scrollBoundary==='middle' &&
       Number(mid.time)>Number(start.time)+.001 && Number(mid.time)<c.time-.001));
   });
-  // v433: MT5 Trade pane with a short, fully visible static order list.
+  // v434: MT5 Trade pane with a short, fully visible static order list.
   // Require >=4 independent OCR samples of an identical >=2-order basket,
   // a stable account header, no scroll evidence, and no extra order labels.
   // This path is intentionally disallowed when any scroll boundary is seen.
@@ -4066,6 +4113,12 @@ function recoverTrustedVideoOrderBasket(results){
   });
   const stableStaticBasket=largest.rows.length>=2 && largest.rows.length<=5 &&
     candidates.length>=4 && staticOrderFrames.length>=4 &&
+    staticOrderFrames.filter(r=>{
+      const parsed=parseOCR(String(r?.data?.text||''));
+      const count=(parsed.positions||[]).filter(o=>normalizeSymbol(o.symbol||currentSymbol)===currentSymbol).length+
+        (parsed.pending||[]).filter(o=>normalizeSymbol(o.symbol||currentSymbol)===currentSymbol).length;
+      return Number(r.visualTradeRows)>0 && Number(r.visualTradeRows)===count;
+    }).length>=4 &&
     !(results||[]).some(r=>['top','middle','bottom'].includes(r?.scrollBoundary)) &&
     baskets.length===1 && maxVisibleLabels===largest.rows.length &&
     candidates.every(c=>c.rows.length===largest.rows.length && c.key===largest.key) &&
@@ -4106,6 +4159,26 @@ function recoverTrustedVideoOrderBasket(results){
     });
     if(!recovered)return {rows:[],authoritative:false,incomplete:true,
       reason:'ORDER_ROW_UNPARSED',observedCounts:baskets.map(g=>g.rows.length)};
+  }
+  // v434: One frame can OCR 0.01 as 9.01. Do not treat a single isolated
+  // outlier as a real order mutation when 3+ independent, pixel-complete,
+  // non-scrolling frames agree on every side/price/lot.
+  const pixelComplete=results.filter(r=>{
+    if(r?.isControlCenter||r?.scrollBoundary!=='none'||!(r.visualTradeRows>0))return false;
+    const parsed=parseOCR(String(r.data?.text||''));
+    return parsed.positions.length+parsed.pending.length===r.visualTradeRows;
+  });
+  const best=baskets.slice().sort((a,b)=>b.support-a.support||b.rows.length-a.rows.length)[0];
+  if(best?.support>=3 && best.rows.length>=2 && pixelComplete.length>=3 &&
+     !(results||[]).some(r=>['top','middle','bottom'].includes(r?.scrollBoundary))){
+    const bestKeys=new Set(best.rows.map(signature));
+    const others=baskets.filter(g=>g.key!==best.key);
+    const isolated=others.every(g=>g.support===1 && g.rows.length===best.rows.length &&
+      g.rows.every(o=>best.rows.some(b=>String(o.side).toLowerCase()===String(b.side).toLowerCase() && Math.abs(Number(o.price)-Number(b.price))<1e-5)));
+    if(isolated && best.rows.length===Math.max(...baskets.map(g=>g.rows.length))){
+      return {rows:best.rows,authoritative:true,terminalConfirmed:true,support:best.support,
+        observedCounts:baskets.map(g=>g.rows.length),source:'pixel-verified-static-majority'};
+    }
   }
   const incompatible=baskets.filter(g=>g.rows.some(o=>!fullSet.has(signature(o))));
   if(incompatible.length){
@@ -4172,6 +4245,20 @@ function parseTradeRowsByLinePair(text){
 //   2) the damaged row is directly attached to a Limit/Stop heading, and
 //   3) inserting the missing decimal reproduces that dominant lot.
 // A real `1.00 / 0 at ...` remains untouched, as does any ambiguous basket.
+// v434: iPhone's floating overlay hides the leading G in GOLD and the 0
+// in 0.01 on the LAST row. Require independent pixel evidence of that row,
+// at least three intact GOLD Limit labels in the SAME frame, and explicit
+// remaining 'OLD sell limit' + '.01 / 0 at PRICE' text. No price is invented.
+function repairOccludedGoldPendingLabel(text,visualRows){
+  const t=String(text||'');
+  if(normalizeSymbol(currentSymbol)!=='GOLD#' && normalizeSymbol(currentSymbol)!=='GOLD')return t;
+  if(!(visualRows>=5))return t;
+  if((t.match(/\bGOLD#?\s+sell\s+limit\b/ig)||[]).length<3)return t;
+  if(!/(?:^|\n)\s*[)\]\W]*OLD#?\s+sell\s+limit\b/im.test(t))return t;
+  if(!/(?:^|\n)\s*[)\]\W]*\.0?1\s*\/\s*0\s+at\s+\d{3,6}\.\d{2,5}\b/im.test(t))return t;
+  return t.replace(/(^|\n)(\s*[)\]\W]*)OLD(#?\s+sell\s+limit\b)/im,'$1GOLD$3')
+    .replace(/(^|\n)(\s*[)\]\W]*)\.(0?1)(\s*\/\s*0\s+at\s+\d{3,6}\.\d{2,5}\b)/im,(_,nl,prefix,digits,tail)=>nl+'0.'+digits+tail);
+}
 function normalizeOccludedMt5OrderLotText(text){
   const original=String(text||'');
   const lines=original.replace(/\r/g,'').split('\n');
@@ -4992,7 +5079,7 @@ async function recognizeOne(TesseractNS,source,psm,logger){
     return r;
   }finally{try{await worker.terminate()}catch(e){console.warn('[XM] recognizeOne worker terminate skipped',e)}}
 }
-// v433: A timed-out recognition cannot safely share its worker with another frame.
+// v434: A timed-out recognition cannot safely share its worker with another frame.
 // Terminate the underlying worker, not only the Promise.race waiter.
 async function boundedOcrRecognition(worker,source){
   let timer,expired=false;
@@ -5071,8 +5158,25 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
       // drops MT5's small price digits on iPhone recordings, while full-frame PSM 6 preserves them.
       const r=await boundedOcrRecognition(worker,source);
       const isTradeFrame=/(?:残高|有効証拠金|クレジット|オーダー|placed)/i.test(String(r?.data?.text||''));
-      const visualTradeRows=isTradeFrame?countVisualTradeRows(sources[i].canvas):0;
-      results.push({data:r.data,time:sources[i].time,frameIndex:sourceFrameIndex,isControlCenter:false,scrollBoundary:sources[i].scrollBoundary||'none',visualTradeRows});
+      const bands=isTradeFrame?detectVisualTradeRowBands(sources[i].canvas):[];
+      let visualTradeRows=bands.length;
+      let data=r.data,recoveredRows=0;
+      if(isTradeFrame && bands.length){
+        const corrected=repairOccludedGoldPendingLabel(String(data?.text||''),bands.length);
+        if(corrected!==String(data?.text||''))data={...data,text:corrected};
+      }
+      if(isTradeFrame && mode!=='trade-column-recover' && bands.length){
+        const parsedNow=parseOCR(String(data?.text||''));
+        const n=(parsedNow.positions||[]).length+(parsedNow.pending||[]).length;
+        // Restrict the expensive fallback to at most four frames per video.
+        // OCR success on normal frames has ZERO extra recognition work.
+        if(n<bands.length && results.filter(x=>x.recoveryAttempted).length<4){
+          const rescue=await rescueMissingTradeRows(worker,sources[i].canvas,String(data?.text||''),bands);
+          recoveredRows=rescue.recovered;
+          if(recoveredRows)data={...data,text:rescue.text};
+        }
+      }
+      results.push({data,time:sources[i].time,frameIndex:sourceFrameIndex,isControlCenter:false,scrollBoundary:sources[i].scrollBoundary||'none',visualTradeRows,recoveredRows,recoveryAttempted:isTradeFrame&&bands.length>0&&((parseOCR(String(r?.data?.text||'')).positions||[]).length+(parseOCR(String(r?.data?.text||'')).pending||[]).length)<bands.length});
     }
   }finally{if(ownWorker){try{await worker.terminate()}catch(e){console.warn('[XM] OCR worker terminate skipped',e)}}}
   results.expectedFrameCount=sources.expectedFrameCount||sources.length;
@@ -5451,7 +5555,7 @@ $('mediaFile').addEventListener('change',async e=>{
   const importToken=(window.__mediaImportToken||0)+1; window.__mediaImportToken=importToken; window.__mediaBusy=true; window.__activeMediaSelectionKey=selectionKey; if($('mediaChoose'))$('mediaChoose').disabled=true;updateAddTradeScreenshotUI();
   const stillCurrent=()=>window.__mediaImportToken===importToken;
   let importSnapshot=null,sharedVideoWorker=null,prewarmedVideoWorkerPromise=null;
-  // v433: An OCR/codec promise can hang without rejecting on iPhone Safari.
+  // v434: An OCR/codec promise can hang without rejecting on iPhone Safari.
   // Watch progress, fail closed, and release the UI even if the original promise never settles.
   const importStartedAt=Date.now();
   let lastActivityAt=Date.now(), lastStatus='';
@@ -5556,7 +5660,7 @@ $('mediaFile').addEventListener('change',async e=>{
   try{
     let videoSourcesForReuse=null;
     sharedVideoWorker=null;
-    // v433: Safari can stall when decoding bundled WASM while simultaneously
+    // v434: Safari can stall when decoding bundled WASM while simultaneously
     // seeking video frames. Finish video extraction before loading/starting OCR.
     let ocrEnginePromise=null;
     prewarmedVideoWorkerPromise=null;
@@ -5687,7 +5791,7 @@ $('mediaFile').addEventListener('change',async e=>{
       /XM画面のスクショ\/動画/i
     ];
     const rawAllText=String(results.map(r=>r?.data?.text||r?.text||'').join('\\n')||'');
-    // v433: Match the symbol explicitly shown in the MT5 Trade/Order pane.
+    // v434: Match the symbol explicitly shown in the MT5 Trade/Order pane.
     // A previous GOLD selection must not silently filter three EURGBP orders.
     // Require >=2 complete, same-symbol order rows in at least two independent
     // OCR frames, and reject mixed-symbol baskets. Quote-board symbols do not
@@ -8526,7 +8630,7 @@ function runV370CoherentOrderBasketSelfTest(){
   const savedSymbol=currentSymbol;
   currentSymbol='GOLD#';
   try{
-  const trade=`オーダー
+    const trade=`残高 100000 有効証拠金 120000 オーダー
 GOLD sell limit
 0.01 / 0 at 4352.49 placed
 GOLD sell limit
@@ -8535,13 +8639,14 @@ GOLD sell limit
 0.01 / 0 at 4395.41 placed
 GOLD sell limit
 0.01 / 0 at 4413.92 placed`;
-  const basket=recoverTrustedVideoOrderBasket([
-    {time:6.1,data:{text:trade}},
-    {time:7.2,data:{text:trade}}
-  ]);
-  const prices=(basket.rows||[]).map(o=>Number(o.price).toFixed(2));
-  return basket.authoritative===true&&basket.support===2&&prices.length===4&&
-    new Set(prices).size===4&&['4352.49','4376.90','4395.41','4413.92'].every(p=>prices.includes(p));
+    const short=[{time:6.1,data:{text:trade}},{time:7.2,data:{text:trade}}];
+    const insufficient=recoverTrustedVideoOrderBasket(short);
+    const frames=[6.1,6.5,7.0,7.4].map(time=>({time,scrollBoundary:'none',visualTradeRows:4,data:{text:trade}}));
+    const basket=recoverTrustedVideoOrderBasket(frames);
+    const prices=(basket.rows||[]).map(o=>Number(o.price).toFixed(2));
+    return insufficient.authoritative!==true && basket.authoritative===true &&
+      prices.length===4 && new Set(prices).size===4 &&
+      ['4352.49','4376.90','4395.41','4413.92'].every(p=>prices.includes(p));
   }finally{currentSymbol=savedSymbol}
 }
 
@@ -10105,7 +10210,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v433-20261026';
+window.__APP_BUILD__='v434-20261026';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -10148,9 +10253,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v433-20261026'
+  build:'v434-20261026'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v433-20261026'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v434-20261026'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v452-20261029">
+<meta name="build-id" content="v453-20261029">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v452</title>
+<title>Stop Out positioning｜デラポジ Pro v453</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -841,7 +841,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v452</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v453</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -854,7 +854,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v452</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v453</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1437,7 +1437,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker diagnostics'; window.__NETWORK_BUILD__='v452-20261029';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker diagnostics'; window.__NETWORK_BUILD__='v453-20261029';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1627,8 +1627,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v452-20261029',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v452-20261029';
+window.__DEPLOYMENT_STATE__={build:'v453-20261029',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v453-20261029';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1649,7 +1649,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v452-20261029', SHORT='v452';
+  const BUILD='v453-20261029', SHORT='v453';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -4242,6 +4242,21 @@ function recoverTrustedVideoOrderBasket(results){
       Math.min(...orderConsensusSamples.map(x=>Number(x.r.time||0)))>=0.4 &&
     !candidates.some(c=>c.rows.some(o=>!fullSet.has(signature(o)))) &&
     !unreadableTerminal.some(bad=>bad.visibleLabels>1);
+  // v453: record each independent safety gate instead of silently rejecting.
+  const staticGateAudit={
+    singleOrder:largest.rows.length===1,noScrollEvidence,
+    labelExactlyOne:maxVisibleLabels===1,orderConsensusFrames:orderConsensusSamples.length,
+    pixelRows:maxPixelTradeRows,
+    twoVotePositionCount:twoVotePositions.length,
+    allPositionSignatures:strongestPositionVotes.length,
+    pixelCompleteFrames:staticTradeSamples.filter(x=>Number(x.r.visualTradeRows)===maxPixelTradeRows).length,
+    consensusTimeSpan:orderConsensusSamples.length?+(Math.max(...orderConsensusSamples.map(x=>Number(x.r.time||0)))-Math.min(...orderConsensusSamples.map(x=>Number(x.r.time||0)))).toFixed(3):0,
+    competingOrderCandidates:candidates.filter(c=>c.rows.some(o=>!fullSet.has(signature(o)))).length,
+    unreadableExtraLabels:unreadableTerminal.filter(bad=>bad.visibleLabels>1).length,
+    verifiedStaticUnion,stableStaticFrames:matchingCompleteFrames.length,
+    positionSignatures:[...positionVotes.entries()].map(([key,v])=>({key,votes:v.times.size}))
+  };
+  window.__ORDER_STATIC_V453_GATES=staticGateAudit;
   window.__ORDER_STATIC_V452_AUDIT={frames:staticTradeSamples.length,
     pendingConsensus:orderConsensusSamples.length,pixelRows:maxPixelTradeRows,
     verifiedPositions3:verifiedPositions.length,verifiedPositions2:twoVotePositions.length,
@@ -6465,7 +6480,7 @@ $('mediaFile').addEventListener('change',async e=>{
       const parsedCounts=trustedVideoOrders.observedCounts||[];
       const isStatic=visibleFrames.length>=2&&!observedScroll;
       window.__ORDER_FAILURE_AUDIT={reason:trustedVideoOrders.reason||'ORDER_BASKET_CONFLICT',
-        isStatic,maxLabels,parsedCounts,frameCount:visibleFrames.length,staticAudit:window.__ORDER_STATIC_V452_AUDIT};
+        isStatic,maxLabels,parsedCounts,frameCount:visibleFrames.length,staticAudit:window.__ORDER_STATIC_V452_AUDIT,staticGates:window.__ORDER_STATIC_V453_GATES};
       if(isStatic){
         throw new Error('ORDER_STATIC_OCR_UNCONFIRMED: 注文画面はスクロール不要ですが、OCRで全行の数量・価格を確定できません。誤計算防止のため停止しました。');
       }
@@ -6881,6 +6896,13 @@ $('mediaFile').addEventListener('change',async e=>{
         extra.textContent='取引行検証：'+(a ? '対象='+a.frames+' / 注文一致='+a.pendingConsensus+' / 画像行数='+a.pixelRows+' / 保有3回='+a.verifiedPositions3+' / 保有2回='+a.verifiedPositions2+' / 保有候補='+a.allPositionSignatures+' / 採用='+a.accepted : '静止画候補なし')+
           ' / スクロール判定='+String(!orderAudit.isStatic);
         $('ocrStatus').appendChild(extra);
+        const gates=orderAudit.staticGates;
+        if(gates){
+          const gateEl=document.createElement('div');gateEl.className='small';
+          gateEl.style.cssText='overflow-wrap:anywhere;color:#f5b44e;margin-top:6px';
+          gateEl.textContent='確定条件：'+Object.entries(gates).filter(([k])=>k!=='positionSignatures').map(([k,v])=>k+'='+v).join(' / ');
+          $('ocrStatus').appendChild(gateEl);
+        }
 
       }
     }
@@ -10408,7 +10430,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v452-20261029';
+window.__APP_BUILD__='v453-20261029';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -10451,9 +10473,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v452-20261029'
+  build:'v453-20261029'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v452-20261029'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v453-20261029'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

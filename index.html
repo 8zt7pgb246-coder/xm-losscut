@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v510-20261103">
+<meta name="build-id" content="v511-20261103">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v510</title>
+<title>Stop Out positioning｜デラポジ Pro v511</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -316,6 +316,7 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
   grid-template-areas:
     "kicker symbol"
     "price price"
+    "quote quote"
     "change change"
     "rule rule"
     "pnl pnl";
@@ -326,6 +327,8 @@ input:focus,select:focus{outline:2px solid #ffffff22;border-color:#677384!import
 }
 .deadlineHero .deadlineKicker{grid-area:kicker;justify-self:start;font-size:10px!important;letter-spacing:1.3px!important;padding:4px 8px!important;margin:0!important}
 .deadlineHero .deadlineSub{display:none!important}
+#deadlineQuoteBasis{grid-area:quote;display:block!important;font-size:10px;color:#d6dce5;line-height:1.3;text-align:center;overflow-wrap:anywhere;margin:1px 0}
+#deadlineQuoteBasis[hidden]{display:none!important}
 .deadlineHero .gold{grid-area:symbol;justify-self:end;font-size:10.5px!important;margin:0!important;text-align:right!important;color:#d6dce5!important;letter-spacing:.3px}
 .deadlineHero .price{grid-area:price;width:100%;font-size:38px!important;line-height:1!important;margin:2px 0 1px!important;text-align:center!important;justify-self:stretch!important;letter-spacing:-1px!important;text-shadow:0 0 28px #ff3b304d!important}
 .deadlineHero .change{grid-area:change;font-size:10px!important;line-height:1.25!important;margin:4px 0 0!important}
@@ -845,7 +848,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v510</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v511</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -858,7 +861,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v510</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v511</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -889,7 +892,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
     </div>
   </details>
 </div>
-<div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT</div><div class="deadlineSub">Stop Out開始予測価格</div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">未約定の将来約定シナリオ／現在保有のみの推定値は上記。</div><div class="heroCurrentPnl"><span>認識保有の含み損益（概算）</span><b id="currentPnl">—</b></div></div><div id="pendingDeadlineWarning" class="danger" style="display:none;margin-top:10px"></div>
+<div class="hero deadlineHero"><div class="deadlineKicker">推定 STOP OUT／Bid基準</div><div class="deadlineSub" id="deadlineQuoteBasis" hidden></div><div class="gold" id="heroSymbol">—</div><div class="price" id="result">—</div><div class="change" id="distance">—</div><div class="deadlineRule">未約定の将来約定シナリオ／現在保有のみの推定値は上記。</div><div class="heroCurrentPnl"><span>認識保有の含み損益（概算）</span><b id="currentPnl">—</b></div></div><div id="pendingDeadlineWarning" class="danger" style="display:none;margin-top:10px"></div>
 
 
 <div class="card compactCard" id="scenarioCard">
@@ -936,7 +939,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <div id="specWarning" class="danger" style="display:none"></div>
 
 <div id="diagnosticPanel" class="card" style="display:none"><div class="row"><b>開発者診断：計算整合性チェック</b><span id="calcCheck" class="small">未実行</span></div><div class="small">本番画面には表示せず、?debug=1 または診断モードでのみ表示します。回帰テストは開発者向け監視です。NGの場合は安全のためDEAD LINE計算を停止します。</div></div>
-<details class="card compactDetails"><summary><b>計算モデル</b></summary><div class="footer">Buy Limit＝Ask、含み損＝Bid。手数料・スワップ等は別途。</div></details>
+<details class="card compactDetails"><summary><b>計算モデル</b></summary><div class="footer">BUYの決済はBid、SELLの決済はAsk。DEAD LINEはBid基準で表示し、同時点のAskは読取スプレッドを固定した推定です。手数料・スワップ等は別途。</div></details>
 </div>
 
 <div id="pagePnl" class="page">
@@ -1434,6 +1437,7 @@ function setImportStage(n,msg){
   console.info('[XM IMPORT]',n,msg);
 }
 function markMediaImportFailed(){
+  renderDeadlineQuoteBasis(null);
   window.__MEDIA_STAGE='failed';window.__importStage='failed';window.__releaseReady=false;
   window.__POST_IMPORT_AUDIT__={pass:false,issues:['MEDIA_IMPORT_FAILED']};
   setAnalysisPanelState('error','⚠ 読み込み停止','詳細を確認');
@@ -1443,7 +1447,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker diagnostics'; window.__NETWORK_BUILD__='v510-20261103';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker diagnostics'; window.__NETWORK_BUILD__='v511-20261103';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1659,8 +1663,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v510-20261103',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v510-20261103';
+window.__DEPLOYMENT_STATE__={build:'v511-20261103',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v511-20261103';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1681,7 +1685,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v510-20261103', SHORT='v510';
+  const BUILD='v511-20261103', SHORT='v511';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -2265,6 +2269,7 @@ function invalidatePositionData(reason){
 // v414: a failed replacement import must not leave the previous calculation
 // visible in secondary panels, even when the main DEAD LINE is locked.
 function clearPreviousCalculationPresentation(){
+  renderDeadlineQuoteBasis(null);
   const neutral=['scenarioSteps','calcBasis','pendingDeadlineWarning'];
   for(const id of neutral){const el=$(id);if(el){el.innerHTML='';if(id==='pendingDeadlineWarning')el.style.display='none';}}
   for(const id of ['scenarioStatus','basisStatus','positionCount','count']){
@@ -2995,7 +3000,7 @@ function renderScenarioSteps(positions,pending,filled,added,lc,simMeta=null){
   });
   if(!added.length&&pending.length)lines.push(`<div class="scenarioRow"><span>Pending</span><b>Stop Out到達前の追加約定なし</b></div>`);
   if(simMeta?.skipped?.length){const px=simMeta.skipped.map(o=>formatScenarioGoldPrice(Number(o.price))).join(' / ');lines.push(`<div class="scenarioRow"><span>Stop Outより${up?'上':'下'}の未到達注文</span><b>${simMeta.skipped.length}件：${px}</b></div>`);if(Number.isFinite(simMeta.allFilledLc))lines.push(`<div class="scenarioRow scenarioTheory"><span>全注文を仮約定した理論LC</span><b>${formatDeadlinePrice(simMeta.allFilledLc)}（実際には到達不能）</b></div>`);}
-  if(Number.isFinite(lc)){lines.push(`<div class="scenarioRow scenarioFinal"><span>実際の${dir}経路でStop Out開始予測</span><b>${formatDeadlinePrice(lc)}</b></div>`);st.textContent=`${dir} / Pending反映 ${added.length}/${pending.length}件 / Stop Out時 ${filled.length}件`}else st.textContent='計算未確定';el.innerHTML=lines.join('');
+  if(Number.isFinite(lc)){lines.push(`<div class="scenarioRow scenarioFinal"><span>${dir}経路の推定Stop Out（Bid基準）</span><b>${formatDeadlinePrice(lc)}</b></div>`);st.textContent=`${dir} / Pending反映 ${added.length}/${pending.length}件 / Stop Out時 ${filled.length}件`}else st.textContent='計算未確定';el.innerHTML=lines.join('');
 }
 
 function buildCurrentTradeState(){
@@ -3185,7 +3190,21 @@ function stopoutRealityContradiction(state,sim){
   }
   return null;
 }
+// The engine uses one Bid coordinate. Display Ask at the SAME scenario
+// endpoint, using only the validated state's spread, without changing the root.
+function renderDeadlineQuoteBasis(lc,market=null){
+ const el=$('deadlineQuoteBasis');if(!el)return;
+ el.hidden=true;el.textContent='';delete el.dataset.bid;delete el.dataset.ask;delete el.dataset.spread;
+ const bid=Number(market?.bid),ask=Number(market?.ask),spread=ask-bid;
+ if(!Number.isFinite(lc)||!(bid>0&&ask>=bid)||!Number.isFinite(spread))return;
+ const endpointAsk=lc+spread;
+ if(!Number.isFinite(endpointAsk)||endpointAsk<=0)return;
+ el.dataset.bid=String(lc);el.dataset.ask=String(endpointAsk);el.dataset.spread=String(spread);
+ el.textContent=`同時点の推定Ask ${formatDeadlinePrice(endpointAsk)} ／ スプレッド固定`;
+ el.hidden=false;
+}
 function clearStaleDeadlinePresentation(){
+  renderDeadlineQuoteBasis(null);
   // A successful import gate certifies one particular state. Any subsequent
   // recalculation (including edits, rollback, and a new import) invalidates it.
   // The gate is re-issued only by runPostImportAcceptanceAudit().
@@ -3276,10 +3295,10 @@ function calc(){
     const anchor=Number(brokerAccountSnapshot?.anchorBid);
     const quoteBid=Number(state.market.bid);
     const spread=Math.max(0,Number(state.market.ask)-Number(state.market.bid));
-    const contributions=positions.map((p,i)=>{const side=String(p.side||'').toLowerCase(),lot=Number(p.lot),entry=Number(p.price),px=side==='sell'?anchor+spread:anchor;const yen=(side==='sell'?entry-px:px-entry)*lot*Number(state.contract.size)*Number(state.contract.quoteRate);return `${i+1}:${side} ${lot.toFixed(2)}@${entry.toFixed(2)}=${fmt(yen)}円`});
+    const contributions=positions.map((p,i)=>{const side=String(p.side||'').toLowerCase(),lot=Number(p.lot),entry=Number(p.price),px=side==='sell'?anchor+spread:anchor,native=(side==='sell'?entry-px:px-entry)*lot*Number(state.contract.size),rate=Number(native>=0?state.contract.quoteProfitRate:state.contract.quoteRate),yen=native*rate;return `${i+1}:${side} ${lot.toFixed(2)}@${formatPrice(entry)}=${fmt(yen)}円`});
     const exposure=positions.reduce((a,p)=>a+(String(p.side||'').toLowerCase()==='sell'?-1:1)*Number(p.lot)*Number(state.contract.size)*Number(state.contract.quoteRate),0);
     const impliedPriceMove=Math.abs(exposure)>1e-9?(observed-model)/exposure:NaN;
-    const evidence=`MT5損益 ${fmt(observed)}円 / 建玉モデル ${fmt(model)}円 / 差額 ${fmt(difference)}円 / 許容 ${fmt(d.tolerance)}円 / MT5基準Bid ${Number.isFinite(anchor)?anchor.toFixed(2):'不明'} / ${brokerAccountSnapshot?.anchorAskSource?.includes('estimate')?'推定Ask':'同一画面Ask'} ${Number(brokerAccountSnapshot?.anchorAsk)>0?Number(brokerAccountSnapshot.anchorAsk).toFixed(2):'未取得'} / 気配値Bid ${Number.isFinite(quoteBid)?quoteBid.toFixed(2):'不明'} / スプレッド ${spread.toFixed(2)} / 損益差に相当する価格差 ${Number.isFinite(impliedPriceMove)?impliedPriceMove.toFixed(3):'不明'} / 保有 ${positions.length}件 / USDJPY ${Number(state.market.usdJpy).toFixed(3)} / 契約サイズ ${Number(state.contract.size)} / 各建玉 ${contributions.join('、')}`;
+    const evidence=`MT5損益 ${fmt(observed)}円 / 建玉モデル ${fmt(model)}円 / 差額 ${fmt(difference)}円 / 許容 ${fmt(d.tolerance)}円 / MT5基準Bid ${Number.isFinite(anchor)?formatPrice(anchor):'不明'} / ${brokerAccountSnapshot?.anchorAskSource?.includes('estimate')?'推定Ask':'同一画面Ask'} ${Number(brokerAccountSnapshot?.anchorAsk)>0?formatPrice(Number(brokerAccountSnapshot.anchorAsk)):'未取得'} / 気配値Bid ${Number.isFinite(quoteBid)?formatPrice(quoteBid):'不明'} / スプレッド ${formatPrice(spread)} / 損益差に相当する価格差 ${Number.isFinite(impliedPriceMove)?formatPrice(impliedPriceMove):'不明'} / 保有 ${positions.length}件 / ${c.quote}/JPY ${Number(state.contract.quoteRate).toFixed(6)} / 契約サイズ ${Number(state.contract.size)} / 各建玉 ${contributions.join('、')}`;
     window.__LAST_PNL_IDENTITY_AUDIT={...d,anchorBid:anchor,quoteBid,positions:positions.map(p=>({...p})),snapshotTime:brokerAccountSnapshot?.at||null};
     blank(`⚠ 口座数値の整合性を確認できないため計算停止。ポジションOCRの誤りと断定しません。残高・クレジット・有効証拠金の組合せに未説明の差額があります。\n【口座差額】${fmt(Number(d.unexplainedAdjustment))}円（原因未確定、スワップ等と断定不可）\n【損益検算】${evidence}`,`${pending.length}件 / 口座整合性NG`);
     renderOrderStatus([],pending,null);return;
@@ -3317,6 +3336,7 @@ function calc(){
   if(Number.isFinite(lc)){
     const fmtScenarioPrice=v=>formatDeadlinePrice(v);
     $('result').textContent=fmtScenarioPrice(lc);
+    renderDeadlineQuoteBasis(lc,state.market);
     const moved=Number.isFinite(sim.currentLc)&&Math.abs(lc-sim.currentLc)>1e-6,
       pendingText=pending.length?(added.length?`Pending ${added.length}/${pending.length}件反映`:`Pending 0/${pending.length}件。Stop Outが先`):'Pendingなし',
       skipped=sim.skipped?.length&&Number.isFinite(sim.allFilledLc)?` / 未到達${sim.skipped.length}件。全${pending.length}件を仮約定なら ${fmtScenarioPrice(sim.allFilledLc)}`:'';
@@ -6684,6 +6704,7 @@ $('mediaFile').addEventListener('change',async e=>{
   clearTimeout(mediaSelectionWatchdog);
   const f=selected;
   importSnapshot=captureImportSnapshot();
+  clearStaleDeadlinePresentation(); // A new selection must not display the prior Bid/Ask endpoint while loading.
   clearBrokerAccountSnapshot('new-import');
   window.__activeMediaFile=f;
   console.info('[XM] FILE_CAPTURED',f.name||'(unnamed)',f.type||'(empty MIME)',f.size);
@@ -7336,7 +7357,7 @@ $('mediaFile').addEventListener('change',async e=>{
     }
     for(const o of authoritativeVideoPositions){if(!positionsRaw.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-o.lot)<1e-6&&Math.abs(Number(x.price)-o.price)<1e-5))positionsRaw.push(o);}
     const sanitizedEvidence=sanitizeRecognizedPositions(positionsRaw);
-    const positionEvidenceCount=new Set(sanitizedEvidence.map(o=>`${String(o.side).toLowerCase()}|${Number(o.lot).toFixed(4)}|${Number(o.price).toFixed(3)}`)).size;
+    const positionEvidenceCount=new Set(sanitizedEvidence.map(positionViewportKey).filter(Boolean)).size;
     const currentCore=String(currentSymbol||'').replace(/#$/,'');
     const aliasPattern=/^GOLD$/i.test(currentCore)?'(?:GOLD|XAUUSD)':currentCore.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const tradeRowEvidence=(parsed.rawText||'').match(new RegExp(`${aliasPattern}#?\\s+(?:buy|sell)\\s+0?\\.\\d+`,'ig'))||[];
@@ -11561,7 +11582,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v510-20261103';
+window.__APP_BUILD__='v511-20261103';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -11604,9 +11625,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v510-20261103'
+  build:'v511-20261103'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v510-20261103'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v511-20261103'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="build-id" content="v511-20261103">
+<meta name="build-id" content="v518-20261106">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050607">
-<title>Stop Out positioning｜デラポジ Pro v511</title>
+<title>Stop Out positioning｜デラポジ Pro v518</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#111}.app{max-width:760px;margin:auto;padding:16px}
@@ -848,7 +848,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
 <body class="accessLocked">
 <div id="accessGate" class="accessGate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
   <div class="accessGateCard">
-  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v511</span>
+  <div class="accessGateBadge">PRIVATE BETA</div><span id="accessBuildVersion" class="accessBuildVersion">v518</span>
     <h2 id="accessGateTitle">DeadLine positioning</h2>
     <p class="accessGateLead">アクセスコードを入力してください</p>
     <form id="accessForm" autocomplete="off">
@@ -861,7 +861,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v511</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v518</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -1447,7 +1447,7 @@ function markMediaImportFailed(){
 window.__ocrReady = false;
 window.__ocrPromise = null;
 window.__BUNDLED_OCR_REQUIRED__=true;
-window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker diagnostics'; window.__NETWORK_BUILD__='v511-20261103';
+window.__ocrLoadStrategy = 'Bundled OCR + Blob Worker diagnostics'; window.__NETWORK_BUILD__='v518-20261106';
 function loadScript(src,timeout=12000){
   window.__ocrScriptLoads=window.__ocrScriptLoads||{};
   if(window.Tesseract)return Promise.resolve();
@@ -1663,8 +1663,8 @@ function videoSamplingRegressionTest(){
     times.length===4&&pos>=2&&
     rescue.length===2&&rescue[0]===.64&&rescue[1]===.82};
 }
-window.__DEPLOYMENT_STATE__={build:'v511-20261103',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
-window.__APP_BUILD__='v511-20261103';
+window.__DEPLOYMENT_STATE__={build:'v518-20261106',controlledByServiceWorker:!!navigator.serviceWorker?.controller,url:location.href};
+window.__APP_BUILD__='v518-20261106';
 window.__XM_CACHE_RESET_V81=true;
 window.__VIDEO_REGRESSION_FIXTURE__={
   duration:10.035,
@@ -1685,7 +1685,7 @@ function deploymentReloadWhenIdle(url){
   // GitHub Pages + iOS Safari can each retain stale HTML. Starting with v205,
   // verify the actually served index.html using a cache-busting request, and
   // clear only this app's legacy SW/Cache entries once per build.
-  const BUILD='v511-20261103', SHORT='v511';
+  const BUILD='v518-20261106', SHORT='v518';
   const status=()=>document.getElementById('deployStatus');
   const setStatus=(html)=>{const el=status();if(el)el.innerHTML=html};
   try{
@@ -2650,11 +2650,15 @@ function readDisplayedPositionPnlEvidence(canvas,text){
     if(!heading)continue;
     if(normalizeSymbol(heading[1])!==normalizeSymbol(currentSymbol))return null;
     const following=[];
-    for(let j=i+1;j<Math.min(lines.length,i+5);j++){if(/\b(?:buy|sell)\b/i.test(lines[j]))break;following.push(lines[j]);}
-    const money=heading[4]||following.find(x=>/^[+−–—-]?\s*\d[\d ,.]*$/.test(x));
-    if(!money)return null;
-    const arrow=following.join(' ').match(/(\d[\d,.]*\.\d+)\s*(?:[-—–]\s*>|→|>|—|–|-|to)\s*(\d[\d,.]*\.\d+)/i);
+    for(let j=i+1;j<Math.min(lines.length,i+5);j++){if(symbolFromText(lines[j].split(/\s/)[0])&&(detectTradeSideFromLine(lines[j])||detectPendingSideFromLine(lines[j])))break;following.push(lines[j]);}
+    const arrowPattern=/(\d[\d,.]*\.\d+)\s*(?:[-—–]\s*>|→|>|—|–|-|to)\s*(\d[\d,.]*\.\d+)/i;
+    const arrow=following.join(' ').match(arrowPattern);
     if(!arrow)return null;
+    // PSM6 often places the JPY cell after entry→current on the SAME line.
+    // Read only the complete trailing money token; never reuse either price.
+    const inlineMoney=following.map(line=>{const a=line.match(arrowPattern);if(!a)return null;const tail=line.slice(a.index+a[0].length).trim();return /^[+−–—-]?\s*\d[\d ,.]*$/.test(tail)?tail:null}).find(Boolean);
+    const money=heading[4]||inlineMoney||following.find(x=>/^[+−–—-]?\s*\d[\d ,.]*$/.test(x));
+    if(!money)return null;
     const band=bands[tradeRowIndex++];if(!band)return null;
     const x=Math.floor(canvas.width*.73),y=Math.max(0,band.top-4),w=canvas.width-x,h=Math.min(canvas.height-y,band.bottom-band.top+12);
     const d=ctx.getImageData(x,y,w,h).data;let red=0,blue=0;
@@ -2674,8 +2678,61 @@ function readDisplayedPositionPnlEvidence(canvas,text){
   const parsed=parseOCR(text),positions=(parsed.positions||[]).filter(o=>normalizeSymbol(o.symbol||currentSymbol)===currentSymbol),pending=(parsed.pending||[]).filter(o=>normalizeSymbol(o.symbol||currentSymbol)===currentSymbol);
   if(!rows.length||rows.length!==positions.length||bands.length!==positions.length+pending.length||
      canonicalPositionFingerprint(rows)!==canonicalPositionFingerprint(positions))return null;
+  const verified=canvas.__verifiedDisplayedPnlCells;
+  if(verified?.text===String(text)){if(verified.rejected)return null;for(let i=0;i<rows.length;i++){const r=verified.rows[i];if(r?.price!==rows[i].price||r?.lot!==rows[i].lot||r?.side!==rows[i].side)return null;rows[i]={...r};}}
   return {rows,visualRows:bands.length,source:'same-frame-monetary-text-and-cell-color'};
 }
+async function verifyOutlierDisplayedPnlCells(worker,canvas,text,restorePsm){
+  const evidence=readDisplayedPositionPnlEvidence(canvas,text);
+  if(!evidence||evidence.rows.length<3)return;
+  const ratios=evidence.rows.map(r=>{const d=Math.abs(r.price-r.close)*r.lot;return Math.abs(r.price-r.close)>Math.max(1e-7,Math.abs(r.close)*1e-5)&&d>0?Math.abs(r.pnl)/d:null}),valid=ratios.filter(v=>v>0).sort((a,b)=>a-b);
+  if(valid.length<3)return;
+  const median=valid[Math.floor(valid.length/2)],suspects=ratios.map((v,i)=>v!==null&&(v<median/4||v>median*4)?i:-1).filter(i=>i>=0);
+  let reconciledTotal=null;
+  if(!suspects.length){
+    const account=parseAccountSnapshotFromText(text);
+    if(![account.balance,account.equity,account.margin,account.free].every(Number.isFinite)||
+       !hasCoherentJpyAccountIdentity(text,account)||
+       !evidence.rows.every(r=>r.close===evidence.rows[0].close))return;
+    const header=account.equity-account.balance-(account.credit||0);
+    const residual=evidence.rows.reduce((sum,row)=>sum+row.pnl,0)-header;
+    if(Math.abs(residual)<=2)return;
+    const candidates=evidence.rows.map((row,i)=>{
+      const expected=row.pixelSign*Math.abs(row.price-row.close)*row.lot*median;
+      return ratios[i]!==null&&Math.abs(row.pnl-expected-residual)<=2?i:-1;
+    }).filter(i=>i>=0);
+    if(candidates.length!==1)return;
+    suspects.push(candidates[0]);
+    reconciledTotal=header;
+  }
+  const proof={text:String(text),rows:evidence.rows.map(r=>({...r})),rejected:true};canvas.__verifiedDisplayedPnlCells=proof;
+  if(suspects.length>2)return;
+  const bands=detectVisualTradeRowBands(canvas);let complete=true;
+  try{
+    for(const i of suspects){
+      const band=bands[i],gap=bands.length>1?Math.min(...bands.slice(1).map((b,j)=>b.top-bands[j].top)):canvas.height*.07;
+      const x=Math.floor(canvas.width*.71),y=Math.max(0,band.top-6),width=canvas.width-x,height=Math.min(canvas.height-y,band.bottom-band.top+Math.ceil(gap*.49));
+      const crop=document.createElement('canvas');crop.width=width*2;crop.height=height*2;crop.getContext('2d').drawImage(canvas,x,y,width,height,0,0,crop.width,crop.height);
+      const amounts=[];
+      for(const mode of ['7','6']){
+        await worker.setParameters({tessedit_pageseg_mode:mode,tessedit_char_whitelist:'0123456789-+,. '});
+        const result=await boundedOcrRecognition(worker,crop),token=String(result?.data?.text||'').trim().replace(/[−–—]/g,'-');
+        if(!/^[+-]?\s*\d[\d ,.]*/.test(token)||!/^[+-]?\s*\d[\d ,.]*$/.test(token)){amounts.push(null);continue;}
+        const grouped=/^[+-]?\s*\d{1,3}(?:[.,]\d{3})+$/.test(token)?token.replace(/[.,]/g,''):token;const n=parseSignedMoney(grouped);amounts.push(Number.isSafeInteger(n)?n:null);
+      }
+      const row=evidence.rows[i],same=amounts[0]!==null&&amounts[0]===amounts[1],signed=same?row.pixelSign*Math.abs(amounts[0]):null;
+      if(!same||(amounts[0]<0&&row.pixelSign!==-1)){complete=false;continue;}
+      proof.rows[i]={...row,pnl:signed,pixelRechecked:true};
+      (window.__PNL_PIXEL_RECHECK__??=[]).push({price:row.price,before:row.pnl,after:signed,source:'same-frame-cell-two-segmentation-modes',independentFrameCount:1});
+    }
+  }finally{await worker.setParameters({tessedit_pageseg_mode:String(restorePsm),tessedit_char_whitelist:''});}
+  if(reconciledTotal!==null&&(!complete||Math.abs(proof.rows.reduce((sum,row)=>sum+row.pnl,0)-reconciledTotal)>2)){
+    delete canvas.__verifiedDisplayedPnlCells;
+    return;
+  }
+  proof.rejected=!complete;
+}
+
 function collectVerifiedAccountPnlSamples(results,positions,account,rate,contract){
   if(!(rate>0&&contract>0)||!positions?.length)return [];
   const fingerprint=canonicalPositionFingerprint(positions),samples=[];
@@ -3563,15 +3620,17 @@ function alignQuotePriceGlyphs(source,x,y,w,h){
  const hits=[];
  for(let xx=0;xx<c.width;xx++){
   let top=c.height,bottom=-1,n=0;
-  for(let yy=0;yy<c.height;yy++){const k=(yy*c.width+xx)*4;let v=.299*d[k]+.587*d[k+1]+.114*d[k+2];if(background<100)v=255-v;d[k]=d[k+1]=d[k+2]=v;if(v<145){top=Math.min(top,yy);bottom=yy;n++;}}
+  for(let yy=0;yy<c.height;yy++){const k=(yy*c.width+xx)*4;let v=background<100?Math.max(d[k],d[k+1],d[k+2]):(.299*d[k]+.587*d[k+1]+.114*d[k+2]);if(background<100)v=255-v;d[k]=d[k+1]=d[k+2]=v;if(v<145){top=Math.min(top,yy);bottom=yy;n++;}}
   if(n>2)hits.push({x:xx,top,bottom});
  }
  ctx.putImageData(image,0,0);const groups=[];
  for(const q of hits){const last=groups.at(-1);if(last&&q.x-last.right<=2){last.right=q.x;last.top=Math.min(last.top,q.top);last.bottom=Math.max(last.bottom,q.bottom)}else groups.push({left:q.x,right:q.x,top:q.top,bottom:q.bottom});}
  if(groups.length<5||groups.length>10)return null;
- const maxH=Math.max(...groups.map(g=>g.bottom-g.top+1)),parts=groups.map(g=>{const gh=g.bottom-g.top+1,gw=g.right-g.left+1,dot=gh<maxH*.27&&gw<maxH*.35,oh=dot?10:80;return {...g,width:Math.max(5,Math.round(gw*oh/gh)),height:oh};});
+ const maxH=Math.max(...groups.map(g=>g.bottom-g.top+1)),parts=groups.map(g=>{const gh=g.bottom-g.top+1,gw=g.right-g.left+1,dot=gh<maxH*.27&&gw<maxH*.35,oh=dot?10:80;return {...g,width:Math.max(5,Math.round(gw*oh/gh)),height:oh,dot};});
  const out=document.createElement('canvas');out.width=parts.reduce((n,p)=>n+p.width+8,30);out.height=110;
  const o=out.getContext('2d');o.fillStyle='#fff';o.fillRect(0,0,out.width,out.height);let at=15;
+ const marks=parts.flatMap((p,i)=>p.dot?[i]:[]);
+ if(marks.length===1)out.quoteDecimal={index:marks[0],digits:parts.length-1};
  for(const p of parts){o.drawImage(c,p.left,p.top,p.right-p.left+1,p.bottom-p.top+1,at,95-p.height,p.width,p.height);at+=p.width+8;}
  return out;
 }
@@ -3623,10 +3682,26 @@ async function repairFxQuoteRows(worker,source,data,psm){
     const crop=alignQuotePriceGlyphs(source,Math.floor(w*x0),y0,Math.floor(w*(x1-x0)),y1-y0);
     if(!crop){values.push(null);continue;}
     const raw=String((await boundedOcrRecognition(worker,crop))?.data?.text||'').trim();text+=raw+' ';
-    values.push(/^\d+\.\d+$/.test(raw)?Number(raw):null);
+    const digits=normalizeSymbol(symbol)==='GOLD#'?2:/JPY#$/i.test(symbol)?3:5;
+    const decimal=crop.quoteDecimal;
+    // Restore a separator only when its own glyph was seen and every digit
+    // on either side was read. The separately printed spread still must agree.
+    const recovered=decimal&&/^\d+$/.test(raw)&&raw.length===decimal.digits&&
+      decimal.index===raw.length-digits&&decimal.index>0
+      ?raw.slice(0,decimal.index)+'.'+raw.slice(decimal.index):'';
+    const price=/^\d+\.\d+$/.test(raw)?raw:recovered;
+    values.push(price?Number(price):null);
    }
   }finally{await worker.setParameters({tessedit_pageseg_mode:String(psm),tessedit_char_whitelist:''});}
-  const q=values.every(x=>x>0)?{bid:values[0],ask:values[1]}:null,checked={...ev,ok:!!q&&Math.abs((q.ask-q.bid)/ev.point-ev.points)<.025};
+  const q=values.every(x=>x>0)?{bid:values[0],ask:values[1]}:null;
+  // Re-read the printed point count after glyph recovery too. A raised last
+  // digit can invalidate the full-frame pair and the spread icon can join its
+  // digits in the same OCR pass; neither supplies a missing price digit.
+  if(q&&Math.abs((q.ask-q.bid)/ev.point-ev.points)>=.025){
+    const points=await readPrintedFxSpread(worker,source,data,box,psm);
+    if(points>0&&Math.abs((q.ask-q.bid)/ev.point-points)<.025)ev={...ev,points,source:'same-frame-printed-spread-crop'};
+  }
+  const checked={...ev,ok:!!q&&Math.abs((q.ask-q.bid)/ev.point-ev.points)<.025};
   (window.__FX_ROW_REOCR_AUDIT??=[]).push({symbol,before:raw||null,after:q||null,printedPoints:ev.points,verified:!!checked.ok,text:text.slice(0,500)});
   if(checked.ok&&checked.points===ev.points)out[symbol]={...q,pointEvidence:checked,glyphEvidence:true};
  }
@@ -3765,6 +3840,28 @@ function parseBrokerPnlFromText(text){
   return null;
 }
 
+function normalizeJpyAccountGrouping(text){
+  const raw=String(text||'').replace(/\r/g,'\n'),jpy=raw.search(/\bJPY\b/i);
+  if(jpy<0)return raw;
+  const row=raw.search(/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{6}#?)\s+(?:buy|sell)/i),end=row>jpy?row:raw.length;
+  const lines=raw.slice(jpy+3,end).split('\n');
+  for(let i=0;i<lines.length;i++){
+    const m=lines[i].match(/^(\s*[^\d\n]*?)(\d{1,3}(?:\.\d{3})+)\s*$/);
+    if(!m||/%|level|証拠金率/i.test(m[1])||/%|level|証拠金率/i.test(lines[i-1]||''))continue;
+    lines[i]=m[1]+m[2].replace(/\./g,'');
+  }
+  return raw.slice(0,jpy+3)+lines.join('\n')+raw.slice(end);
+}
+function hasCoherentJpyAccountIdentity(text,snap){
+  const raw=String(text||''),jpy=raw.search(/\bJPY\b/i);
+  if(jpy<0)return true;
+  const headerLine=raw.slice(0,jpy+3).split(/\r?\n/).at(-1).replace(/[\u00a0\u202f\t]/g,' ');
+  const printed=headerLine.match(/([+−–—-]? *\d[\d ,.]*?) *JPY\b/i),floating=printed?parseSignedMoney(printed[1].trim()):NaN;
+  if([snap.equity,snap.margin,snap.free].every(Number.isFinite)&&Math.abs(snap.equity-snap.margin-snap.free)>2)return false;
+  if([snap.balance,snap.credit,snap.equity,floating].every(Number.isFinite)&&Math.abs(snap.equity-snap.balance-snap.credit-floating)>2)return false;
+  return true;
+}
+
 function parseAccountMoneyToken(s){
   if(s==null)return null;
   const raw=String(s).replace(/[￥¥,，]/g,'').replace(/[  ]/g,' ').trim();
@@ -3822,7 +3919,7 @@ function hasRobustPendingOrderRowText(text){
   });
 }
 function parseMt5AccountSummaryFallback(text){
-  const raw=String(text||'').replace(/\r/g,'\n');
+  const raw=normalizeJpyAccountGrouping(text);
   // Fallback is allowed only on an unmistakable MT5 Trade/Orders frame. Japanese
   // account labels and even the literal 'JPY' can be lost by OCR, so the anchor is
   // the MT5 order/position structure itself, not one fragile label token.
@@ -3870,6 +3967,20 @@ function parseMt5AccountSummaryFallback(text){
       const v=Math.round(agreed);
       return {balance:v,equity:v,credit:0,free:v,evidence:[`fallback-balance:${v}`,'fallback-flat-two-of-three-pending']};
     }
+  }
+  // Disambiguate a no-credit layout BEFORE the looser five-row credit fallback.
+  // Its final number is Margin Level, not Free Margin. Require both accounting
+  // identities AND the independently printed floating P/L to prove Credit = 0.
+  const printedFloating=raw.slice(0,jpy>=0?jpy+3:0).match(/([+−–—-]?\s*\d[\d ,.]*?)\s*JPY\b/i);
+  const floating=printedFloating?parseSignedMoney(printedFloating[1].trim()):NaN;
+  for(let i=0;i+4<nums.length;i++){
+    const b=nums[i],e=nums[i+1],margin=nums[i+2],free=nums[i+3],rawLevel=nums[i+4];
+    if(!(b>=1000&&e>=1000&&margin>0&&free>=0&&Number.isFinite(floating)))continue;
+    if(Math.abs(e-margin-free)>2||Math.abs(e-b-floating)>2)continue;
+    const expected=e/margin*100;
+    const level=[1,10,100,1000].map(scale=>rawLevel/scale).find(v=>v>=100&&Math.abs(v-expected)<=Math.max(.02,expected*.001));
+    if(level===undefined)continue;
+    return {balance:b,equity:e,credit:0,margin,free,marginLevel:level,evidence:[`fallback-balance:${b}`,'fallback-live-no-credit-double-checksum-priority','fallback-live-no-credit-double-checksum-and-floating-pnl']};
   }
   // v233: PSM11 usually preserves the complete five-number JPY account sequence
   // even when every Japanese label is garbled: Balance, Equity, Credit, Used Margin, Free.
@@ -3991,6 +4102,7 @@ function parseMt5AccountSummaryFallback(text){
   return {balance:null,equity:null,credit:null,free:null,evidence:[]};
 }
 function parseAccountSnapshotFromText(text){
+  text=normalizeJpyAccountGrouping(text);
   const lines=String(text||'').replace(/\r/g,'\n').split(/\n+/).map(normalizeOcrLine).filter(Boolean);
   const specs={
     balance:/(?:^|\b)(?:残高|balance)\s*[:：]?/i,
@@ -4065,6 +4177,10 @@ function aggregateAccountSnapshotFromResults(results){
       if(Number.isFinite(recovered.balance)&&recovered.balance>0)snap=recovered;
     }
     if(!Number.isFinite(snap.balance)||snap.balance<=0)continue;
+    if(!hasCoherentJpyAccountIdentity(text,snap)){
+      const rejected=(window.__ACCOUNT_CHECKSUM_REJECTIONS__??=[]);if(rejected.length<40)rejected.push({time:Number(r?.time)||0,frameIndex:r?.frameIndex,balance:snap.balance,equity:snap.equity,credit:snap.credit,margin:snap.margin,free:snap.free,reason:'same-frame-account-identity'});
+      continue;
+    }
     const full=Number.isFinite(snap.equity)&&Number.isFinite(snap.free);
     const cr=Number.isFinite(snap.credit)?snap.credit:0;
     const flat=full&&Math.abs(snap.equity-snap.free)<=1&&(Math.abs(snap.balance-snap.equity)<=1||Math.abs((snap.balance+cr)-snap.equity)<=1);
@@ -4378,6 +4494,17 @@ function positionViewportKey(o){
   return side&&Number.isFinite(lot)&&lot>0&&Number.isFinite(price)&&price>0
     ?`${side}|${lot.toFixed(4)}|${price.toFixed(5)}`:'';
 }
+// Pixel rechecks validate ONLY the entry token. A missing decimal in the
+// current-price column must neither manufacture an entry nor authorize a quote.
+function verifiesCroppedPositionEntry(text,expected){
+  const lines=String(text||'').split(/\r?\n/).map(normalizeOcrLine).filter(Boolean);
+  const headers=lines.filter(line=>symbolFromText(line.match(/^[A-Z][A-Z0-9#]*/i)?.[0]||'')===normalizeSymbol(expected.symbol||currentSymbol)&&!!detectTradeSideFromLine(line));
+  if(headers.length!==1||/\b(?:limit|stop|placed)\b/i.test(lines.join(' ')))return false;
+  const header=headers[0],side=detectTradeSideFromLine(header),lot=header.match(/(?:buy|sell|sel[!|1lI]?|buv|bu[yv])[^0-9]{0,7}(0?\.\d+|\d+(?:\.\d+)?)/i);
+  if(side!==String(expected.side).toLowerCase()||!lot||Math.abs(Number(lot[1])-Number(expected.lot))>1e-8)return false;
+  const entries=[...lines.join(' ').matchAll(/(?:^|\s)(\d[\d,]*\.\d+)\s*(?:->|→|>|—|–|-|to)(?=\s*\d)/g)];
+  return entries.length===1&&Math.abs(normalizeOcrNumber(entries[0][1])-Number(expected.price))<1e-8;
+}
 function orderedViewportOverlap(existingRows,nextRows){
   const a=(existingRows||[]).map(positionViewportKey).filter(Boolean);
   const b=(nextRows||[]).map(positionViewportKey).filter(Boolean);
@@ -4408,7 +4535,13 @@ function stitchScrolledPositionViewports(candidates){
       const nextKeys=c.rows.map(positionViewportKey);
       const allAlreadyKnown=nextKeys.length>0&&nextKeys.every(k=>currentKeys.has(k));
       if(allAlreadyKnown){
-        lastTime=c.time;endBoundary=endBoundary||!!c.hasOrderBoundary||!!c.hasTerminalBoundary;sourceFrames.add(c.frameIndex??`t:${c.time}`);continue;
+        // Scrolling can expose the Orders boundary without adding a position.
+        // Require the exact ordered suffix, a different physical frame and a
+        // verified terminal boundary; repeated/cropped top views are not proof.
+        const terminal=!!c.hasOrderBoundary||!!c.hasTerminalBoundary;
+        const connects=!c.hasAccountBoundary&&terminal&&c.rows.length>=2&&orderedViewportOverlap(rows,c.rows)===c.rows.length&&!sourceFrames.has(c.frameIndex??`t:${c.time}`);
+        if(connects)links++;
+        lastTime=c.time;endBoundary=endBoundary||(terminal&&connects);sourceFrames.add(c.frameIndex??`t:${c.time}`);continue;
       }
       // A changed basket while the account header is still visible is a live
       // state update, not proof of scrolling. Start candidates are evaluated
@@ -4441,7 +4574,7 @@ function stitchScrolledPositionViewports(candidates){
       // another reading, and must not append spurious prices to this snapshot.
       if(endBoundary)break;
     }
-    if(!endBoundary||links<1||rows.length<=first.rows.length)continue;
+    if(!endBoundary||links<1||rows.length<first.rows.length)continue;
     const stitched=sanitizeRecognizedPositions(rows);
     if(stitched.length!==rows.length)continue;
     const candidate={rows:stitched,authoritative:true,source:'scroll-overlap-position-chain',frameIndex:first.frameIndex,support:sourceFrames.size,stitched:true,links,terminalBoundary:endBoundary};
@@ -4470,7 +4603,7 @@ function hasVerifiedStaticPositionToOrderBoundary(frame,text,parsedFrame,account
   if(!rows.length||!pending.length)return false;
   const visible=Number(frame?.visualTradeRows||0);
   if(visible<=0||visible!==rows.length+pending.length)return false;
-  if(countVisibleSelectedPendingLabels(text)!==pending.length)return false;
+  if(countVisibleSelectedPendingLabels(text,frame)!==pending.length)return false;
   if(!auditOcrLotBasket(pending,'order').ok)return false;
   const lines=String(text||'').split(/\r?\n/);
   const firstOrder=lines.findIndex(line=>hasRobustPendingOrderRowText(line));
@@ -4493,8 +4626,24 @@ function readStaticTradeEndEvidence(canvas,text,boundary,displayed){
  if(new Set(rows.map(key)).size!==rows.length||!rows.every(o=>money.filter(m=>key(m)===key(o)).length===1))return null;
  const floating=account.equity-account.balance-(account.credit||0),sum=money.reduce((a,x)=>a+Number(x.pnl),0);
  if(!Number.isFinite(sum)||!Number.isFinite(floating)||Math.abs(sum-floating)>Math.max(150,Math.abs(floating)*.005))return null;
+ const blankFraction=readStaticTradeBlankTail(canvas,bands,Math.abs(sum-floating)<=2);
+ if(blankFraction===null)return null;
+ return {fingerprint:canonicalPositionFingerprint(rows),count:rows.length,source:'blank-trade-tail-exact-rows-and-account-pnl',pnlResidual:sum-floating,blankFraction};
+}
+// Visual evidence can select a candidate frame, but cannot certify the list.
+function readStaticTradeBlankTail(canvas,bands,exactPnl=false){
+ if(!bands.length)return null;
  const w=canvas.width,h=canvas.height,last=bands.at(-1),y0=Math.ceil(last.bottom+h*.045),y1=Math.floor(h*.90);
- if(y1-y0<h*.12)return null;
+ if(y1-y0<h*.12){
+  // A dense stationary list can end close to the tab bar. Require a
+  // full visible slot for the next label, supported by uniform row pitch
+  // and exact account/row P&L reconciliation on this very frame.
+  if(!exactPnl||bands.length<6)return null;
+  const tail=bands.slice(-5),gaps=tail.slice(1).map((b,i)=>b.center-tail[i].center);
+  const pitch=Math.min(...gaps),maxPitch=Math.max(...gaps),labelHeight=Math.max(...tail.map(b=>b.bottom-b.top+1));
+  if(pitch<h*.04||maxPitch>pitch*1.08||
+     y0>last.top+pitch-2||y1<last.bottom+maxPitch+2||y1-y0<Math.max(pitch*.75,labelHeight*2))return null;
+ }
  try{
   const d=canvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data;
   let dark=0,light=0,other=0,total=0;
@@ -4502,9 +4651,39 @@ function readStaticTradeEndEvidence(canvas,text,boundary,displayed){
    const k=(y*w+x)*4,r=d[k],g=d[k+1],b=d[k+2],v=(r+g+b)/3;
    if(v<40)dark++;else if(v>235)light++;else other++;total++;
   }
-  if(total<100||Math.max(dark,light)/total<.9975)return null;
-  return {fingerprint:canonicalPositionFingerprint(rows),count:rows.length,source:'blank-trade-tail-exact-rows-and-account-pnl',pnlResidual:sum-floating,blankFraction:Math.max(dark,light)/total};
+  const fraction=Math.max(dark,light)/total;
+  return total>=100&&fraction>=.9975?fraction:null;
  }catch(_){return null}
+}
+
+// A scrollbar thumb is navigation evidence, not proof that all rows ended.
+// For a scrolled Trade list require the actual full-width blank tail below the
+// last complete row, repeated at independent video instants.
+function readScrolledTradeEndEvidence(canvas,text){
+ if(!canvas)return null;
+ const parsed=parseOCR(text),rows=sanitizeRecognizedPositions(parsed.positions||[]);
+ if(!rows.length||parsed.pending.length)return null;
+ const bands=detectVisualTradeRowBands(canvas);
+ if(bands.length!==rows.length)return null;
+ const w=canvas.width,h=canvas.height,y0=Math.ceil(bands.at(-1).bottom+h*.045),y1=Math.floor(h*.90);
+ if(y1-y0<h*.12)return null;
+ try{
+  const d=canvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data;
+  let dark=0,light=0,total=0;
+  for(let y=y0;y<y1;y+=3)for(let x=Math.floor(w*.04);x<Math.floor(w*.96);x+=3){
+   const k=(y*w+x)*4,v=(d[k]+d[k+1]+d[k+2])/3;
+   if(v<40)dark++;else if(v>235)light++;total++;
+  }
+  const blank=total?Math.max(dark,light)/total:0;
+  if(total<100||blank<.9975)return null;
+  return {fingerprint:canonicalPositionFingerprint(rows),count:rows.length,blankFraction:blank,source:'scrolled-blank-tail-exact-visual-rows'};
+ }catch(_){return null}
+}
+function hasIndependentScrolledTradeEnd(frame,results,rows){
+ const fp=canonicalPositionFingerprint(rows);
+ if(frame?.scrollBoundary!=='bottom'||frame?.scrolledTradeEnd?.fingerprint!==fp)return false;
+ const times=[...new Set((results||[]).filter(r=>r.scrollBoundary==='bottom'&&r.scrolledTradeEnd?.fingerprint===fp).map(r=>Number(r.time)).filter(Number.isFinite))].sort((a,b)=>a-b);
+ return times.length>=3&&times.at(-1)-times[0]>=.4;
 }
 function hasIndependentStaticTradeEnd(frame,results,rows){
  const fp=canonicalPositionFingerprint(rows),e=frame?.staticTradeEnd;
@@ -4513,8 +4692,23 @@ function hasIndependentStaticTradeEnd(frame,results,rows){
  return times.length>=3&&times.at(-1)-times[0]>=.4;
 }
 
+function orderPositionRowsFromPrintedEntries(rows,text){
+ // The two parsers recover different subsets and append their union. Preserve
+ // printed entry-line order before comparing adjacent scrolling windows.
+ // This changes no identity or quantity and supplies no missing row or price.
+ if(!Array.isArray(rows)||rows.length<2)return rows;
+ const prices=rows.map(o=>Number(o.price));if(new Set(prices).size!==prices.length)return rows;
+ const offsets=new Map();
+ for(const m of String(text||'').matchAll(/\b(\d[\d,]*\.\d+)\s*(?:→|->|>|—|–)\s*\d/g)){
+  const price=Number(m[1].replace(/,/g,''));
+  if(prices.includes(price)&&!offsets.has(price))offsets.set(price,m.index);
+ }
+ if(offsets.size!==rows.length)return rows;
+ return [...rows].sort((a,b)=>offsets.get(Number(a.price))-offsets.get(Number(b.price)));
+}
 function recoverTrustedVideoPositionBasket(results,mergedText=''){
   const candidates=[];
+  const verifiedOrders=recoverTrustedVideoOrderBasket(results);
   for(const r of (results||[])){
     if(r?.isControlCenter)continue;
     const text=String(r?.data?.text||r?.text||'');
@@ -4535,29 +4729,77 @@ function recoverTrustedVideoPositionBasket(results,mergedText=''){
     for(const o of [...parsedRows,...strongRows]){
       if(!union.some(x=>String(x.side).toLowerCase()===String(o.side).toLowerCase()&&Math.abs(Number(x.lot)-Number(o.lot))<1e-6&&Math.abs(Number(x.price)-Number(o.price))<1e-5))union.push(o);
     }
-    const rows=sanitizeRecognizedPositions(union);
+    const rows=orderPositionRowsFromPrintedEntries(sanitizeRecognizedPositions(union),text);
     if(!rows.length)continue;
 
     const hasTradeContext=/(?:GOLD#?|XAUUSD#?|BTCUSD#?|OILCash#?|JP225Cash#?|[A-Z]{3,}(?:Cash)?#?)\s+(?:buy|sell|sel[!|1lI])|(?:buy|sell|sel[!|1lI])\s*(?:limit|stop)|(?:残高|balance|有効額|equity|可能額|margin|オーダー|orders?|ポジション|positions?)/i.test(text);
     if(!hasTradeContext)continue;
 
     // Prefer completeness first, then newest time only as a tie-breaker.
-    const account=r?.sameFrameAccountSnapshot||parseAccountSnapshotFromText(text);
+    let account=r?.sameFrameAccountSnapshot||parseAccountSnapshotFromText(text);
+    // Column OCR and header OCR may read different regions of the SAME pixels.
+    // Reuse account context only for the exact physical frame/time, never across
+    // video instants or from a previously imported recording.
+    if(!hasVerifiedPositionTopBoundary(r,account)&&Number.isFinite(r?.frameIndex)){
+      const peer=(results||[]).find(x=>x!==r&&x.frameIndex===r.frameIndex&&Math.abs(Number(x.time)-Number(r.time))<1e-6&&x.scrollBoundary===r.scrollBoundary&&hasVerifiedPositionTopBoundary(x,x.sameFrameAccountSnapshot||parseAccountSnapshotFromText(x.data?.text||x.text||'')));
+      if(peer)account=peer.sameFrameAccountSnapshot||parseAccountSnapshotFromText(peer.data?.text||peer.text||'');
+    }
     const hasAccountBoundary=hasVerifiedPositionTopBoundary(r,account);
     // A parsed pending row can appear in a cropped or partial OCR frame.
     // It does not independently prove the end of the open-position list.
-    const hasOrderBoundary=hasExplicitPendingSectionBoundary(text)||hasVerifiedStaticPositionToOrderBoundary(r,text,parsedFrame,account,rows);
-    const hasTerminalBoundary=r?.scrollBoundary==='bottom'||hasIndependentStaticTradeEnd(r,results,rows);
+    // Three independently complete, pixel-verified order regions also prove
+    // the positions-to-orders boundary when English OCR misses its Japanese heading.
+    const pendingRows=normalizePendingSnapshot(parsedFrame.pending||[]);
+    const orderPixelsVerified=peer=>{
+      const evidence=peer?.pendingPixelBoundary;
+      if(peer?.isControlCenter||!evidence?.blankTail||evidence.occluded)return false;
+      const pending=normalizePendingSnapshot(parseOCR(peer.data?.text||peer.text||'').pending||[]);
+      return pending.length===evidence.count&&pending.length>0&&pending.every(o=>verifiedOrders.rows.some(p=>String(p.side).toLowerCase()===String(o.side).toLowerCase()&&p.lot===o.lot&&Math.abs(p.price-o.price)<1e-8));
+    };
+    // A position-column read and an order-region read of the SAME physical
+    // image share its proven boundary. Never borrow it from another instant.
+    const verifiedOrderBoundary=verifiedOrders.authoritative&&verifiedOrders.terminalConfirmed&&(orderPixelsVerified(r)||Number.isFinite(r.frameIndex)&&(results||[]).some(peer=>peer!==r&&peer.frameIndex===r.frameIndex&&Math.abs(Number(peer.time)-Number(r.time))<1e-6&&orderPixelsVerified(peer)));
+    const hasOrderBoundary=hasExplicitPendingSectionBoundary(text)||hasVerifiedStaticPositionToOrderBoundary(r,text,parsedFrame,account,rows)||verifiedOrderBoundary;
+    const hasTerminalBoundary=hasIndependentScrolledTradeEnd(r,results,rows)||hasIndependentStaticTradeEnd(r,results,rows);
     candidates.push({rows,time:Number(r?.time||0),frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null,hasAccountBoundary,hasOrderBoundary,hasTerminalBoundary,hasScrollableViewport:r?.scrollBoundary==='top'||r?.scrollBoundary==='middle'});
   }
   if(candidates.length){
+    const allObserved=new Map();
+    for(const c of candidates)for(const o of c.rows)allObserved.set(positionViewportKey(o),o);
+    const observedRows=[...allObserved.values()],observedLotAudit=auditOcrLotBasket(observedRows,'position');
+    if(!observedLotAudit.ok)return {rows:[],authoritative:false,incomplete:true,source:'cross-frame-lot-conflict',conflictingEntries:observedLotAudit.conflicts?.[0]?.map(o=>observedRows[o.index]),reason:'動画フレーム間で保有Lotが矛盾しています。異なる取引として追加せず、保有一覧とDEAD LINEの確定を停止します。'};
+    // A one-tick disagreement across scroll windows is not a new position.
+    // Without ticket IDs or a frame showing BOTH rows, neither deduplication nor
+    // a majority vote can prove whether this is OCR damage or a real trade.
+    // Keep exact identities and stop rather than adding both to the account.
+    const tick=Number(instrumentProfile(currentSymbol)?.tickSize);
+    if(tick>0){
+      const distinct=new Map();
+      for(const c of candidates)for(const o of c.rows)distinct.set(positionViewportKey(o),o);
+      const entries=[...distinct.entries()];
+      for(let i=0;i<entries.length;i++)for(let j=i+1;j<entries.length;j++){
+        const [ka,a]=entries[i],[kb,b]=entries[j];
+        if(String(a.side).toLowerCase()!==String(b.side).toLowerCase()||Math.abs(Number(a.lot)-Number(b.lot))>1e-8)continue;
+        const delta=Math.abs(Number(a.price)-Number(b.price));
+        if(delta<tick*.01||delta>tick*1.01)continue;
+        const together=candidates.some(c=>{const keys=new Set(c.rows.map(positionViewportKey));return keys.has(ka)&&keys.has(kb)});
+        if(!together)return {rows:[],authoritative:false,incomplete:true,source:'cross-frame-entry-conflict',conflictingEntries:[a,b],reason:'別フレームの保有建値に1 tickの矛盾があります。同一取引か別取引か確認できないため、重複追加せずDEAD LINEを停止します。'};
+      }
+    }
     const stitched=stitchScrolledPositionViewports(candidates);
     if(stitched)return stitched;
     // A complete header-to-end viewport owns its basket. Partial OCR windows
     // and older complete baskets cannot overrule it by vote or contaminate it.
     const complete=candidates.filter(c=>c.hasAccountBoundary&&(c.hasOrderBoundary||c.hasTerminalBoundary))
       .sort((a,b)=>b.time-a.time||b.rows.length-a.rows.length)[0];
-    if(complete)return {rows:complete.rows,authoritative:true,source:'complete-trade-viewport',frameIndex:complete.frameIndex,support:1};
+    if(complete){
+      // A complete viewport may also be independently repeated. Do not discard
+      // that support: full-video zero-order sync needs it to replace old orders.
+      // Count physical frames AND instants, never extra OCR passes of one image.
+      const matching=candidates.filter(c=>canonicalPositionFingerprint(c.rows)===canonicalPositionFingerprint(complete.rows));
+      const ids=new Set(matching.map(c=>c.frameIndex??`t:${c.time}`)),times=new Set(matching.map(c=>c.time));
+      return {rows:complete.rows,authoritative:true,source:'complete-trade-viewport',frameIndex:complete.frameIndex,support:Math.max(1,Math.min(ids.size,times.size))};
+    }
     // Repeated OCR proves a viewport, never the entire account basket. A long
     // viewport needs a header-to-end boundary; disagreeing windows must not fall
     // through to the consensus/newest/merged-union recovery paths below.
@@ -4755,14 +4997,14 @@ function makePendingRegionRecoveryCanvas(source){
  const out=document.createElement('canvas');out.width=Math.round(w*scale);out.height=Math.round((bottom-y)*scale);
  out.getContext('2d').drawImage(source,0,y,w,bottom-y,0,0,out.width,out.height);return out;
 }
-function readPendingPixelBoundary(canvas,text,boundary='none'){
+function readPendingPixelBoundary(canvas,text,boundary='none',sourcePendingLabelText=null){
  const parsed=parseOCR(text);if(!parsed.pending.length)return null;
  const account=parseAccountSnapshotFromText(text),flat=Number.isFinite(account.equity)&&Number.isFinite(account.balance)&&Math.abs(account.equity-account.balance-(account.credit||0))<=2&&Math.abs(account.equity-account.free)<=2;
  if(!hasExplicitPendingSectionBoundary(text)&&!parsed.positions.length&&!flat&&boundary!=='bottom')return null;
  const w=canvas.width,h=canvas.height,bar=detectPendingSectionBar(canvas);if(!bar)return null;
  const bands=detectVisualTradeRowBands(canvas),rows=bands.filter(b=>b.top>bar.bottom),lastBand=rows.at(-1);
  if(pendingQuantityPixelsOccluded(canvas,rows))return {count:rows.length,blankTail:false,occluded:true,source:'quantity-left-edge-covered-by-overlay'};
- if(!lastBand||rows.length!==parsed.pending.length||countVisibleSelectedPendingLabels(text)!==rows.length)return null;
+ if(!lastBand||rows.length!==parsed.pending.length||countVisibleSelectedPendingLabels(text,sourcePendingLabelText===null?null:{sourcePendingLabelText})!==rows.length)return null;
  if(lastBand.bottom>h*(boundary==='bottom'?.905:.85))return null;
  if(boundary==='bottom')return {count:rows.length,barTop:bar.top,barBottom:bar.bottom,lastBottom:lastBand.bottom,blankTail:true,endpoint:'verified-scroll-bottom',source:'mt5-contrast-section-bar-labeled-orders-and-scroll-bottom'};
  const y0=Math.ceil(lastBand.bottom+h*.035),y1=Math.floor(h*.9);if(y1-y0<h*.025)return null;
@@ -4772,6 +5014,36 @@ function readPendingPixelBoundary(canvas,text,boundary='none'){
  return {count:rows.length,barTop:bar.top,barBottom:bar.bottom,lastBottom:lastBand.bottom,blankTail:true,source:'mt5-contrast-section-bar-labeled-orders-and-empty-tail-pixels'};
 }
 function countVisualTradeRows(canvas){return detectVisualTradeRowBands(canvas).length}
+const videoRowCropInputs = new WeakMap();
+async function prepareVideoRowRescueInput(source,band){
+  const frame=videoRowCropInputs.get(source);
+  if(frame && frame.budget.importToken!==window.__mediaImportToken)throw new Error('STALE_MEDIA_OBJECT');
+  if(!frame || frame.width!==source.width || frame.height!==source.height){
+    return makeTradeRowRescueCanvas(source,band);
+  }
+  // This private canvas is the immutable decoded copy of one frame.
+  // Key only its region. Recognition still runs independently under every PSM.
+  const key=band.top+'|'+band.bottom;
+  const saved=frame.crops.get(key);
+  if(saved){
+    window.__STAGE254_ROW_RASTER_HITS__=++frame.budget.hits;
+    return saved;
+  }
+  const crop=makeTradeRowRescueCanvas(source,band);
+  if(typeof crop.toBlob!=='function'||frame.budget.bytes>=2000000)return crop;
+  let timer;
+  const png=await new Promise(resolve=>{
+    timer=setTimeout(()=>resolve(null),350);
+    crop.toBlob(resolve);
+  }).catch(()=>null).finally(()=>clearTimeout(timer));
+  if(frame.budget.importToken!==window.__mediaImportToken)throw new Error('STALE_MEDIA_OBJECT');
+  if(!png || !png.size || png.type!=='image/png')return crop;
+  if(frame.budget.bytes+png.size<=2000000 && !frame.crops.has(key)){
+    frame.crops.set(key,png);
+    frame.budget.bytes+=png.size;
+  }
+  return png;
+}
 function makeTradeRowRescueCanvas(source,band){
   const w=source.width,h=source.height;
   const x=0,y=Math.max(0,band.top-Math.round(h*.016));
@@ -4798,9 +5070,8 @@ async function rescueMissingTradeRows(worker,source,rawText,visualBands,previous
   // demonstrate missing OCR. This avoids a heavy second full-video pass.
   for(const band of visualBands.slice(0,10)){
     if(known.size>=visualBands.length)break;
-    const crop=makeTradeRowRescueCanvas(source,band);
     let t='';
-    try{t=String((await boundedOcrRecognition(worker,crop))?.data?.text||'')}catch(e){break}
+    try{t=String((await boundedOcrRecognition(worker,()=>prepareVideoRowRescueInput(source,band)))?.data?.text||'')}catch(e){break}
     const parsed=parseOCR(t);
     window.__ROW_RESCUE_DEBUG.push({y:band.center,text:t.slice(0,250),positions:parsed.positions.length,pending:parsed.pending.length});
     const rows=[...(parsed.positions||[]),...(parsed.pending||[])];
@@ -4823,7 +5094,9 @@ async function rescueMissingTradeRows(worker,source,rawText,visualBands,previous
   }
   return {text:added.length?rawText+'\n'+added.join('\n'):rawText,recovered:added.length};
 }
-function countVisibleSelectedPendingLabels(text){
+function countVisibleSelectedPendingLabels(text,frame=null){
+  // Row-rescue text is evidence for numeric fields, not another physical label.
+  if(typeof frame?.sourcePendingLabelText==='string')text=frame.sourcePendingLabelText;
   const matches=String(text||'').matchAll(/\b([A-Z][A-Z0-9]{2,})\s*#?\s+(?:buy|sell)[\s\-‐‑–—−]+(?:limit|stop)\b/ig);
   let count=0;
   for(const m of matches){
@@ -4847,7 +5120,7 @@ function stitchScrolledPendingViewports(results){
     }
     const keys=rows.map(key),positions=(p.positions||[]).filter(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
     const complete=Number(r.visualTradeRows)===positions.length+rows.length &&
-      countVisibleSelectedPendingLabels(text)===rows.length &&
+      countVisibleSelectedPendingLabels(text,r)===rows.length &&
       new Set(keys).size===keys.length && auditOcrLotBasket(rows,'order').ok;
     if(!complete){chain=null;continue}
     const start=hasExplicitPendingSectionBoundary(text);
@@ -4890,7 +5163,7 @@ function recoverTrustedVideoOrderBasket(results){
     const matching=pixelProofs.filter(x=>x.key===latestProof.key),times=new Set(matching.map(x=>Number(x.r.time)));
     const contradiction=(results||[]).some(r=>{
       if(r?.isControlCenter)return false;const t=String(r.data?.text||r.text||''),rows=normalizePendingSnapshot((parseOCR(t).pending||[]).filter(o=>normalizeSymbol(o.symbol||currentSymbol)===currentSymbol));
-      if(countVisibleSelectedPendingLabels(t)>latestProof.rows.length)return true;
+      if(countVisibleSelectedPendingLabels(t,r)>latestProof.rows.length)return true;
       return Number(r.time)>=Math.min(...matching.map(x=>Number(x.r.time)))-.001&&rows.some(o=>!latestProof.rows.some(p=>String(p.side).toLowerCase()===String(o.side).toLowerCase()&&p.lot===o.lot&&Math.abs(p.price-o.price)<1e-5));
     });
     const latestOrderFrame=(results||[]).filter(r=>(parseOCR(String(r.data?.text||r.text||'')).pending||[]).length>0).slice().sort((a,b)=>Number(b.time)-Number(a.time))[0];
@@ -4911,7 +5184,7 @@ function recoverTrustedVideoOrderBasket(results){
     // Even if no order could be parsed, a visible labelled order at the verified
     // terminal means the snapshot cannot be certified as complete.
     // This check must occur BEFORE skipping frames with zero parsed rows.
-    const visibleLabels=countVisibleSelectedPendingLabels(text);
+    const visibleLabels=countVisibleSelectedPendingLabels(text,r);
     if(r?.scrollBoundary==='bottom' && visibleLabels>rows.length){
       // A damaged OCR pass must not veto two matching full parses of the
       // SAME terminal frame; but any observed excess labels still blocks it.
@@ -4946,7 +5219,7 @@ function recoverTrustedVideoOrderBasket(results){
   // silently overrule that evidence and produce an optimistic DEAD LINE.
   const maxVisibleLabels=Math.max(0,...(results||[]).filter(r=>!r?.isControlCenter).map(r=>{
     const t=String(r?.data?.text||r?.text||'');
-    return countVisibleSelectedPendingLabels(t);
+    return countVisibleSelectedPendingLabels(t,r);
   }));
   // Independent visual count also catches the SAME missing OCR line in every
   // frame. Never silently certify four rows when the pixels show five.
@@ -4991,7 +5264,7 @@ function recoverTrustedVideoOrderBasket(results){
     const t=String(r?.data?.text||r?.text||'');
     return !r?.isControlCenter && r?.scrollBoundary==='none' &&
       (/(?:残高|有効証拠金|クレジット|オーダー|placed)/i.test(t)||(parseOCR(t).positions||[]).length>0||(parseOCR(t).pending||[]).length>0) &&
-      countVisibleSelectedPendingLabels(t)<=largest.rows.length;
+      countVisibleSelectedPendingLabels(t,r)<=largest.rows.length;
   });
   // v468: Only scrolling within an order-bearing MT5 viewport can invalidate
   // the static order consensus. Earlier position-list scrolling is independent.
@@ -5000,7 +5273,7 @@ function recoverTrustedVideoOrderBasket(results){
     if(r?.isControlCenter)return false;
     const t=String(r?.data?.text||r?.text||'');
     if(!t||isControlCenterFrameText(t))return false;
-    if(countVisibleSelectedPendingLabels(t)>0)return true;
+    if(countVisibleSelectedPendingLabels(t,r)>0)return true;
     return (parseOCR(t).pending||[]).some(o=>!o.symbol||normalizeSymbol(o.symbol)===currentSymbol);
   });
   const noScrollEvidence=!orderBearingFrames.some(r=>['top','middle','bottom'].includes(r?.scrollBoundary));
@@ -5367,7 +5640,8 @@ function parseOCR(text){
     else if(nums.length){
       const at=chunk.match(/\bat\s+(\d[\d,.]*\.\d+)/i);
       if(at) price=normalizeOcrNumber(at[1]);
-      else if(!isPending) { const filtered=nums.filter(n=>n!==lot); price=filtered.length?filtered[0]:null; }
+      // An unreadable entry before an arrow must never promote the current price to entry.
+      else if(!isPending) continue;
     }
     if(!Number.isFinite(price)||price<=0) continue;
     const obj={symbol:sym,side:sideRaw.replace(/\s+/g,' '),lot:+lot.toFixed(4),price};
@@ -5385,8 +5659,9 @@ function parseOCR(text){
     const sym=symbolFromText(sm[1]); if(!sym) continue;
     const sideM=chunk.match(/\b(buy\s*limit|sell\s*limit|buy|sell)\b/i); if(!sideM) continue;
     const sideRaw=sideM[1].replace(/\s+/g,' ');
-    // 約定済みポジションのフォールバックでも、entry → current の矢印を必須にする。
-    if(!/limit$/i.test(sideRaw) && !/(?:->|→|to)/i.test(chunk)) continue;
+    // Open positions require the dedicated numeric entry/current parsers.
+    // A generic three-line number fallback may attach P/L or the current quote.
+    if(!/limit$/i.test(sideRaw))continue;
     // Never infer a pending order from a neighboring position's entry price.
     // The original fallback would read e.g. "4149.31" and "1" adjacent to
     // "GOLD sell limit" as a fictitious 1-lot order at 4149.31.
@@ -5997,8 +6272,26 @@ function prepareVideoFramePresentation(video,target,timeoutMs=300){
   });
   return {ready,dispose:()=>finish({supported,ok:false})};
 }
+// Cheap decode-only coverage for a late static Trade scene. Candidate selection
+// never certifies positions: the existing independent OCR/account/tail gates do.
+function lateStaticVerificationFractions(candidates){
+ const valid=(candidates||[]).filter(x=>!x.isControlCenter&&x.scrollBoundary==='none'&&x.fraction>=.65&&x.canvas).sort((a,b)=>a.time-b.time);
+ const latest=valid.at(-1);if(!latest)return [];
+ const bands=detectVisualTradeRowBands(latest.canvas);
+ const same=bands.length?valid.filter(x=>{if(latest.time-x.time>.9)return false;const a=detectVisualTradeRowBands(x.canvas);return a.length===bands.length&&a.every((b,i)=>Math.abs(b.center-bands[i].center)<=x.canvas.height*.01)}):[];
+ if(same.length>=3&&same.at(-1).time-same[0].time>=.4)return [];
+ // A transition or an obscured end can leave just one clear static frame.
+ // Sample around its visible blank tail; the later OCR gates are unchanged.
+ const first=same.length>=2?same[0]:valid.find(x=>readStaticTradeBlankTail(x.canvas,detectVisualTradeRowBands(x.canvas))!==null);
+ if(!first)return [];
+ const scale=first.fraction>0?first.time/first.fraction:0;
+ if(!(scale>0))return [];
+ const offsets=same.length>=2?[-.30,-.60]:[-.45,.30];
+ return offsets.map(delta=>(first.time+delta)/scale).filter(f=>f>.5&&(same.length>=2||f<.98)&&!(candidates||[]).some(x=>Math.abs(x.time-f*scale)<.08)).slice(0,2);
+}
 async function videoFrameSources(file,maxFrames=60,onProgress=null){
   window.__VIDEO_CAPTURE_AUDIT=null;
+  window.__ACCOUNT_HEADER_RESCUE_AUDIT__=null;
   window.__COVERAGE_RECOVERY_AUDIT=null;
   if(!(file instanceof Blob) || !file.size) throw new Error('VIDEO_FILE_INVALID');
   const v=document.createElement('video');
@@ -6053,6 +6346,8 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));
     const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)throw new Error('VIDEO_CANVAS_UNAVAILABLE');
     const candidates=[];
+    const rowCropBudget={importToken:window.__mediaImportToken,bytes:0,hits:0};
+    window.__STAGE254_ROW_RASTER_HITS__=0;
     const captureFraction=async(f)=>{
       const t=Math.min(endTime,Math.max(.02,endTime*f));
       let presentation={supported:false,ok:false};
@@ -6075,6 +6370,9 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
       const fingerprint=frameFingerprint(canvas);
       const scrollBoundary=detectMt5TradeScrollBoundary(canvas);
       const copy=document.createElement('canvas');copy.width=canvas.width;copy.height=canvas.height;copy.getContext('2d').drawImage(canvas,0,0);
+      if(Number.isFinite(rowCropBudget.importToken) && window.__mediaBusy && rowCropBudget.importToken===window.__mediaImportToken){
+        videoRowCropInputs.set(copy,{budget:rowCropBudget,width:copy.width,height:copy.height,crops:new Map()});
+      }
       candidates.push({canvas:copy,time:t,fraction:f,frameIndex:candidates.length,isControlCenter,sharpness,fingerprint,scrollBoundary,presentation});
       onProgress?.(candidates.length,Math.max(baseFractions.length+2,(typeof allFractions!=='undefined'?allFractions.length:baseFractions.length)+2));
     };
@@ -6094,6 +6392,11 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     const bottoms=candidates.filter(x=>!x.isControlCenter&&x.scrollBoundary==='bottom').sort((a,b)=>a.time-b.time);
     let terminalResamples=0;
     for(let i=bottoms.length-1;i>0&&terminalResamples<2;i--){const a=bottoms[i-1],b=bottoms[i],gap=b.time-a.time;if(gap<.4||gap>6)continue;const f=(a.fraction+b.fraction)/2;if(candidates.some(x=>Math.abs(x.fraction-f)<.012))continue;await captureFraction(f);const midpoint=candidates.at(-1);midpoint.verificationResample=true;terminalResamples++;if(midpoint.scrollBoundary==='bottom'&&terminalResamples<2&&b.time-midpoint.time>=.4){const f2=(midpoint.fraction+b.fraction)/2;if(!candidates.some(x=>Math.abs(x.fraction-f2)<.012)){await captureFraction(f2);candidates.at(-1).verificationResample=true;terminalResamples++;}}}
+    // Only missing static verification instants add at most two seeks; no second video decode pass.
+    for(const f of lateStaticVerificationFractions(candidates)){
+      await captureFraction(f);
+      candidates.at(-1).staticVerificationResample=true;
+    }
     const anchors=selectAdaptiveVideoFrames(candidates,rescueFractions.length?6:5);
     const changes=selectVisualChangeFrames(candidates,4);
     const merged=selectProtectedVideoSources(candidates,anchors,changes,8);
@@ -6127,7 +6430,9 @@ async function recognizeOne(TesseractNS,source,psm,logger){
 // Terminate the underlying worker, not only the Promise.race waiter.
 async function boundedOcrRecognition(worker,source){
   let timer,expired=false;
-  const work=Promise.resolve().then(()=>worker.recognize(source));
+  const work=Promise.resolve().then(()=>typeof source==='function'
+    ? source().then(input=>worker.recognize(input))
+    : worker.recognize(source));
   try{
     return await Promise.race([work,new Promise((_,reject)=>{
       timer=setTimeout(()=>{expired=true;reject(new Error('OCR_RECOGNITION_TIMEOUT'))},45000);
@@ -6210,6 +6515,7 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
         const corrected=repairOccludedGoldPendingLabel(String(data?.text||''),bands.length);
         if(corrected!==String(data?.text||''))data={...data,text:corrected};
       }
+      const sourcePendingLabelText=String(data?.text||'');
       if(isTradeFrame && mode!=='trade-column-recover'&&mode!=='pending-region-recover' && bands.length){
         const parsedNow=parseOCR(String(data?.text||''));
         const n=(parsedNow.positions||[]).length+(parsedNow.pending||[]).length;
@@ -6252,8 +6558,9 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
         }
       }
       const verifiedFxQuotes=!isTradeFrame?await repairFxQuoteRows(worker,sources[i].canvas,data,psm):null;
+      if(isTradeFrame)await verifyOutlierDisplayedPnlCells(worker,sources[i].canvas,String(data?.text||''),psm);
       const displayedPositionPnl=isTradeFrame?readDisplayedPositionPnlEvidence(sources[i].canvas,String(data?.text||'')):null;
-      results.push({verifiedFxQuotes,staticTradeEnd:isTradeFrame?readStaticTradeEndEvidence(sources[i].canvas,String(data?.text||''),sources[i].scrollBoundary||'none',displayedPositionPnl):null,pendingPixelBoundary:isTradeFrame?readPendingPixelBoundary(sources[i].canvas,String(data?.text||''),sources[i].scrollBoundary||'none'):null,displayedPositionPnl,data,time:sources[i].time,frameIndex:sourceFrameIndex,isControlCenter:false,scrollBoundary:sources[i].scrollBoundary||'none',visualTradeRows,recoveredRows,recoveryAttempted:isTradeFrame&&bands.length>0&&((parseOCR(String(r?.data?.text||'')).positions||[]).length+(parseOCR(String(r?.data?.text||'')).pending||[]).length)<bands.length});
+      results.push({sourcePendingLabelText,verifiedFxQuotes,scrolledTradeEnd:isTradeFrame&&sources[i].scrollBoundary==='bottom'?readScrolledTradeEndEvidence(sources[i].canvas,String(data?.text||'')):null,staticTradeEnd:isTradeFrame?readStaticTradeEndEvidence(sources[i].canvas,String(data?.text||''),sources[i].scrollBoundary||'none',displayedPositionPnl):null,pendingPixelBoundary:isTradeFrame?readPendingPixelBoundary(sources[i].canvas,String(data?.text||''),sources[i].scrollBoundary||'none',sourcePendingLabelText):null,displayedPositionPnl,data,time:sources[i].time,frameIndex:sourceFrameIndex,isControlCenter:false,scrollBoundary:sources[i].scrollBoundary||'none',visualTradeRows,recoveredRows,recoveryAttempted:isTradeFrame&&bands.length>0&&((parseOCR(String(r?.data?.text||'')).positions||[]).length+(parseOCR(String(r?.data?.text||'')).pending||[]).length)<bands.length});
     }
   }finally{if(ownWorker){try{Promise.resolve(worker.terminate()).catch(e=>console.warn('[XM] OCR worker terminate skipped',e))}catch(e){console.warn('[XM] OCR worker terminate skipped',e)}}}
   results.expectedFrameCount=sources.expectedFrameCount||sources.length;
@@ -6336,27 +6643,44 @@ function bestTradeSourceForAccountRescue(results,sources){
     (sources||[]).find((x,i)=>i===fi) || null;
   return source?{...source,accountFocus:true}:null;
 }
+// Read the floating P&L sign independently from its centered MT5 header.
+function recoverMissingAccountFloatingSign(canvas,text){
+  if(!canvas?.width||!canvas?.height)return text;
+  const match=String(text).match(/^(\s*)(\d[\d ,.]*?\s+JPY)\b/im);
+  if(!match)return text;
+  const w=canvas.width,h=canvas.height,x=Math.floor(w*.27),y=Math.floor(h*.073);
+  const pixels=canvas.getContext('2d',{willReadFrequently:true}).getImageData(x,y,Math.floor(w*.46),Math.floor(h*.051)).data;
+  let red=0,blue=0;
+  for(let i=0;i<pixels.length;i+=4){
+    const r=pixels[i],g=pixels[i+1],b=pixels[i+2];
+    if(r>105&&r>g*1.42&&r>b*1.42&&r-g>35)red++;
+    if(b>100&&b>r*1.35&&b>g*1.12&&b-r>35)blue++;
+  }
+  if(red<20||red<=blue*4)return text;
+  return text.slice(0,match.index)+match[1]+'-'+text.slice(match.index+match[1].length);
+}
 async function rescueVideoAccountHeader(T,file,results,sources,sharedWorker,onProgress){
-  const src=bestTradeSourceForAccountRescue(results,sources);
-  if(!src?.canvas)return null;
-  const focus={
-    ...src,
-    canvas:makeAccountHeaderFocusCanvas(src.canvas),
-    isControlCenter:false,
-    accountFocus:true
-  };
-  let rr=await recognizeFileFrames(T,file,'trade-fast',m=>{
-    if(m.status==='recognizing text')onProgress?.(Math.round((m.progress||0)*100));
-  },[focus],sharedWorker);
-  rr=filterUsableOCRResults(rr);
-  for(const r of rr){
-    const snap=parseAccountSnapshotFromText(r?.data?.text||'');
-    if(Number.isFinite(snap.balance)&&snap.balance>0){
+  const fallback=bestTradeSourceForAccountRescue(results,sources);
+  if(!fallback?.canvas)return null;
+  const tradeTimes=(results||[]).filter(r=>Number(r?.visualTradeRows)>0&&hasStrongOpenPositionRowText(String(r?.data?.text||''))).map(r=>Number(r.time)).filter(Number.isFinite);
+  const firstTrade=tradeTimes.length?Math.min(...tradeTimes):Number(fallback.time);
+  // A list rich in rows is usually scrolled: its account header can be hidden.
+  // Reuse at most one earlier, visually top-boundary frame already captured in
+  // this import, rather than decoding the video again or inventing a balance.
+  const earlier=sources?.accountHeaderCandidate||(sources?.candidateSources||[]).filter(src=>src?.canvas&&!src.isControlCenter&&src.scrollBoundary==='top'&&Number(src.time)>=firstTrade-1.6&&Number(src.time)<firstTrade-.12).sort((a,b)=>Number(a.time)-Number(b.time))[0];
+  const choices=[earlier,fallback].filter(Boolean);window.__ACCOUNT_HEADER_RESCUE_AUDIT__={firstTrade,attempts:[]};
+  const seen=new Set();
+  for(const candidate of choices){
+    const t=Number(candidate.time);if(seen.has(t))continue;seen.add(t);
+    const focus={...candidate,frameIndex:Math.max(0,...(results||[]).map(r=>Number(r.frameIndex)||0))+100+seen.size,canvas:makeAccountHeaderFocusCanvas(candidate.canvas),isControlCenter:false,accountFocus:true};
+    let rr=await recognizeFileFrames(T,file,'trade-fast',m=>{if(m.status==='recognizing text')onProgress?.(Math.round((m.progress||0)*100));},[focus],sharedWorker);
+    rr=filterUsableOCRResults(rr);
+    if(candidate.scrollBoundary==='top')rr=rr.map(r=>({...r,data:{...r.data,
+      text:recoverMissingAccountFloatingSign(candidate.canvas,r.data?.text||'')}}));
+    const snap=aggregateAccountSnapshotFromResults(rr);window.__ACCOUNT_HEADER_RESCUE_AUDIT__.attempts.push({time:t,frameIndex:focus.frameIndex,text:rr[0]?.data?.text,snapshot:snap});
+    if(Number.isFinite(snap.balance)&&snap.balance>0&&hasCoherentJpyAccountIdentity(rr[0]?.data?.text||'',snap)){
+      Object.assign(window.__ACCOUNT_HEADER_RESCUE_AUDIT__,{time:t,frameIndex:focus.frameIndex,earlierCandidate:candidate===earlier,coherent:true});
       return {snapshot:snap,results:rr};
-    }
-    const fallback=parseMt5AccountSummaryFallback(r?.data?.text||'');
-    if(Number.isFinite(fallback.balance)&&fallback.balance>0){
-      return {snapshot:fallback,results:rr};
     }
   }
   return null;
@@ -6387,7 +6711,7 @@ function aggregateVideoQuotes(results){
   for(const r of filterUsableOCRResults(results)){
     const q1=extractQuotesFromWords(r.data?.words||[]);
     const q2=extractAllQuotesText(r.data?.text||'');
-    const symbols=new Set([...Object.keys(q1),...Object.keys(q2)]);
+    const symbols=new Set([...Object.keys(q1),...Object.keys(q2),...Object.keys(r.verifiedFxQuotes||{})]);
     for(const sym of symbols){
       const prev=quoteStore[sym]||priceStore[sym];
       const textQ=r.verifiedFxQuotes?.[sym]||q2[sym],wordQ=q1[sym];
@@ -6656,7 +6980,7 @@ $('mediaFile').addEventListener('change',async e=>{
     return;
   }
   const importToken=(window.__mediaImportToken||0)+1; window.__mediaImportToken=importToken; window.__mediaBusy=true; window.__activeMediaSelectionKey=selectionKey; if($('mediaChoose'))$('mediaChoose').disabled=true;updateAddTradeScreenshotUI();
-  for(const key of ['__ORDER_FAILURE_AUDIT','__ORDER_STATIC_V452_AUDIT','__ORDER_STATIC_V453_GATES','__VIDEO_CAPTURE_AUDIT','__COVERAGE_RECOVERY_AUDIT','__ROW_RESCUE_DEBUG','__FRAME_REOCR_AUDIT','__POSITION_LOT_REOCR_AUDIT','__CURRENT_IMPORT_QUOTES','__ROW_LOT_REPAIR_AUDIT','__FX_ROW_REOCR_AUDIT','__FX_SPREAD_REOCR_AUDIT','__OBSERVED_PNL_CONVERSION__','__PENDING_REGION_RECOVERY_AUDIT'])window[key]=null;window.__activeMediaResultsForAudit=[];
+  for(const key of ['__STATIC_PROOF_RESCUE_AUDIT__','__STATIC_PROOF_EXTRA_FRAMES__','__ENTRY_PIXEL_RECHECK__','__ORDER_FAILURE_AUDIT','__ORDER_STATIC_V452_AUDIT','__ORDER_STATIC_V453_GATES','__VIDEO_CAPTURE_AUDIT','__COVERAGE_RECOVERY_AUDIT','__ROW_RESCUE_DEBUG','__FRAME_REOCR_AUDIT','__POSITION_LOT_REOCR_AUDIT','__CURRENT_IMPORT_QUOTES','__ROW_LOT_REPAIR_AUDIT','__FX_ROW_REOCR_AUDIT','__FX_SPREAD_REOCR_AUDIT','__OBSERVED_PNL_CONVERSION__','__PENDING_REGION_RECOVERY_AUDIT'])window[key]=null;window.__activeMediaResultsForAudit=[];
   const stillCurrent=()=>window.__mediaImportToken===importToken;
   let importSnapshot=null,sharedVideoWorker=null,prewarmedVideoWorkerPromise=null;
   // v452: An OCR/codec promise can hang without rejecting on iPhone Safari.
@@ -6873,11 +7197,59 @@ $('mediaFile').addEventListener('change',async e=>{
         }
       }
 
+    // Static proof requires three independent video instants. Visual deduplication
+    // may retain only two Trade frames. Read at most two unused, already decoded
+    // matching canvases; never lower the three-frame or completeness requirements.
+    if(isVideo&&sharedVideoWorker&&(!recoverTrustedVideoPositionBasket(results,'').authoritative||!recoverTrustedVideoOrderBasket(results).authoritative)){
+      const proofFrames=results.filter(r=>{
+        if(r.isControlCenter||r.scrollBoundary!=='none')return false;
+        const p=parseOCR(r.data?.text||''),a=parseAccountSnapshotFromText(r.data?.text||'');
+        return !!r.staticTradeEnd||(r.pendingPixelBoundary?.blankTail&&r.pendingPixelBoundary.count===p.pending.length&&p.positions.length+p.pending.length===r.visualTradeRows&&hasVerifiedPositionTopBoundary(r,a));
+      });
+      window.__STATIC_PROOF_RESCUE_AUDIT__={proofTimes:proofFrames.map(r=>r.time),candidates:videoSourcesForReuse?.candidateSources?.length||0};
+      const usedTimes=results.map(r=>Number(r.time)),extra=[];
+      const staticCandidates=[...(videoSourcesForReuse?.candidateSources||[])];
+      staticCandidates.sort((a,b)=>Number(!!b.staticVerificationResample)-Number(!!a.staticVerificationResample));
+      for(const src of staticCandidates){
+        if(extra.length>=2)break;
+        if(src.isControlCenter||src.scrollBoundary!=='none'||usedTimes.some(t=>Math.abs(t-src.time)<.02))continue;
+        const matching=proofFrames.some(r=>{
+          const peer=(videoSourcesForReuse||[]).find(x=>x.frameIndex===r.frameIndex&&Math.abs(x.time-r.time)<1e-6);
+          if(Math.abs(src.time-r.time)>.9)return false;
+          if(src.staticVerificationResample&&r.staticTradeEnd){
+            const bands=detectVisualTradeRowBands(src.canvas);
+            if(bands.length===r.staticTradeEnd.count&&readStaticTradeBlankTail(src.canvas,bands)!==null)return true;
+          }
+          if(!peer)return false;
+          if(fingerprintDistance(src.fingerprint,peer.fingerprint)<=.55)return true;
+          // Price/P&L digits can change a whole-image fingerprint. Matching row
+          // geometry only selects an OCR candidate; all identities and the three
+          // independent-frame proof still have to pass the existing verifier.
+          const a=detectVisualTradeRowBands(src.canvas),b=detectVisualTradeRowBands(peer.canvas);
+          return a.length===b.length&&a.length===r.visualTradeRows&&a.every((v,i)=>Math.abs(v.center-b[i].center)<=src.canvas.height*.01);
+        });
+        if(matching){extra.push({...src,frameIndex:Math.max(-1,...(videoSourcesForReuse||[]).map(x=>Number(x.frameIndex)))+1+extra.length});usedTimes.push(src.time);}
+      }
+      if(extra.length){
+        videoSourcesForReuse.push(...extra);
+        const confirmed=filterUsableOCRResults(await recognizeFileFrames(T,f,'trade-fast',null,extra,sharedVideoWorker));
+        results=[...results,...confirmed];
+        window.__STATIC_PROOF_EXTRA_FRAMES__=confirmed.map(r=>({frameIndex:r.frameIndex,time:r.time}));
+      }
+    }
+
+
       // Keep at most three already-decoded terminal order regions until their
       // independent verification. Releasing every unselected canvas here used
       // to leave only one terminal timestamp on compressed scrolling videos.
       const pendingRegions=(videoSourcesForReuse.candidateSources||[]).filter(src=>!src.isControlCenter&&src.fraction>=.5&&src.scrollBoundary==='bottom'&&detectPendingSectionBar(src.canvas)).sort((a,b)=>b.time-a.time).slice(0,3).map((src,i)=>({...src,frameIndex:videoSourcesForReuse.length+i}));
       Object.defineProperty(videoSourcesForReuse,'pendingRegionSources',{value:pendingRegions,configurable:true});
+      // Retain just one same-import account-header candidate before freeing the
+      // visual pre-scan. Later account rescue must not be forced to use scrolled rows.
+      const headerTradeTimes=results.filter(r=>Number(r?.visualTradeRows)>0&&hasStrongOpenPositionRowText(String(r?.data?.text||''))).map(r=>Number(r.time)).filter(Number.isFinite);
+      const headerTradeStart=headerTradeTimes.length?Math.min(...headerTradeTimes):NaN;
+      const headerCandidate=(videoSourcesForReuse.candidateSources||[]).filter(src=>src?.canvas&&!src.isControlCenter&&src.scrollBoundary==='top'&&Number(src.time)>=headerTradeStart-1.6&&Number(src.time)<headerTradeStart-.12).sort((a,b)=>Number(a.time)-Number(b.time))[0]||null;
+      Object.defineProperty(videoSourcesForReuse,'accountHeaderCandidate',{value:headerCandidate,enumerable:false,configurable:true});
       delete videoSourcesForReuse.candidateSources; // release unselected canvases after bounded recovery
       results.expectedFrameCount=videoSourcesForReuse.length;
       results.videoDuration=Number(videoSourcesForReuse?.videoDuration||0);
@@ -7207,7 +7579,7 @@ $('mediaFile').addEventListener('change',async e=>{
     // Re-read only a demonstrably complete order region, independently of a
     // clipped position row above it. Different timestamps, exact labels, pixel
     // count, latest-state and conflict checks remain mandatory in the verifier.
-    if(isVideo&&results.some(r=>countVisibleSelectedPendingLabels(r.data?.text||'')>0||(parseOCR(r.data?.text||'').pending||[]).length>0)&&!recoverTrustedVideoOrderBasket(results).authoritative){
+    if(isVideo&&results.some(r=>countVisibleSelectedPendingLabels(r.data?.text||'',r)>0||(parseOCR(r.data?.text||'').pending||[]).length>0)&&!recoverTrustedVideoOrderBasket(results).authoritative){
       const seen=new Set();
       const orderSources=(videoSourcesForReuse?.pendingRegionSources||videoSourcesForReuse||[]).filter(src=>!src.isControlCenter&&src.scrollBoundary==='bottom'&&src.fraction>=.5&&detectPendingSectionBar(src.canvas)).sort((a,b)=>b.time-a.time).filter(src=>{if(seen.has(src.time))return false;seen.add(src.time);return true}).slice(0,3).sort((a,b)=>a.time-b.time);
       if(orderSources.length>=3&&orderSources.at(-1).time-orderSources[0].time>=.4){
@@ -7219,6 +7591,59 @@ $('mediaFile').addEventListener('change',async e=>{
       }
     }
     if(videoSourcesForReuse?.pendingRegionSources)delete videoSourcesForReuse.pendingRegionSources;
+    if(isVideo&&sharedVideoWorker){
+      const conflict=recoverTrustedVideoPositionBasket(results,parsed.rawText||'');
+      if(['cross-frame-entry-conflict','cross-frame-lot-conflict'].includes(conflict.source)&&conflict.conflictingEntries?.length===2){
+        const pair=conflict.conflictingEntries;
+        const supporting=o=>results.filter(r=>(parseOCR(r.data?.text||'').positions||[]).some(p=>positionViewportKey(p)===positionViewportKey(o)));
+        const ranked=pair.map(o=>({o,frames:supporting(o)})).sort((a,b)=>new Set(a.frames.map(r=>r.frameIndex)).size-new Set(b.frames.map(r=>r.frameIndex)).size);
+        const [weak,strong]=ranked;
+        // Repetition selects a frame to inspect; it never authorizes a correction.
+        // BOTH new pixel OCR passes must read the alternative entry explicitly.
+        if(new Set(weak.frames.map(r=>r.frameIndex)).size===1&&new Set(strong.frames.map(r=>r.frameIndex)).size>=2){
+          const frame=weak.frames[0],src=(videoSourcesForReuse||[]).find(x=>x.frameIndex===frame.frameIndex);
+          if(src){
+            const lines=String(frame.data?.text||'').split(/\r?\n/).map(normalizeOcrLine).filter(Boolean),bands=detectVisualTradeRowBands(src.canvas);
+            let headerIndex=-1,rowIndex=-1,headerCount=0;
+            for(const line of lines){
+              if(symbolFromText(line.split(/\s/)[0])===normalizeSymbol(currentSymbol)&&detectTradeSideFromLine(line)){headerIndex=headerCount++;}
+              const token=line.match(/^(\d[\d,]*\.\d+)\s*(?:->|→|>|—|–|-|to)(?=\s*\d)/);
+              if(token&&Math.abs(normalizeOcrNumber(token[1])-Number(weak.o.price))<1e-8)rowIndex=headerIndex;
+            }
+            const crop=headerCount===bands.length&&rowIndex>=0?makeTradeRowRescueCanvas(src.canvas,bands[rowIndex]):src.canvas;
+            const reads=[],readTexts=[];
+            for(const [canvas,psm]of [[crop,6],[crop,11]]){
+              await sharedVideoWorker.setParameters({tessedit_pageseg_mode:String(psm)});
+              const text=(await boundedOcrRecognition(sharedVideoWorker,canvas))?.data?.text||'';readTexts.push(text);reads.push(parseOCR(text).positions||[]);
+            }
+            const good=positionViewportKey(strong.o),bad=positionViewportKey(weak.o);
+            const verified=readTexts.every((text,i)=>(reads[i].length===1&&positionViewportKey(reads[i][0])===good)||(verifiesCroppedPositionEntry(text,strong.o)&&!verifiesCroppedPositionEntry(text,weak.o)));
+            window.__ENTRY_PIXEL_RECHECK__={frameIndex:frame.frameIndex,time:frame.time,before:weak.o.price,alternative:strong.o.price,reads:reads.map(rows=>rows.map(positionViewportKey)),texts:readTexts,verified};
+            if(verified){
+              // Replace only an explicit entry token before its price arrow.
+              const old=Number(weak.o.price).toFixed(cfg().digits),next=Number(strong.o.price).toFixed(cfg().digits),escaped=old.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+              const re=new RegExp('(^|\\s)'+escaped+'(?=\\s*(?:->|→|>|—|–|-|to)\\s*\\d)','gm');
+              for(const r of weak.frames){
+                const text=String(r.data?.text||'');let fixed=text;
+                if(weak.o.lot!==strong.o.lot)fixed=replaceVerifiedPositionLot(text,weak.o,strong.o);
+                else if([...text.matchAll(re)].length===1)fixed=text.replace(re,(_,prefix)=>prefix+next);
+                if(fixed===text)continue;
+                r.data={...r.data,text:fixed};
+                // All derived proofs must describe the corrected row identities
+                // from these SAME pixels. Stale fingerprints cannot confirm or
+                // veto the new basket after a verified entry/Lot correction.
+                r.displayedPositionPnl=readDisplayedPositionPnlEvidence(src.canvas,fixed);
+                r.staticTradeEnd=readStaticTradeEndEvidence(src.canvas,fixed,r.scrollBoundary||'none',r.displayedPositionPnl);
+                r.pendingPixelBoundary=readPendingPixelBoundary(src.canvas,fixed,r.scrollBoundary||'none',r.sourcePendingLabelText??null);
+              }
+              parsed=mergeParsedResults(results);
+              window.__ENTRY_PIXEL_RECHECK__={frameIndex:frame.frameIndex,time:frame.time,before:weak.o,after:strong.o,twoPixelPasses:true};
+            }
+          }
+        }
+      }
+    }
+
     if(sharedVideoWorker){releaseReusableOcrWorker(sharedVideoWorker);sharedVideoWorker=null;}
     // Account type is determined only from actual quote-board rows. Order/position-only
     // media never flips the account type, preventing an OCR-dropped '#' from changing profiles.
@@ -7429,7 +7854,7 @@ $('mediaFile').addEventListener('change',async e=>{
       const visibleFrames=results.filter(r=>!r?.isControlCenter &&
         /(?:オーダー|placed|残高|有効証拠金)/i.test(String(r?.data?.text||r?.text||'')));
       const observedScroll=visibleFrames.some(r=>['top','middle','bottom'].includes(r?.scrollBoundary));
-      const maxLabels=Math.max(0,...visibleFrames.map(r=>countVisibleSelectedPendingLabels(r?.data?.text||r?.text||'')));
+      const maxLabels=Math.max(0,...visibleFrames.map(r=>countVisibleSelectedPendingLabels(r?.data?.text||r?.text||'',r)));
       const parsedCounts=trustedVideoOrders.observedCounts||[];
       const isStatic=visibleFrames.length>=2&&!observedScroll;
       window.__ORDER_FAILURE_AUDIT={reason:trustedVideoOrders.reason||'ORDER_BASKET_CONFLICT',
@@ -7597,6 +8022,12 @@ $('mediaFile').addEventListener('change',async e=>{
       free:Number.isFinite(parsedAccountSnapshot.free)?parsedAccountSnapshot.free:rawAccountSnapshot.free,
       evidence:[...(rawAccountSnapshot.evidence||[]),...(parsedAccountSnapshot.evidence||[])],sourceText:''
     };
+
+    // An open basket must not reuse values from merged OCR after every
+    // individual frame failed its account identity check.
+    if(isVideo&&positions.length>0&&!Number.isFinite(frameAccountSnapshot.balance)){
+      accountSnapshot=frameAccountSnapshot;
+    }
 
     // v364: if the Trade basket is clear but the top account header was missed,
     // OCR only that header once. This is a failure-only rescue and does not slow
@@ -11582,7 +12013,7 @@ window.__XM_ACCOUNT_TYPE_TEST__=(()=>{
   const standardQuote=extractAllQuotesText(std);
   return {standard:a.type,kiwami:b.type,mixed:c.type,orderOnly:d.type,usdJpyNormalized:!!standardQuote['USDJPY#'],goldNormalized:!!standardQuote['GOLD#'],pass:a.type==='standard'&&b.type==='kiwami'&&c.type==='unknown'&&d.type==='unknown'&&!!standardQuote['USDJPY#']&&!!standardQuote['GOLD#']};
 })();
-window.__APP_BUILD__='v511-20261103';
+window.__APP_BUILD__='v518-20261106';
 window.__API_SELFTEST__={getPositions:typeof window.getPositions==='function',getOrders:typeof window.getOrders==='function',setPositions:typeof window.setPositions==='function',setOrders:typeof window.setOrders==='function',quoteMetaScope:typeof window.__quoteMeta==='object'};
 window.__V125_PENDING_ORDER_TEST__=(()=>{
   const t='GOLD# buy limit\n0.03 / 0 at 4577.90 placed\nGOLD# buy limit\n0.03 / 0 at 4528.25 placed\nGOLD# buy limit\n0.03 / 0 at 4603.95 placed';
@@ -11625,9 +12056,9 @@ window.__V125_SELFTEST__={
   atomicTradeSnapshot:typeof applyAuthoritativeTradeSnapshot==='function',
   transitionClassifier:typeof classifyTradeStateTransition==='function',
   fingerprint:typeof tradeStateFingerprint==='function',
-  build:'v511-20261103'
+  build:'v518-20261106'
 };
-window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v511-20261103'};
+window.__V125_POSITION_SESSION_TEST__={helpers:[normalizedPositionFingerprint,readVerifiedPositionSession,writeVerifiedPositionSession,hasVerifiedPositionSession,clearVerifiedPositionSession].every(fn=>typeof fn==='function'),maxAge:VERIFIED_POSITION_MAX_AGE_MS,build:'v518-20261106'};
 if(!Object.values(window.__API_SELFTEST__).every(Boolean)){
   const missing=Object.entries(window.__API_SELFTEST__).filter(([,ok])=>!ok).map(([k])=>k);
   console.error('APP_API_INIT_FAILED',missing);

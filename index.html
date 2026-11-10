@@ -6291,6 +6291,8 @@ function lateStaticVerificationFractions(candidates){
 }
 async function videoFrameSources(file,maxFrames=60,onProgress=null){
   window.__VIDEO_CAPTURE_AUDIT=null;
+  window.__VIDEO_CAPTURE_FAILURE=null;
+  let captureStage='initializing',captureFrame=-1,captureTarget=null;
   window.__ACCOUNT_HEADER_RESCUE_AUDIT__=null;
   window.__COVERAGE_RECOVERY_AUDIT=null;
   if(!(file instanceof Blob) || !file.size) throw new Error('VIDEO_FILE_INVALID');
@@ -6309,9 +6311,9 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     let done=false;const finish=(err)=>{if(done)return;done=true;clearTimeout(timer);v.removeEventListener(type,onOk);v.removeEventListener('error',onErr);err?reject(err):resolve()};
     const timer=setTimeout(()=>{
       if(minReadyState>0&&v.readyState>=minReadyState)finish();
-      else finish(new Error(`VIDEO_${type.toUpperCase()}_TIMEOUT`));
+      else finish(new Error(`VIDEO_${type.toUpperCase()}_TIMEOUT_READY_${v.readyState}_NETWORK_${v.networkState}_MEDIA_${v.error?.code||0}`));
     },timeout);
-    const onOk=()=>finish();const onErr=()=>finish(new Error(`VIDEO_${type.toUpperCase()}_ERROR`));
+    const onOk=()=>finish();const onErr=()=>finish(new Error(`VIDEO_${type.toUpperCase()}_ERROR_MEDIA_${v.error?.code||0}`));
     v.addEventListener(type,onOk,{once:true});v.addEventListener('error',onErr,{once:true});
     // Safari may advance readyState between the initial check and listener registration.
     if(minReadyState>0&&v.readyState>=minReadyState)queueMicrotask(()=>finish());
@@ -6319,6 +6321,7 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
   try{
     // iPhone Safari can dispatch loadedmetadata immediately after src/load.
     // Arm the listener BEFORE assigning/loading the blob URL so the event cannot be missed.
+    captureStage='metadata';
     const metadataReady=waitEvent('loadedmetadata',15000,1);
     v.src=objectUrl;
     v.load();
@@ -6326,6 +6329,7 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     const duration=Number(v.duration),width=Number(v.videoWidth),height=Number(v.videoHeight);
     if(!Number.isFinite(duration)||duration<=0)throw new Error('VIDEO_DURATION_INVALID');
     if(width<=0||height<=0)throw new Error('VIDEO_DIMENSIONS_INVALID');
+    captureStage='first-frame';
     if(v.readyState<2)await waitEvent('loadeddata',12000,2);
     // v364: cheap visual pre-scan across the whole video. Fixed anchors are fallback coverage,
     // not assumptions about where Quotes/Balance/Positions/Orders must appear.
@@ -6350,6 +6354,7 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     window.__STAGE254_ROW_RASTER_HITS__=0;
     const captureFraction=async(f)=>{
       const t=Math.min(endTime,Math.max(.02,endTime*f));
+      captureFrame=candidates.length;captureTarget=t;captureStage='seek';
       let presentation={supported:false,ok:false};
       if(Math.abs(Number(v.currentTime)-t)>.02){
         const pending=prepareVideoFramePresentation(v,t);
@@ -6364,7 +6369,9 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
         }
       }
       if(v.readyState<2)await waitEvent('loadeddata',10000,2);
+      captureStage='draw-frame';
       ctx.drawImage(v,0,0,canvas.width,canvas.height);
+      captureStage='inspect-frame';
       const sharpness=frameSharpnessScore(canvas);
       const isControlCenter=looksLikeIOSControlCenterCanvas(canvas,sharpness);
       const fingerprint=frameFingerprint(canvas);
@@ -6405,12 +6412,23 @@ async function videoFrameSources(file,maxFrames=60,onProgress=null){
     // visual-change extras second.  Sorting before truncation could discard the
     // latest protected Trade anchor whenever four quote-scroll changes were found.
     // Bound the work first, then restore chronological OCR order.
+    captureStage='select-frames';
     const frames=merged.slice(0,8).sort((a,b)=>a.time-b.time).map((x,i)=>({canvas:x.canvas,time:x.time,frameIndex:i,isControlCenter:false,fraction:x.fraction,sharpness:x.sharpness,fingerprint:x.fingerprint,scrollBoundary:x.scrollBoundary||'none'}));
     window.__VIDEO_CAPTURE_AUDIT={build:window.__APP_BUILD__,duration,width,height,candidates:candidates.map(x=>({time:x.time,boundary:x.scrollBoundary,presented:!!x.presentation?.ok,mediaTime:x.presentation?.mediaTime,control:x.isControlCenter})),selected:frames.map(x=>({time:x.time,boundary:x.scrollBoundary}))};
     Object.defineProperty(frames,'candidateSources',{value:candidates.filter(x=>!x.isControlCenter),enumerable:false,configurable:true});
     Object.defineProperties(frames,{expectedFrameCount:{value:frames.length,enumerable:false},candidateFrameCount:{value:candidates.length,enumerable:false},videoDuration:{value:duration,enumerable:false}});
     return frames;
-  }catch(e){console.error('[XM] VIDEO_PIPELINE_FAILED',e);throw e}
+  }catch(e){
+    window.__VIDEO_CAPTURE_FAILURE={
+      code:String(e?.message||e),stage:captureStage,frameIndex:captureFrame,targetTime:captureTarget,fileType:String(file?.type||''),fileBytes:file?.size||0,
+      readyState:v.readyState,networkState:v.networkState,mediaErrorCode:v.error?.code||0,
+      duration:Number.isFinite(v.duration)?v.duration:null,videoWidth:v.videoWidth,videoHeight:v.videoHeight,
+      currentTime:Number.isFinite(v.currentTime)?v.currentTime:null,
+      capturedAt:new Date().toISOString()
+    };
+    console.error('[XM] VIDEO_PIPELINE_FAILED',window.__VIDEO_CAPTURE_FAILURE,e);
+    throw e;
+  }
   finally{cleanup()}
 }
 
@@ -7277,6 +7295,21 @@ $('mediaFile').addEventListener('change',async e=>{
     // data (positions/orders/quotes), not from how much of the video is MT5.
     let parsed=mergeParsedResults(results);
     window.__activeMediaResultsForAudit=isVideo?results:[];
+    // Full-video import: align the selected instrument with unambiguous MT5
+    // position/order rows before quote recovery. Never infer from quote-board
+    // rows alone and never switch on mixed-symbol media.
+    if(isVideo){
+      const importedSymbols=[...new Set([...parsed.positions,...parsed.pending]
+        .map(o=>o.symbol?normalizeSymbol(o.symbol):null).filter(Boolean))];
+      if(importedSymbols.length===1&&importedSymbols[0]!==currentSymbol){
+        const option=[...$('symbol').options].find(o=>o.value===importedSymbols[0]);
+        if(option){
+          $('symbol').value=importedSymbols[0];
+          switchSymbol(false);
+          window.__VIDEO_SYMBOL_ALIGNMENT__={from:'position-order-evidence',symbol:importedSymbols[0]};
+        }
+      }
+    }
 
     // HARD SAFETY: never treat this calculator's own UI as MT5 input.
     // The app can be screen-recorded and then fed back into itself. OCR may
@@ -7658,12 +7691,12 @@ $('mediaFile').addEventListener('change',async e=>{
       // v364: if the normal multi-frame aggregator still misses the SELECTED symbol,
       // recover only an explicit, sane Bid/Ask pair from THIS import's merged OCR text.
       // This never carries an old stored price and therefore cannot create stale-market data.
-      if(cfg().type!=='fx'&&currentSymbol!=='GOLD#'&&!(quotes[currentSymbol]?.bid>0&&quotes[currentSymbol]?.ask>0)){
+      if(currentSymbol!=='GOLD#'&&!(quotes[currentSymbol]?.bid>0&&quotes[currentSymbol]?.ask>0)){
         const rq=rescueCurrentQuoteFromMergedText(parsed.rawText||'',currentSymbol);
         if(rq){quotes[currentSymbol]=rq;window.__quoteMeta[currentSymbol]={source:'same-import-merged-text-rescue'};}
       }
       // A Bid-only rescue cannot establish Ask. Never manufacture a conversion spread.
-      if((parsed.positions.length||parsed.pending.length)&&!(quotes[currentSymbol]?.bid>0&&quotes[currentSymbol]?.ask>0))throw new Error('SELECTED_QUOTE_PAIR_UNCONFIRMED: 対象銘柄のBid・Askを動画から照合できません。推測スプレッドでは計算しません。');
+            if((parsed.positions.length||parsed.pending.length)&&!(quotes[currentSymbol]?.bid>0&&quotes[currentSymbol]?.ask>0))throw new Error('SELECTED_QUOTE_PAIR_UNCONFIRMED: 対象銘柄のBid・Askを動画から照合できません。推測スプレッドでは計算しません。');
       window.__VIDEO_CONVERSION_SCOPE__=new Set(Object.keys(quotes).map(normalizeSymbol));
       const usd=quotes['USDJPY#']; if(usd?.bid){usdjpy=+usd.bid;mediaUsdJpyFresh=true;}
     }else{

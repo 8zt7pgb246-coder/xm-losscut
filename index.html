@@ -4685,6 +4685,19 @@ function hasIndependentScrolledTradeEnd(frame,results,rows){
  const times=[...new Set((results||[]).filter(r=>r.scrollBoundary==='bottom'&&r.scrolledTradeEnd?.fingerprint===fp).map(r=>Number(r.time)).filter(Number.isFinite))].sort((a,b)=>a-b);
  return times.length>=3&&times.at(-1)-times[0]>=.4;
 }
+// An OCR P/L crop can fail in one frame even when the independent pixels
+// prove an unchanged full viewport. Require 3 distinct video times, identical
+// parsed identities, a blank pixel tail at each time, and at least one frame
+// with the original independent account/P&L reconciliation. Never accept
+// OCR repetition from the same physical frame as independent evidence.
+function hasIndependentStaticTailWithPnlAnchor(frame,results,rows){
+ const fp=canonicalPositionFingerprint(rows);
+ if(!frame?.staticTailEvidence||frame.staticTailEvidence.fingerprint!==fp)return false;
+ const matching=(results||[]).filter(r=>r.scrollBoundary==='none'&&r.staticTailEvidence?.fingerprint===fp&&r.staticTailEvidence.count===rows.length);
+ const times=[...new Set(matching.map(r=>Number(r.time)).filter(Number.isFinite))].sort((a,b)=>a-b);
+ if(times.length<3||times.at(-1)-times[0]<.4)return false;
+ return matching.some(r=>r.staticTradeEnd?.fingerprint===fp&&r.staticTradeEnd.count===rows.length);
+}
 function hasIndependentStaticTradeEnd(frame,results,rows){
  const fp=canonicalPositionFingerprint(rows),e=frame?.staticTradeEnd;
  if(!e||e.fingerprint!==fp)return false;
@@ -4760,8 +4773,8 @@ function recoverTrustedVideoPositionBasket(results,mergedText=''){
     // image share its proven boundary. Never borrow it from another instant.
     const verifiedOrderBoundary=verifiedOrders.authoritative&&verifiedOrders.terminalConfirmed&&(orderPixelsVerified(r)||Number.isFinite(r.frameIndex)&&(results||[]).some(peer=>peer!==r&&peer.frameIndex===r.frameIndex&&Math.abs(Number(peer.time)-Number(r.time))<1e-6&&orderPixelsVerified(peer)));
     const hasOrderBoundary=hasExplicitPendingSectionBoundary(text)||hasVerifiedStaticPositionToOrderBoundary(r,text,parsedFrame,account,rows)||verifiedOrderBoundary;
-    const hasTerminalBoundary=hasIndependentScrolledTradeEnd(r,results,rows)||hasIndependentStaticTradeEnd(r,results,rows);
-    candidates.push({rows,time:Number(r?.time||0),frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null,hasAccountBoundary,hasOrderBoundary,hasTerminalBoundary,hasScrollableViewport:r?.scrollBoundary==='top'||r?.scrollBoundary==='middle'});
+    const hasTerminalBoundary=hasIndependentScrolledTradeEnd(r,results,rows)||hasIndependentStaticTradeEnd(r,results,rows)||hasIndependentStaticTailWithPnlAnchor(r,results,rows);
+    candidates.push({rows,time:Number(r?.time||0),frameIndex:Number.isFinite(r?.frameIndex)?r.frameIndex:null,hasAccountBoundary,hasOrderBoundary,hasTerminalBoundary,hasScrollableViewport:r?.scrollBoundary==='top'||r?.scrollBoundary==='middle',staticTailEvidence:r?.staticTailEvidence});
   }
   if(candidates.length){
     const allObserved=new Map();
@@ -5948,6 +5961,11 @@ function rescueCurrentQuoteFromMergedText(text,symbol=currentSymbol){
   const all=extractAllQuotesText(String(text||''));
   const q=all[normalizeSymbol(symbol)]||all[symbol]||null;
   if(!q||!quoteSanity(symbol,q,quoteStore[symbol]||priceStore[symbol]))return null;
+  // Do not bypass the printed MT5 spread verification during quote rescue.
+  // A dropped superscript final digit can yield plausible prices but a wrong
+  // spread (e.g. 0.83320/0.83382 versus 56 printed points).
+  const printed=readFxSpreadEvidence(text,symbol,q);
+  if(printed.present&&!printed.ok)return null;
   const c=ensureSpec(symbol),rel=q.bid>0?(q.ask-q.bid)/q.bid:1;
   const max=c.type==='fx'?0.001:c.type==='index'?0.005:c.type==='crypto'?0.02:c.type==='cfd'?0.0015:0.001;
   if(!(q.bid>0&&q.ask>q.bid&&rel<=max))return null;
@@ -5984,8 +6002,9 @@ async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProg
   r=filterUsableOCRResults(r);
   const merged=mergeParsedResults(r).rawText||'';
   const hasCurrent=!!rescueCurrentQuoteFromMergedText(merged,currentSymbol);
-  const hasUsd=cfg().quote!=='USD'||!!rescueUsdJpyFromMergedText(merged);
-  if(hasCurrent&&hasUsd)return r;
+  const refSymbol=cfg().quote==='JPY'?null:cfg().quote+'JPY#';
+  const hasReference=!refSymbol||!!aggregateVideoQuotes(r)[refSymbol]||!!rescueCurrentQuoteFromMergedText(merged,refSymbol);
+  if(hasCurrent&&hasReference)return r;
   const focus={
     canvas:makeQuoteFocusCanvas(base.canvas),
     time:base.time,
@@ -6578,7 +6597,25 @@ async function recognizeFileFrames(T,file,mode,onProgress,reuseSources=null,shar
       const verifiedFxQuotes=!isTradeFrame?await repairFxQuoteRows(worker,sources[i].canvas,data,psm):null;
       if(isTradeFrame)await verifyOutlierDisplayedPnlCells(worker,sources[i].canvas,String(data?.text||''),psm);
       const displayedPositionPnl=isTradeFrame?readDisplayedPositionPnlEvidence(sources[i].canvas,String(data?.text||'')):null;
-      results.push({sourcePendingLabelText,verifiedFxQuotes,scrolledTradeEnd:isTradeFrame&&sources[i].scrollBoundary==='bottom'?readScrolledTradeEndEvidence(sources[i].canvas,String(data?.text||'')):null,staticTradeEnd:isTradeFrame?readStaticTradeEndEvidence(sources[i].canvas,String(data?.text||''),sources[i].scrollBoundary||'none',displayedPositionPnl):null,pendingPixelBoundary:isTradeFrame?readPendingPixelBoundary(sources[i].canvas,String(data?.text||''),sources[i].scrollBoundary||'none',sourcePendingLabelText):null,displayedPositionPnl,data,time:sources[i].time,frameIndex:sourceFrameIndex,isControlCenter:false,scrollBoundary:sources[i].scrollBoundary||'none',visualTradeRows,recoveredRows,recoveryAttempted:isTradeFrame&&bands.length>0&&((parseOCR(String(r?.data?.text||'')).positions||[]).length+(parseOCR(String(r?.data?.text||'')).pending||[]).length)<bands.length});
+      // Independent pixel tail evidence is cheap and does not rely on OCR of
+      // each P/L cell. Full reconciliation remains mandatory on one frame.
+      const staticTailEvidence=(()=>{
+        if(!isTradeFrame||(sources[i].scrollBoundary||'none')!=='none')return null;
+        const text=String(data?.text||''),p=parseOCR(text);
+        const union=[];
+        for(const o of [...(p.positions||[]),...recoverStrongOpenPositionsFromTradeText(text)]){
+          if(!union.some(x=>positionViewportKey(x)===positionViewportKey(o)))union.push(o);
+        }
+        const rows=union.filter(o=>o.symbol&&Number(o.lot)>0&&Number(o.price)>0&&/^(buy|sell)$/i.test(String(o.side))&&(!o.positionPattern||o.positionPattern==='entry-current-arrow'));
+        const symbols=new Set(rows.map(o=>normalizeSymbol(o.symbol)));
+        const bands=detectVisualTradeRowBands(sources[i].canvas);
+        (window.__TAIL_AUDIT__||(window.__TAIL_AUDIT__=[])).push({time:sources[i].time,rows:rows.length,parsed:p.positions.length,pending:p.pending.length,bands:bands.length,blank:readStaticTradeBlankTail(sources[i].canvas,bands)});
+        if(!rows.length||symbols.size!==1||new Set(rows.map(positionViewportKey)).size!==rows.length||p.pending.length||bands.length!==rows.length)return null;
+        const blank=readStaticTradeBlankTail(sources[i].canvas,bands);
+        if(blank===null)return null;
+        return {fingerprint:canonicalPositionFingerprint(rows),count:rows.length,blankFraction:blank};
+      })();
+      results.push({staticTailEvidence,sourcePendingLabelText,verifiedFxQuotes,scrolledTradeEnd:isTradeFrame&&sources[i].scrollBoundary==='bottom'?readScrolledTradeEndEvidence(sources[i].canvas,String(data?.text||'')):null,staticTradeEnd:isTradeFrame?readStaticTradeEndEvidence(sources[i].canvas,String(data?.text||''),sources[i].scrollBoundary||'none',displayedPositionPnl):null,pendingPixelBoundary:isTradeFrame?readPendingPixelBoundary(sources[i].canvas,String(data?.text||''),sources[i].scrollBoundary||'none',sourcePendingLabelText):null,displayedPositionPnl,data,time:sources[i].time,frameIndex:sourceFrameIndex,isControlCenter:false,scrollBoundary:sources[i].scrollBoundary||'none',visualTradeRows,recoveredRows,recoveryAttempted:isTradeFrame&&bands.length>0&&((parseOCR(String(r?.data?.text||'')).positions||[]).length+(parseOCR(String(r?.data?.text||'')).pending||[]).length)<bands.length});
     }
   }finally{if(ownWorker){try{Promise.resolve(worker.terminate()).catch(e=>console.warn('[XM] OCR worker terminate skipped',e))}catch(e){console.warn('[XM] OCR worker terminate skipped',e)}}}
   results.expectedFrameCount=sources.expectedFrameCount||sources.length;
@@ -7550,8 +7587,9 @@ $('mediaFile').addEventListener('change',async e=>{
       let mergedQuote=rescueCurrentQuoteFromMergedText(parsed.rawText||'',currentSymbol);
       let mergedUsd=rescueUsdJpyFromMergedText(parsed.rawText||'');
       const currentMissing=!(prelimQuotes[currentSymbol]?.bid>0&&prelimQuotes[currentSymbol]?.ask>0)&&!mergedQuote;
-      const usdMissing=cfg().quote==='USD'&&!(prelimQuotes['USDJPY#']?.bid>0)&&!mergedUsd;
-      if((currentMissing||usdMissing)&&sharedVideoWorker){
+      const refSymbol=cfg().quote==='JPY'?null:cfg().quote+'JPY#';
+      const refMissing=!!refSymbol&&!(prelimQuotes[refSymbol]?.bid>0&&prelimQuotes[refSymbol]?.ask>0)&&!rescueCurrentQuoteFromMergedText(parsed.rawText||'',refSymbol);
+      if((currentMissing||refMissing)&&sharedVideoWorker){
         try{
           $('ocrStatus').textContent='価格だけ再確認中…';
           const quoteRescue=await rescueVideoQuoteWithEarlyFrame(T,f,videoSourcesForReuse,sharedVideoWorker,p=>{

@@ -861,7 +861,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v518 / Stage256-test</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v518 / Stage256-rootfix-test</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -6014,14 +6014,17 @@ async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProg
   const hasCurrent=!!quotes[currentSymbol]||!!rescueCurrentQuoteFromMergedText(merged,currentSymbol);
   const hasReference=!refSymbol||!!quotes[refSymbol]||!!rescueCurrentQuoteFromMergedText(merged,refSymbol);
   if(hasCurrent&&hasReference)return r;
-  // Only the first image gets the expensive focused OCR. Preserve all original
-  // time-stamped frame evidence for the strict 3-frame spread verification.
-  const base=selected[0];
-  const focus={canvas:makeQuoteFocusCanvas(base.canvas),time:base.time,
-    fraction:base.fraction,frameIndex:base.frameIndex,isControlCenter:false,quoteFocus:true};
+  // A wide-spread FX reference requires three independent frame times.
+  // OCR the quote strip in EACH selected frame, not only the first.
+  // Keep original timestamps and never fabricate a quote or spread.
+  const focusFrames=selected.map(base=>({
+    canvas:makeQuoteFocusCanvas(base.canvas),time:base.time,
+    fraction:base.fraction,frameIndex:base.frameIndex,
+    isControlCenter:false,quoteFocus:true
+  }));
   let q=await recognizeFileFrames(T,file,'order',m=>{
     if(m.status==='recognizing text')onProgress?.(Math.round((m.progress||0)*100));
-  },[focus],sharedWorker);
+  },focusFrames,sharedWorker);
   q=filterUsableOCRResults(q);
   return [...r,...q];
 }
@@ -6810,7 +6813,8 @@ function aggregateVideoQuotes(results){
       // pair. Limit the text-only exception to the selected symbol and USDJPY.
       const q=arr[0], rel1=q.bid>0?(q.ask-q.bid)/q.bid:1;
       const oneFrameMax=c.type==='fx'?0.001:c.type==='index'?0.005:c.type==='crypto'?0.02:c.type==='cfd'?0.0015:0.001;
-      const selectedOrFxRef=sym===currentSymbol||sym==='USDJPY#';
+      const requiredConversionRef=cfg().quote==='JPY'?null:cfg().quote+'JPY#';
+      const selectedOrFxRef=sym===currentSymbol||sym==='USDJPY#'||sym===requiredConversionRef;
       if(!q.fromWords && !(q.fromText&&selectedOrFxRef))continue;
       if(rel1>oneFrameMax)continue;
     }else if(stable.length<2){

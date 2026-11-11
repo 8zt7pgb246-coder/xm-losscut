@@ -861,7 +861,7 @@ body.accessLocked .app{visibility:hidden;pointer-events:none}
   </div>
 </div>
 <div class="app" id="appRoot">
-<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v518</span></h1>
+<h1>DeadLine positioning <span style="font-size:11px;color:#8b96a5;font-weight:700">v518 / Stage256-test</span></h1>
 <div class="nav"><button id="navLC" class="active" type="button">LC</button><button id="navPnl" class="secondary" type="button">損益</button><button id="navCompare" class="secondary" type="button">口座比較</button></div>
 <div id="pageLC" class="page active">
 
@@ -5995,24 +5995,30 @@ async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProg
     .filter(x=>!x?.isControlCenter&&Number(x?.fraction)<0.50)
     .sort((a,b)=>Number(a?.fraction||0)-Number(b?.fraction||0));
   if(!early.length)return [];
-  const base=early[0];
+  const refSymbol=cfg().quote==='JPY'?null:cfg().quote+'JPY#';
+  // A wide but legitimate FX spread requires proof from three distinct video
+  // times. Re-OCRing only early[0] could never supply that evidence.
+  const selected=[];
+  for(const frame of early){
+    const t=Number(frame.time);
+    if(selected.length && Number.isFinite(t) && selected.some(x=>Math.abs(Number(x.time)-t)<0.20))continue;
+    selected.push(frame);
+    if(selected.length>=3)break;
+  }
   let r=await recognizeFileFrames(T,file,'order',m=>{
     if(m.status==='recognizing text')onProgress?.(Math.round((m.progress||0)*100));
-  },[base],sharedWorker);
+  },selected,sharedWorker);
   r=filterUsableOCRResults(r);
   const merged=mergeParsedResults(r).rawText||'';
-  const hasCurrent=!!rescueCurrentQuoteFromMergedText(merged,currentSymbol);
-  const refSymbol=cfg().quote==='JPY'?null:cfg().quote+'JPY#';
-  const hasReference=!refSymbol||!!aggregateVideoQuotes(r)[refSymbol]||!!rescueCurrentQuoteFromMergedText(merged,refSymbol);
+  const quotes=aggregateVideoQuotes(r);
+  const hasCurrent=!!quotes[currentSymbol]||!!rescueCurrentQuoteFromMergedText(merged,currentSymbol);
+  const hasReference=!refSymbol||!!quotes[refSymbol]||!!rescueCurrentQuoteFromMergedText(merged,refSymbol);
   if(hasCurrent&&hasReference)return r;
-  const focus={
-    canvas:makeQuoteFocusCanvas(base.canvas),
-    time:base.time,
-    fraction:base.fraction,
-    frameIndex:base.frameIndex,
-    isControlCenter:false,
-    quoteFocus:true
-  };
+  // Only the first image gets the expensive focused OCR. Preserve all original
+  // time-stamped frame evidence for the strict 3-frame spread verification.
+  const base=selected[0];
+  const focus={canvas:makeQuoteFocusCanvas(base.canvas),time:base.time,
+    fraction:base.fraction,frameIndex:base.frameIndex,isControlCenter:false,quoteFocus:true};
   let q=await recognizeFileFrames(T,file,'order',m=>{
     if(m.status==='recognizing text')onProgress?.(Math.round((m.progress||0)*100));
   },[focus],sharedWorker);

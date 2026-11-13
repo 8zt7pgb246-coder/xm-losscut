@@ -5992,16 +5992,21 @@ function rescueUsdJpyFromMergedText(text){
   const rel=(q.ask-q.bid)/q.bid;
   return rel<=0.001?+q.bid:null;
 }
-function makeQuoteFocusCanvas(source){
+function makeQuoteFocusCanvas(source, band='upper'){
   if(!source?.width||!source?.height)return source;
   const w=source.width,h=source.height;
-  const cropH=Math.max(1,Math.round(h*0.44));
-  const scale=Math.min(1.8,1800/Math.max(1,w));
+  // MT5 quote rows are scrollable. The reference pair may fall just below
+  // the former 44%-height crop (including its printed spread line).
+  // Overlapping bands preserve the actual glyphs, without inventing prices.
+  const top=band==='middle'?Math.round(h*.25):0;
+  const bottom=band==='middle'?Math.round(h*.72):Math.round(h*.55);
+  const cropH=Math.max(1,bottom-top);
+  const scale=Math.min(2.3,2200/Math.max(1,w));
   const c=document.createElement('canvas');
   c.width=Math.max(1,Math.round(w*scale));
   c.height=Math.max(1,Math.round(cropH*scale));
   const ctx=c.getContext('2d',{willReadFrequently:true});
-  ctx.drawImage(source,0,0,w,cropH,0,0,c.width,c.height);
+  ctx.drawImage(source,0,top,w,cropH,0,0,c.width,c.height);
   return c;
 }
 async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProgress){
@@ -6035,11 +6040,11 @@ async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProg
   // A wide-spread FX reference requires three independent frame times.
   // OCR the quote strip in EACH selected frame, not only the first.
   // Keep original timestamps and never fabricate a quote or spread.
-  const focusFrames=selected.map(base=>({
-    canvas:makeQuoteFocusCanvas(base.canvas),time:base.time,
+  const focusFrames=selected.flatMap(base=>['upper','middle'].map(band=>({
+    canvas:makeQuoteFocusCanvas(base.canvas,band),time:base.time,
     fraction:base.fraction,frameIndex:base.frameIndex,
-    isControlCenter:false,quoteFocus:true
-  }));
+    isControlCenter:false,quoteFocus:true,quoteBand:band
+  })));
   let q=await recognizeFileFrames(T,file,'order',m=>{
     if(m.status==='recognizing text')onProgress?.(Math.round((m.progress||0)*100));
   },focusFrames,sharedWorker);
@@ -7635,7 +7640,13 @@ $('mediaFile').addEventListener('change',async e=>{
       window.__lastQuoteRescue={
         at:Date.now(),symbol:currentSymbol,requiredReference:refSymbol,referenceValidated:!refSymbol||!!prelimQuotes[refSymbol],referenceMissingAtRescue:refMissing,
         current:prelimQuotes[currentSymbol]||mergedQuote||null,
-        usdjpy:prelimQuotes['USDJPY#']||mergedUsd||null
+        usdjpy:prelimQuotes['USDJPY#']||mergedUsd||null,
+        referenceCandidates:filterUsableOCRResults(results).map(r=>({
+          time:Number(r.time)||0,frameIndex:r.frameIndex||0,band:r.quoteBand||'full',
+          textMentionsReference:!!refSymbol&&String(r.data?.text||'').includes(refSymbol.replace('#','')),
+          parsedReference:refSymbol?(extractAllQuotesText(r.data?.text||'')[refSymbol]||null):null,
+          verifiedReference:refSymbol?(r.verifiedFxQuotes?.[refSymbol]||null):null
+        })).filter(x=>x.textMentionsReference||x.parsedReference||x.verifiedReference).slice(0,20)
       };
     }
 

@@ -6027,7 +6027,11 @@ async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProg
   const quotes=aggregateVideoQuotes(r);
   const hasCurrent=!!quotes[currentSymbol]||!!rescueCurrentQuoteFromMergedText(merged,currentSymbol);
   const hasReference=!refSymbol||!!quotes[refSymbol]||!!rescueCurrentQuoteFromMergedText(merged,refSymbol);
-  if(hasCurrent&&hasReference)return r;
+  // Do not accept a single-frame merged-text reference as sufficient proof.
+  // GBPJPY 92-point spread exceeds the strict 80-point threshold and requires
+  // independent frame-level printed-spread verification.
+  const verifiedRef=!refSymbol||!!quotes[refSymbol];
+  if(hasCurrent&&hasReference&&verifiedRef)return r;
   // A wide-spread FX reference requires three independent frame times.
   // OCR the quote strip in EACH selected frame, not only the first.
   // Keep original timestamps and never fabricate a quote or spread.

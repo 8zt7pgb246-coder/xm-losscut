@@ -6026,7 +6026,7 @@ async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProg
   const merged=mergeParsedResults(r).rawText||'';
   const quotes=aggregateVideoQuotes(r);
   const hasCurrent=!!quotes[currentSymbol]||!!rescueCurrentQuoteFromMergedText(merged,currentSymbol);
-  const hasReference=!refSymbol||!!quotes[refSymbol]||!!rescueCurrentQuoteFromMergedText(merged,refSymbol);
+  const hasReference=!refSymbol||!!quotes[refSymbol]; // Require fully validated frame-based reference before stopping OCR.
   // Do not accept a single-frame merged-text reference as sufficient proof.
   // GBPJPY 92-point spread exceeds the strict 80-point threshold and requires
   // independent frame-level printed-spread verification.
@@ -7616,7 +7616,7 @@ $('mediaFile').addEventListener('change',async e=>{
       let mergedUsd=rescueUsdJpyFromMergedText(parsed.rawText||'');
       const currentMissing=!(prelimQuotes[currentSymbol]?.bid>0&&prelimQuotes[currentSymbol]?.ask>0)&&!mergedQuote;
       const refSymbol=cfg().quote==='JPY'?null:cfg().quote+'JPY#';
-      const refMissing=!!refSymbol&&!(prelimQuotes[refSymbol]?.bid>0&&prelimQuotes[refSymbol]?.ask>0)&&!rescueCurrentQuoteFromMergedText(parsed.rawText||'',refSymbol);
+      const refMissing=!!refSymbol&&!(prelimQuotes[refSymbol]?.bid>0&&prelimQuotes[refSymbol]?.ask>0); // A merged-text candidate is not proof of a verified conversion quote.
       if((currentMissing||refMissing)&&sharedVideoWorker){
         try{
           $('ocrStatus').textContent='価格だけ再確認中…';
@@ -7633,7 +7633,7 @@ $('mediaFile').addEventListener('change',async e=>{
         }catch(e){console.warn('[XM] QUOTE_RESCUE_FAILED',e)}
       }
       window.__lastQuoteRescue={
-        at:Date.now(),symbol:currentSymbol,
+        at:Date.now(),symbol:currentSymbol,requiredReference:refSymbol,referenceValidated:!refSymbol||!!prelimQuotes[refSymbol],referenceMissingAtRescue:refMissing,
         current:prelimQuotes[currentSymbol]||mergedQuote||null,
         usdjpy:prelimQuotes['USDJPY#']||mergedUsd||null
       };

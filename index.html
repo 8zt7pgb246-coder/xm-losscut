@@ -5995,13 +5995,12 @@ function rescueUsdJpyFromMergedText(text){
 function makeQuoteFocusCanvas(source, band='upper'){
   if(!source?.width||!source?.height)return source;
   const w=source.width,h=source.height;
-  // MT5 quote rows are scrollable. The reference pair may fall just below
-  // the former 44%-height crop (including its printed spread line).
-  // Overlapping bands preserve the actual glyphs, without inventing prices.
-  const top=band==='middle'?Math.round(h*.25):0;
-  const bottom=band==='middle'?Math.round(h*.72):Math.round(h*.55);
+  // GBPJPY may be in the middle of a scrolled MT5 Quotes list.
+  // Preserve the symbol, both printed prices and the separate spread row.
+  const top=band==='middle'?Math.round(h*.25):band==='reference-row'?Math.round(h*.32):0;
+  const bottom=band==='middle'?Math.round(h*.72):band==='reference-row'?Math.round(h*.53):Math.round(h*.55);
   const cropH=Math.max(1,bottom-top);
-  const scale=Math.min(2.3,2200/Math.max(1,w));
+  const scale=Math.min(band==='reference-row'?3.2:2.3,2600/Math.max(1,w));
   const c=document.createElement('canvas');
   c.width=Math.max(1,Math.round(w*scale));
   c.height=Math.max(1,Math.round(cropH*scale));
@@ -6010,20 +6009,25 @@ function makeQuoteFocusCanvas(source, band='upper'){
   return c;
 }
 async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProgress){
-  const early=(Array.isArray(sources)?sources:[])
-    .filter(x=>!x?.isControlCenter&&Number(x?.fraction)<0.50)
-    .sort((a,b)=>Number(a?.fraction||0)-Number(b?.fraction||0));
+  // The 8 selected OCR anchors can include only one or two early Quotes frames.
+  // The video pre-scan already holds more real, time-stamped frames. Reuse them
+  // instead of requiring three confirmations from an insufficient source set.
+  const allSources=Array.isArray(sources?.candidateSources)&&sources.candidateSources.length
+    ?sources.candidateSources:(Array.isArray(sources)?sources:[]);
+  const early=allSources.filter(x=>!x?.isControlCenter&&Number(x?.fraction)<0.48)
+    .sort((a,b)=>Number(a?.time||0)-Number(b?.time||0));
   if(!early.length)return [];
   const refSymbol=cfg().quote==='JPY'?null:cfg().quote+'JPY#';
-  // A wide but legitimate FX spread requires proof from three distinct video
-  // times. Re-OCRing only early[0] could never supply that evidence.
   const selected=[];
   for(const frame of early){
     const t=Number(frame.time);
-    if(selected.length && Number.isFinite(t) && selected.some(x=>Math.abs(Number(x.time)-t)<0.20))continue;
+    if(!Number.isFinite(t)||selected.some(x=>Math.abs(Number(x.time)-t)<.42))continue;
     selected.push(frame);
-    if(selected.length>=3)break;
+    if(selected.length>=4)break;
   }
+  // Do not manufacture additional observations when the video has fewer
+  // than three genuinely different visible quote frames.
+  window.__QUOTE_RESCUE_SOURCE_AUDIT={available:early.length,selected:selected.map(x=>({time:x.time,fraction:x.fraction}))};
   let r=await recognizeFileFrames(T,file,'order',m=>{
     if(m.status==='recognizing text')onProgress?.(Math.round((m.progress||0)*100));
   },selected,sharedWorker);
@@ -6040,7 +6044,7 @@ async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProg
   // A wide-spread FX reference requires three independent frame times.
   // OCR the quote strip in EACH selected frame, not only the first.
   // Keep original timestamps and never fabricate a quote or spread.
-  const focusFrames=selected.flatMap(base=>['upper','middle'].map(band=>({
+  const focusFrames=selected.flatMap(base=>['upper','middle','reference-row'].map(band=>({
     canvas:makeQuoteFocusCanvas(base.canvas,band),time:base.time,
     fraction:base.fraction,frameIndex:base.frameIndex,
     isControlCenter:false,quoteFocus:true,quoteBand:band

@@ -6044,12 +6044,14 @@ async function rescueVideoQuoteWithEarlyFrame(T,file,sources,sharedWorker,onProg
   // A wide-spread FX reference requires three independent frame times.
   // OCR the quote strip in EACH selected frame, not only the first.
   // Keep original timestamps and never fabricate a quote or spread.
-  const focusFrames=selected.flatMap(base=>['upper','middle','reference-row'].map(band=>({
+  const focusFrames=selected.flatMap(base=>['upper','middle'].map(band=>({
     canvas:makeQuoteFocusCanvas(base.canvas,band),time:base.time,
     fraction:base.fraction,frameIndex:base.frameIndex,
     isControlCenter:false,quoteFocus:true,quoteBand:band
   })));
-  let q=await recognizeFileFrames(T,file,'order',m=>{
+  // Quote strips are sparse text, not dense trade tables. PSM 11 retains
+  // separated symbol / Bid / Ask / printed-spread lines on iPhone MT5.
+  let q=await recognizeFileFrames(T,file,'price',m=>{
     if(m.status==='recognizing text')onProgress?.(Math.round((m.progress||0)*100));
   },focusFrames,sharedWorker);
   q=filterUsableOCRResults(q);
